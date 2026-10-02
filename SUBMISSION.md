@@ -36,6 +36,7 @@ Comando: `python -m pytest tests/` (o `pytest tests/`).
 - `test_pedidos.py`: los cuatro pedidos válidos, ids inexistentes o mal formados que devuelven "No encontrado" sin inventar producto ni fecha, y extracción de ids del texto.
 - `test_guardrails.py`: reembolsos de $501 o más escalan, el de exactamente $500 no, "600 días" no se toma como dinero, quejas de trato, disputas de facturación, temas legales, varias categorías a la vez, formatos de monto e inyección de prompt.
 - `test_agente.py`: escenarios de punta a punta (garantía, producto en liquidación, garantía con devolución, pedido existente, pedido inexistente, pedido sin número, fuera de alcance, reembolso de $500 y de $501), que el modelo no se llama cuando salta un guardrail, que el prompt solo lleva el contexto recuperado, el respaldo offline si el LLM falla y las trazas.
+- `test_llm.py`: los clientes OpenAI-compatible y Anthropic contra un servidor local (formato del pedido, clave, reintento con `max_completion_tokens`, errores y el agente de punta a punta con un proveedor).
 
 ## Cómo mapearías esto a producción
 
@@ -47,7 +48,7 @@ Comando: `python -m pytest tests/` (o `pytest tests/`).
 
 ## Limitaciones conocidas
 
-- Los clientes de LLM (`OpenAICompatible` y `Anthropic` en `llm.py`) no se probaron contra una API real: los tests usan un cliente falso. La conexión a Ollama, OpenAI o Anthropic es código escrito siguiendo la documentación de cada API y sin verificar.
+- Los clientes de LLM (`OpenAICompatible` y `Anthropic` en `llm.py`) se probaron contra un servidor HTTP local que imita la forma de cada API (`tests/test_llm.py`), incluido el rechazo de `max_tokens` que hacen algunos modelos de OpenAI. [Completar con el proveedor real que se haya probado, por ejemplo Gemini por su endpoint compatible. Lo que no se haya probado contra la API real queda declarado acá.]
 - Los guardrails son reglas en español. No cubren paráfrasis raras, otros idiomas ni ironía. Un monto escrito de forma rara (por ejemplo "quinientos cincuenta") se detecta solo para unos pocos casos. Un reembolso sin monto explícito no escala: el agente informa la política y la regla de los $500, y nunca aprueba nada.
 - Una devolución de un producto de más de $500 mencionada como "devolver una estufa de $900" se escala por prudencia aunque el cliente no use la palabra reembolso. Es una decisión mía, no está en los documentos.
 - La tabla de conceptos del RAG y el umbral se ajustaron a mano con pocas preguntas. Con preguntas reales habría que medir y reajustar. En modo offline una pregunta fuera de tema que comparta un concepto con un documento (por ejemplo "cuánto cuesta el envío") recibe el documento de envíos completo, no la respuesta exacta.

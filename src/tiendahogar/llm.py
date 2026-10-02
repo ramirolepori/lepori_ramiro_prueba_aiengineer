@@ -37,7 +37,11 @@ def _post(url: str, cabeceras: dict[str, str], cuerpo: dict, timeout: float, rei
         except urllib.error.HTTPError as e:
             ultimo = e
             if e.code not in {408, 429, 500, 502, 503, 504}:
-                raise ErrorLLM(f"el proveedor respondió HTTP {e.code}") from e
+                try:
+                    detalle = e.read().decode("utf-8", "replace")[:300]
+                except OSError:
+                    detalle = ""
+                raise ErrorLLM(f"el proveedor respondió HTTP {e.code}: {detalle}") from e
         except (urllib.error.URLError, TimeoutError, ValueError) as e:
             ultimo = e
         if intento < reintentos:
@@ -53,10 +57,21 @@ class OpenAICompatible:
 
     def generar(self, sistema: str, usuario: str) -> str:
         cab = {"Authorization": f"Bearer {self._c.api_key}"} if self._c.api_key else {}
-        r = _post(self._c.base_url.rstrip("/") + "/chat/completions", cab, {
-            "model": self._c.modelo, "max_tokens": self._c.max_tokens, "temperature": 0,
-            "messages": [{"role": "system", "content": sistema}, {"role": "user", "content": usuario}],
-        }, self._c.timeout_s)
+        base = {"model": self._c.modelo,
+                "messages": [{"role": "system", "content": sistema}, {"role": "user", "content": usuario}]}
+        url = self._c.base_url.rstrip("/") + "/chat/completions"
+        # Los modelos de razonamiento de OpenAI exigen `max_completion_tokens` y rechazan `temperature`;
+        # Gemini, Ollama y los modelos clásicos usan `max_tokens`. Se prueba lo clásico y, si el proveedor
+        # lo rechaza con un 400, se reintenta con la variante nueva: el mismo código sirve para todos.
+        variantes = [{"max_tokens": self._c.max_tokens, "temperature": 0},
+                     {"max_completion_tokens": self._c.max_tokens}]
+        for i, extra in enumerate(variantes):
+            try:
+                r = _post(url, cab, {**base, **extra}, self._c.timeout_s)
+                break
+            except ErrorLLM as e:
+                if i == len(variantes) - 1 or "HTTP 400" not in str(e):
+                    raise
         try:
             return r["choices"][0]["message"]["content"].strip()
         except (KeyError, IndexError, AttributeError) as e:

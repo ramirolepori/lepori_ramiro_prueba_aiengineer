@@ -64,7 +64,15 @@ Copiar `.env.example` a `.env` (ignorado por git) o definirlas en el entorno. Ni
 | `LLM_MODEL` | Nombre del modelo |
 | `LLM_API_KEY` | Clave. Puede quedar vacía con un servidor local como Ollama |
 | `LLM_BASE_URL` | Solo con `openai`. Por defecto `https://api.openai.com/v1`. Ollama: `http://localhost:11434/v1` |
-| `LLM_TIMEOUT_S`, `LLM_MAX_TOKENS` | Tiempo máximo por llamada (60 s) y tokens de salida (500) |
+| `LLM_TIMEOUT_S`, `LLM_MAX_TOKENS` | Tiempo máximo por llamada (60 s) y tokens de salida (1024) |
+
+`LLM_PROVIDER=openai` sirve para cualquier API compatible con OpenAI y solo cambia `LLM_BASE_URL`, `LLM_MODEL` y `LLM_API_KEY`. Con los modelos de razonamiento de OpenAI, que rechazan `max_tokens` y `temperature`, el cliente reintenta solo con `max_completion_tokens`.
+
+Ejemplo con OpenAI (PowerShell):
+
+```powershell
+$env:LLM_PROVIDER = "openai"; $env:LLM_MODEL = "<modelo>"; $env:LLM_API_KEY = "<clave>"
+```
 
 Ejemplo con un modelo local en Ollama (PowerShell):
 

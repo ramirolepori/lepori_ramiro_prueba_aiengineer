@@ -36,4 +36,4 @@ class Config:
     api_key: str = field(default_factory=lambda: _entorno("LLM_API_KEY", ""))
     base_url: str = field(default_factory=lambda: _entorno("LLM_BASE_URL", "https://api.openai.com/v1"))
     timeout_s: float = field(default_factory=lambda: float(_entorno("LLM_TIMEOUT_S", "60")))
-    max_tokens: int = field(default_factory=lambda: int(_entorno("LLM_MAX_TOKENS", "500")))
+    max_tokens: int = field(default_factory=lambda: int(_entorno("LLM_MAX_TOKENS", "1024")))
