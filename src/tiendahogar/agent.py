@@ -70,6 +70,7 @@ class Respuesta:
     escalamientos: list[str] = field(default_factory=list)
     pedidos: list[dict[str, Any]] = field(default_factory=list)
     traza: list[dict[str, Any]] = field(default_factory=list)
+    conversacional: bool = False                  # charla (nombre, saludo): no cambia lo que el agente esperaba del cliente
     tiempos: dict[str, float] = field(default_factory=dict)   # ms por etapa y por balde (ver tiempos.py)
 
 
@@ -101,7 +102,8 @@ class AgenteSoporte:
             r = self._decidir(pregunta, ev, sesion)
         if sesion is not None:
             # dijo otra cosa que no tiene que ver con la tienda: se le contesta eso y se vuelve a pedir lo que faltaba
-            if previo is not None and not sesion.pendiente and r.estado == "sin_informacion" and retomar(sesion, previo):
+            if (previo is not None and not sesion.pendiente and (r.estado == "sin_informacion" or r.conversacional)
+                    and retomar(sesion, previo)):
                 r.texto = r.texto + chr(10) * 2 + pregunta_pendiente(sesion)
             recordar_pregunta(sesion, r.texto)
         total_ms = (time.perf_counter() - t0) * 1000
@@ -137,6 +139,7 @@ class AgenteSoporte:
                 if sesion.turnos <= MAX_TURNOS:
                     ev("cortesia_con_pendiente", pendiente=sesion.pendiente)
                     if _es_saludo(pregunta):
+                        _recordar_nombre(pregunta, sesion)
                         return Respuesta(_saludar(pregunta, pregunta_pendiente(sesion)), "respondido")
                     return Respuesta(f"¡De nada! {pregunta_pendiente(sesion)}", "respondido")
                 sesion.limpiar()
@@ -169,9 +172,16 @@ class AgenteSoporte:
                                  [e.categoria for e in escalamientos], pedidos)
             return Respuesta(derivacion, "escalado", escalamientos=[e.categoria for e in escalamientos])
 
+        if _PREGUNTA_SU_NOMBRE.search(guardrails.normalizar(pregunta)):
+            ev("su_nombre", sabido=bool(sesion is not None and sesion.nombre))
+            if sesion is not None and sesion.nombre:
+                return Respuesta(f"Te llamás {sesion.nombre}.", "respondido", conversacional=True)
+            return Respuesta("Todavía no me dijiste tu nombre. Si querés, decime cómo te llamás.", "respondido", conversacional=True)
         if _es_saludo(pregunta):
             ev("saludo")
             nombre = _nombre_dicho(pregunta)
+            if sesion is not None and nombre:
+                sesion.nombre = nombre
             return Respuesta(MENSAJE_SALUDO.replace("¡Hola!", f"¡Hola, {nombre}!", 1) if nombre else MENSAJE_SALUDO, "respondido")
         if _es_despedida(pregunta):
             ev("despedida")
@@ -506,6 +516,16 @@ def _nombre_dicho(pregunta: str) -> str | None:
     if any(guardrails.normalizar(w) in _NO_ES_NOMBRE for w in palabras):
         return None
     return " ".join(w.capitalize() for w in palabras)
+
+
+_PREGUNTA_SU_NOMBRE = re.compile(r"como me llamo|cual es mi nombre|como es mi nombre|sabes (?:mi nombre|como me llamo)|"
+                                 r"te acordas de mi nombre|recordas mi nombre|(?:decime|dime) mi nombre")
+
+
+def _recordar_nombre(pregunta: str, sesion: Sesion | None) -> None:
+    nombre = _nombre_dicho(pregunta)
+    if sesion is not None and nombre:
+        sesion.nombre = nombre
 
 
 def _saludar(pregunta: str, resto: str) -> str:

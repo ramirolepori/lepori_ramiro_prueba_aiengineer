@@ -60,6 +60,7 @@ class Sesion:
     repreguntas: int = 0
     turnos: int = 0                     # mensajes desde que quedó pendiente
     ultima: str = ""                    # la pregunta tal como se le hizo al cliente, para volver a hacerla
+    nombre: str = ""                    # cómo se presentó (ya validado); no se olvida con lo pendiente
 
     def esperar(self, pendiente: str, base: str, si: Lugar | None = None, no: Lugar | None = None) -> None:
         if self.pendiente != pendiente or self.base != base:
