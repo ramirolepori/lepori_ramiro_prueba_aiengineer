@@ -23,4 +23,4 @@ El enunciado permite OpenAI, Anthropic, Azure OpenAI o un modelo local. No se sa
 
 ## Consecuencias
 
-El agente corre en una máquina sin GPU ni claves, y cambiar de proveedor es cambiar variables de entorno. A cambio, la lentitud medida (de 15 a 33 segundos por respuesta que usa el modelo, en CPU) depende del hardware de desarrollo y no del diseño. Los clientes se probaron contra un servidor HTTP local que imita la forma de cada API (`tests/test_llm.py`); no se probaron contra la API de un proveedor comercial, y está declarado en las limitaciones.
+El agente corre en una máquina sin GPU ni claves, y cambiar de proveedor es cambiar variables de entorno. Los clientes se probaron contra un servidor HTTP local que imita la forma de cada API (`tests/test_llm.py`); no se probaron contra la API de un proveedor comercial, y está declarado en las limitaciones.

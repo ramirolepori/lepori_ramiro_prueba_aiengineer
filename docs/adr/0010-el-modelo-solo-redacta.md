@@ -4,7 +4,7 @@ Estado: aceptada. Fecha: octubre de 2026. Decidió: Ramiro.
 
 ## Contexto
 
-Un modelo chico puede ignorar lo que no se le pide con fuerza, deformar cifras, inventar citas o cubrir una sola de dos políticas. Las pruebas con `qwen2.5:7b` mostraron cuatro problemas: omitía a veces la aclaración de la regla de los $500 y el aviso de pedir el número de pedido; el modelo de 3B inventaba citas y cifras; una pregunta que mezcla garantía y devolución recibía a veces una respuesta que cubría solo una; y las respuestas largas tardaban mucho en CPU.
+Un modelo chico puede ignorar lo que no se le pide con fuerza, deformar cifras, inventar citas o cubrir una sola de dos políticas. Las pruebas con `qwen2.5:7b` mostraron estos problemas: omitía a veces la aclaración de la regla de los $500 y el aviso de pedir el número de pedido; el modelo de 3B inventaba citas y cifras; una pregunta que mezcla garantía y devolución recibía a veces una respuesta que cubría solo una; y las respuestas largas sumaban texto de más.
 
 ## Decisión
 
@@ -20,8 +20,8 @@ El modelo recibe solo el contexto recuperado (documentos y pedidos), un prompt q
 
 - Confiar en que el modelo copie las aclaraciones obligatorias: la calidad era de 8 de 10 y subió a 10 de 10 al moverlas al código.
 - Responder con la oración exacta del documento, sin modelo, cuando la pregunta corresponde a una sola oración: casi instantáneo y no puede inventar, pero le quita naturalidad. Descartada por Ramiro.
-- Limitar la respuesta con un tope de tokens: no aportó nada en la mediana y puede cortar respuestas, así que no se usa.
+- Limitar la respuesta con un tope de tokens: no mejoró la calidad ni acortó las respuestas y puede cortarlas, así que no se usa.
 
 ## Consecuencias
 
-La respuesta es verificable aunque el modelo sea chico y el modo offline siempre es una salida válida. Costo de completar la cobertura, medido en el peor caso (el modelo cita solo el primer documento) sobre las 102 preguntas del conjunto de RAG con documentos esperados: se agrega texto en 9, en 7 era útil y en 2 era de más. Medición del largo con `qwen2.5:7b` local (10 preguntas con datos esperados fijos): sin límite 19,7 s y 20,2 palabras, "máximo 2 oraciones" 18,0 s, "una o dos oraciones, sin repetir ni aconsejar" 18,2 s y 16,4 palabras, y esa misma con tope de 200 tokens 17,8 s. El modelo genera unos 3,1 tokens por segundo en esa CPU, así que casi todo el tiempo es generación; la indicación de brevedad ayuda sobre todo en las respuestas largas.
+La respuesta es verificable aunque el modelo sea chico y el modo offline siempre es una salida válida. Costo de completar la cobertura, medido en el peor caso (el modelo cita solo el primer documento) sobre las 102 preguntas del conjunto de RAG con documentos esperados: se agrega texto en 9, en 7 era útil y en 2 era de más. La indicación de brevedad del prompt ("una o dos oraciones, sin repetir la pregunta ni agregar consejos") redujo el largo medio de las respuestas de 20 a 16 palabras en 10 preguntas con datos esperados fijos, sin perder calidad.

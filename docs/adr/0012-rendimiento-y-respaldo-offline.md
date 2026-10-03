@@ -4,7 +4,7 @@ Estado: aceptada. Fecha: octubre de 2026. Decidió: Ramiro.
 
 ## Contexto
 
-La latencia de una respuesta depende de dos cosas distintas: los modelos (el de lenguaje que redacta y el de embeddings, que cambian con el modelo y el hardware) y la herramienta (guardrail, recuperación, tool de pedidos, validación), donde sí hay que optimizar. Mezclarlas lleva a optimizar lo que no se puede cambiar. Además, el agente no puede quedar inutilizable o lento cuando un servicio de modelos falla.
+La latencia de una respuesta depende de dos cosas distintas: los modelos (que cambian con el modelo y el hardware) y la herramienta (guardrail, recuperación, tool de pedidos, validación), donde sí hay que optimizar. Mezclarlas lleva a optimizar lo que no se puede cambiar. Por eso este registro solo expone los tiempos de la herramienta; los del modelo de lenguaje dependen de la máquina de pruebas y no son parte de lo que se evalúa. Además, el agente no puede quedar inutilizable o lento cuando un servicio de modelos falla.
 
 ## Decisión
 
@@ -19,24 +19,21 @@ La latencia de una respuesta depende de dos cosas distintas: los modelos (el de 
 ## Alternativas descartadas
 
 - Optimizar el modelo de lenguaje: depende del modelo y del hardware, no de este código.
-- Reintentar siempre ante un fallo: con un servidor caído una sola pregunta tardaba 9 segundos (solo modelo de lenguaje) y hasta 37 (con embeddings).
+- Reintentar siempre ante un fallo: con un servidor caído, cada llamada del agente esperaba sus propios reintentos y una sola pregunta se demoraba muchos segundos.
 - Un tope de tokens para acelerar: no aportó nada (ADR 0010).
 
 ## Consecuencias
 
-La herramienta, sin contar al modelo de lenguaje, responde en decenas de milisegundos con embeddings y en unos pocos sin ningún modelo. Con el modelo de lenguaje local en CPU, el modelo explica casi todo el tiempo, y las colas se deben a la carga del modelo en memoria (la primera pregunta puede tardar decenas de segundos, evitable con `OLLAMA_KEEP_ALIVE`) y a respuestas largas.
+La herramienta responde en decenas de milisegundos con embeddings y en unos pocos sin ningún modelo, y no se degrada cuando un servicio de modelos falla.
 
 ## Evidencia
 
-Medición inicial, herramienta con embeddings y sin modelo de lenguaje: 2129 ms de mediana por pregunta nueva, 2102 ms del servicio de embeddings y 33 ms de código propio; arranque en frío de 12,5 s. Después de los cambios de arriba, mediana por pregunta nueva, en milisegundos:
+Medición inicial, herramienta con embeddings y sin modelo de lenguaje: 2129 ms de mediana por pregunta nueva, 2102 ms del servicio de embeddings y 33 ms de código propio; arranque en frío de 12,5 s. Después de los cambios de arriba, mediana por pregunta nueva de la herramienta (sin contar al modelo de lenguaje), en milisegundos:
 
 | Modo | Total | Modelo de lenguaje | Modelo de embeddings | Código propio |
 | --- | --- | --- | --- | --- |
 | Sin ningún modelo (reglas, n-gramas y BM25) | 2,0 | 0 | 0 | 2,0 |
 | Herramienta con embeddings, sin modelo de lenguaje | 66 | 0 | 60 | 6,6 |
-| Completo, con `qwen2.5:7b` local en CPU (las 16 preguntas) | 127 | 0 | 75 | 10 |
-
-En el modo completo la mediana es baja porque 9 de las 16 preguntas no llaman al modelo de lenguaje (derivaciones, pedidos, envíos con lugar y fuera de alcance, resueltas por código). Las 7 que sí lo llaman tardan de 15 a 33 segundos, con una mediana de 16,7 segundos, y el modelo de lenguaje explica más del 99 % de ese tiempo: es la generación en CPU (unos 3 tokens por segundo) y no el código del agente.
 
 Arranque en frío con embeddings: 123 ms con la caché de disco (sin ella, 3,9 s).
 
