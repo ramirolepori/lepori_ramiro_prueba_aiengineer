@@ -33,9 +33,9 @@ Conjunto de 122 preguntas (`tests/data/rag_evaluacion.json`): explícitas, pará
 
 | Recuperación | Desarrollo: recall, fuera de alcance rechazadas | Prueba: recall, fuera de alcance rechazadas |
 | --- | --- | --- |
-| BM25 solo | 64/70 (91,4 %), 13 de 14 | 27/32 (84,4 %), 5 de 6 |
-| Híbrido con `embeddinggemma` | 65/70 (92,9 %), 13 de 14 | 29/32 (90,6 %), 5 de 6 |
+| BM25 solo | 68/70 (97,1 %), 13 de 14 | 29/32 (90,6 %), 6 de 6 |
+| Híbrido con `embeddinggemma` | 67/70 (95,7 %), 13 de 14 | 30/32 (93,8 %), 6 de 6 |
 
-Antes de sumar la tabla de conceptos coloquiales, la corrección de faltas y la recuperación por cláusula, BM25 solo daba 55/70 y 22/32, y el híbrido 64/70 y 26/32.
+Antes de sumar la tabla de conceptos coloquiales, la corrección de faltas y la recuperación por cláusula, BM25 solo daba 55/70 y 22/32, y el híbrido 64/70 y 26/32. Después, a partir de un banco de preguntas ajenas al negocio, se ajustaron las palabras que BM25 acepta (se sacaron de la tabla de conceptos palabras genéricas como "funciona" o "escribir", la corrección de faltas exige la misma primera letra, "contacto" necesita una segunda coincidencia y se agregaron las frases que piden un canal) y se sumó una ancla léxica: el documento que BM25 reconoce por una palabra explícita de la pregunta ("reembolso") no se descarta por una diferencia chica de similitud, y un documento mucho más débil que el mejor (menos de 0,4 veces su margen) solo se queda si esa ancla lo respalda. Con eso, el rechazo de preguntas ajenas sin embeddings pasó de 66 de 75 a 73 de 75 (ADR 0013).
 
 Fallos que quedan: paráfrasis lejanas ("mandan a otros países?"), preguntas por el canal de contacto y preguntas que mezclan dos documentos, donde a veces solo se recupera uno. Salvedad: el conjunto lo escribió el autor del código y los márgenes se ajustaron sobre desarrollo con un conjunto chico.

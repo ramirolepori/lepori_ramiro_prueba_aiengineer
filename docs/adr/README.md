@@ -18,5 +18,6 @@ Formato: estado, contexto, decisión, alternativas descartadas, consecuencias y,
 | [0010](0010-el-modelo-solo-redacta.md) | El modelo solo redacta: validación de salida, notas y cobertura por código | Aceptada |
 | [0011](0011-estrategia-de-evaluacion.md) | Estrategia de evaluación: desarrollo, prueba y lotes independientes | Aceptada |
 | [0012](0012-rendimiento-y-respaldo-offline.md) | Rendimiento por etapa y respaldo offline | Aceptada |
+| [0013](0013-robustez-ante-intentos-de-sacarlo-de-alcance.md) | Robustez ante intentos de sacar al agente de su alcance | Aceptada |
 
 La visión de conjunto (flujo, módulos y cómo extender el agente) está en [../arquitectura.md](../arquitectura.md).

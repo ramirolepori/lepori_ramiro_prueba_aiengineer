@@ -3,6 +3,8 @@
     python -m tiendahogar.rendimiento              # con lo configurado en .env (modelo de lenguaje y embeddings)
     python -m tiendahogar.rendimiento --sin-llm    # sin modelo de lenguaje: mide la herramienta con embeddings
     python -m tiendahogar.rendimiento --offline    # sin ningún modelo: reglas, n-gramas y BM25
+    python -m tiendahogar.rendimiento --sin-llm --concurrente 8   # 8 clientes a la vez sobre un mismo agente
+    ... --concurrente 8 --nuevas   # además, cada pregunta es distinta (hay que pedir sus embeddings)
 
 Cada pregunta distinta se mide una vez ("primera vez": hay que pedir sus embeddings) y otra vez ("repetida":
 ya están en memoria). Antes se mide el arranque en frío: construir el agente y responder la primera pregunta.
@@ -54,6 +56,58 @@ def _resumen(nombre: str, filas: list[dict[str, float]]) -> None:
     print(f"{'llamadas de embeddings':26s} {statistics.median(llamadas):10.1f} {max(llamadas):10.0f}   (por pregunta; mediana y máximo)")
 
 
+def concurrente(agente, clientes: int, rondas: int = 5, nuevas: bool = False) -> int:
+    """Varios clientes a la vez sobre un mismo agente (cada pregunta con una sesión nueva). Verifica que cada respuesta sea igual a la
+    que da el agente solo y mide latencia y capacidad de la herramienta. Con modelo de lenguaje no tiene sentido (serían
+    llamadas al mismo servidor local), por eso se usa con --sin-llm o --offline. Con `nuevas` cada pregunta lleva un texto
+    distinto, para que haya que pedir sus embeddings al servicio (y se compara solo el estado de la respuesta)."""
+    import random
+    from concurrent.futures import ThreadPoolExecutor
+
+    from .sesion import Sesion
+    base = {p: (r.estado, r.texto) for p in PREGUNTAS for r in [agente.responder(p)]}       # el agente solo (y la caché tibia)
+    t_sec = time.perf_counter()
+    for p in PREGUNTAS * rondas:
+        agente.responder(p)
+    sec_s = time.perf_counter() - t_sec
+
+    def cliente(n: int) -> tuple[list[float], list[str], list[str]]:
+        rnd = random.Random(n)
+        lat, distintas, errores = [], [], []
+        for _ in range(rondas):
+            orden = PREGUNTAS[:]
+            rnd.shuffle(orden)
+            for p in orden:
+                sesion = Sesion()          # una conversación nueva por pregunta: lo que se compara es la respuesta sola
+                texto = f"{p} (caso {n}-{len(lat)})" if nuevas else p
+                t0 = time.perf_counter()
+                try:
+                    r = agente.responder(texto, sesion)
+                except Exception as e:                                 # noqa: BLE001 - se informa, no se oculta
+                    errores.append(f"{type(e).__name__}: {e}")
+                    continue
+                lat.append((time.perf_counter() - t0) * 1000)
+                if (r.estado != base[p][0]) if nuevas else ((r.estado, r.texto) != base[p]):
+                    distintas.append(p)
+        return lat, distintas, errores
+
+    t0 = time.perf_counter()
+    with ThreadPoolExecutor(max_workers=clientes) as pool:
+        resultados = list(pool.map(cliente, range(clientes)))
+    total_s = time.perf_counter() - t0
+    lat = [x for r in resultados for x in r[0]]
+    distintas = [x for r in resultados for x in r[1]]
+    errores = [x for r in resultados for x in r[2]]
+    print(f"\n{clientes} clientes a la vez,{rondas} rondas de {len(PREGUNTAS)} preguntas cada uno ({len(lat)} respuestas)")
+    print(f"un solo cliente, en serie: {len(PREGUNTAS) * rondas / sec_s:8.0f} respuestas por segundo")
+    print(f"{clientes} clientes a la vez:      {len(lat) / total_s:8.0f} respuestas por segundo")
+    print(f"latencia por respuesta: mediana {statistics.median(lat):.1f} ms, p95 {_percentil(lat, 0.95):.1f} ms, máxima {max(lat):.1f} ms")
+    print(f"errores: {len(errores)}   respuestas distintas a las del agente solo: {len(distintas)}")
+    for e in errores[:3]:
+        print("  ", e)
+    return 0 if not errores and not distintas else 1
+
+
 def main(argv: list[str]) -> int:
     if "--offline" in argv:
         os.environ["LLM_PROVIDER"] = "none"
@@ -68,6 +122,10 @@ def main(argv: list[str]) -> int:
             "sin modelo de lenguaje" if llm is None else "con modelo de lenguaje")
     print(f"Modo: {modo}.  Embeddings: {'sí' if agente.cliente_embeddings else 'no'}")
     print(f"Construir el agente: {construir_ms:.0f} ms")
+
+    if "--concurrente" in argv:
+        n = int(argv[argv.index("--concurrente") + 1])
+        return concurrente(agente, n, nuevas="--nuevas" in argv)
 
     primera = agente.responder(PREGUNTAS[0])
     print(f"Primera pregunta (arranque en frío): {primera.tiempos['total_ms']:.0f} ms "

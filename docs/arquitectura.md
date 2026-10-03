@@ -71,6 +71,7 @@ La traza (`trazas/trazas.jsonl` si se configura `trazas_dir`, ignorada por git) 
 - El guardrail y la tool corren en código, antes del modelo. El modelo no clasifica ni decide el flujo.
 - El agente no inventa: ni datos de pedidos, ni plazos, ni montos. Un identificador raro no se corrige en silencio.
 - No confirma ni promete que un reembolso o una devolución fue aprobado o ejecutado.
+- Lo que no tiene que ver con los documentos no llega al modelo: sin un documento ni un pedido relevante se responde que no hay información (ADR 0013).
 - La memoria es opcional y nunca saltea el guardrail.
 - Sin claves en el repositorio y sin texto del cliente en las trazas.
 - Después de un cambio, correr `python -m pytest tests/` y las mediciones de `SUBMISSION.md`. Un lote de frases ajenas se mide una vez antes de corregir.

@@ -116,3 +116,24 @@ def test_envio_mas_garantia_el_modelo_solo_redacta_la_garantia():
 def test_una_pregunta_de_politica_no_pide_numero_de_pedido(agente):
     r = agente.responder("Cuánto tarda el envío y cuánto de garantía tiene la estufa? Soy de la capital")
     assert "número de pedido" not in r.texto and "2-3 días hábiles" in r.texto
+
+
+@pytest.mark.parametrize("pregunta", ["Cuánto cuesta el envío?", "Cuánto cuesta el envío a Rosario?", "El envío es gratis?"])
+def test_el_costo_del_envio_no_se_inventa(agente, pregunta):
+    r = agente.responder(pregunta)
+    assert r.texto.startswith("Los documentos no indican el costo del envío.") and "$" not in r.texto
+
+
+@pytest.mark.parametrize("pregunta", [
+    "Cuánto tardan en devolverme la plata a la tarjeta?",
+    "Quiero devolver la tostadora y que me devuelvan la plata, cuánto tardan?",
+    "Cuándo me reintegran la plata de la heladera?",
+])
+def test_la_plata_de_dinero_no_es_la_ciudad(agente, pregunta):
+    assert resolver_lugares(pregunta) == []
+    assert "Los envíos a La Plata" not in agente.responder(pregunta).texto
+
+
+def test_la_plata_ciudad_sigue_siendo_una_ciudad(agente):
+    assert [l.nombre for l in resolver_lugares("Mandan a La Plata? Cuánto tarda el envío")] == ["La Plata"]
+    assert [l.nombre for l in resolver_lugares("Soy de La Plata")] == ["La Plata"]

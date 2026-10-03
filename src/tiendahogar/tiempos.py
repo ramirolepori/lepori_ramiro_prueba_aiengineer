@@ -22,6 +22,8 @@ ETAPAS = ("guardrail", "pedidos", "intencion", "recuperacion", "generacion", "va
 class Cronometro:
     def __init__(self) -> None:
         self.ms: dict[str, float] = defaultdict(float)
+        self.embeddings_s = 0.0          # tiempo esperando al servicio de embeddings, solo de esta respuesta
+        self.embeddings_n = 0            # llamadas al servicio de esta respuesta
 
     def resumen(self, total_ms: float, embeddings_ms: float, embeddings_llamadas: int) -> dict[str, float]:
         out = {f"{e}_ms": round(self.ms.get(e, 0.0), 2) for e in ETAPAS}
@@ -58,3 +60,12 @@ def etapa(nombre: str) -> Iterator[None]:
     finally:
         if cron is not None:
             cron.ms[nombre] += (time.perf_counter() - t0) * 1000
+
+
+def sumar_embeddings(segundos: float) -> None:
+    """Anota una llamada al servicio de embeddings en el cronómetro activo. Cada respuesta lleva su propia cuenta, así
+    que los tiempos no se mezclan cuando varias respuestas se atienden a la vez."""
+    cron = _ACTUAL.get()
+    if cron is not None:
+        cron.embeddings_s += segundos
+        cron.embeddings_n += 1

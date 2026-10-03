@@ -73,6 +73,7 @@ def _compilar(alias: str) -> re.Pattern[str]:
     return re.compile(rf"(?<![a-z0-9]){re.escape(alias)}(?![a-z0-9])")
 
 
+_DINERO = re.compile(r"devol|reembols|reintegr|\bpag|cobr|gast|dinero|perd|recuper|vuelta|\bmi\b|\btu\b|\bsu\b")
 _ART = r"(?:el |la |los |las )?"
 _PISTA = re.compile(rf"(?:\ben|\ba|\bde|\bdesde|\bhacia|\bpara|\bpor|\bbarrio|\bzona)\s+{_ART}$")
 _DE_LA_PROVINCIA = re.compile(r"\s+(?:del|de)\s+(?:(?:la\s+)?provincia\s+de\s+|la\s+)?")
@@ -101,6 +102,8 @@ def resolver_lugares(texto: str) -> list[Lugar]:
                 continue
             if necesita_pista and not _PISTA.search(p[max(0, i - 16):i]):
                 continue
+            if alias == "la plata" and _DINERO.search(p[max(0, i - 40):i]):
+                continue                  # "devolverme la plata" es plata de dinero, no la ciudad de La Plata
             menciones.append([i, f, nombre, tipo])
             ocupado[i:f] = [True] * (f - i)
     for m in re.finditer(r"[a-z]{6,}", p):         # una falta de ortografía en el nombre de la ciudad

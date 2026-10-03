@@ -29,24 +29,28 @@ STOPWORDS = {
     "este", "esto", "la", "las", "lo", "los", "me", "mi", "mis", "no", "o", "para", "por", "que", "se", "si",
     "su", "sus", "un", "una", "unas", "uno", "unos", "y", "ya", "hay", "son", "ser", "debe", "puede", "pueden",
     "quiero", "quisiera", "necesito", "puedo", "tengo", "tienen", "hola", "buenas", "gracias", "favor", "saber",
-    "cuanto", "cuantos", "cuanta", "cuantas", "donde", "quien", "hacer", "mas", "muy", "tiempo", "tarda",
+    "cuanto", "cuantos", "cuanta", "cuantas", "donde", "quien", "hacer", "mas", "muy", "tiempo", "tarda", "tiene",
+    "cualquier", "asistente", "tiendahogar", "ia", "sobre", "entre", "hacia", "hasta", "desde", "cada", "algo", "nada",
+    "todo", "todos", "todas", "otro", "otra", "otros", "otras",
 }
 
 # palabra normalizada -> término canónico que se agrega a la consulta y a los fragmentos
 CONCEPTOS = {
     "garantia": ["garantia", "defecto", "defectuoso", "defectuosa", "fabrica", "falla", "fallo", "roto",
-                 "rota", "descompuso", "descompuesto", "reparar", "reparacion", "arreglar", "cubre", "quemo", "quemado",
-                 "quemada", "averia", "averio", "desperfecto", "estropeo", "enciende", "prende", "funciona", "anda"],
+                 "rota", "descompuso", "descompuesto", "cubre", "quemo", "quemado", "quemada", "averia", "averio",
+                 "desperfecto", "estropeo", "respalda", "respaldan", "respaldo", "cubierto", "cubierta"],
     "devolucion": ["devolver", "devolucion", "devuelvo", "devuelve", "devuelto", "regresar", "retornar",
                    "cambiar", "cambio"],
-    "envio": ["envio", "enviar", "envian", "envia", "entrega", "entregar", "llega", "llegar", "despacho",
+    "envio": ["envio", "enviar", "envian", "envia", "entrega", "entregar", "llega", "llegar", "despacho", "despachar", "despachan",
               "demora", "demorar"],
     "reembolso": ["reembolso", "reembolsar", "reembolsan", "reintegro", "dinero", "plata", "reembolsa", "reintegran",
                   "reintegrar", "reintegren", "reintegrame", "guita"],
-    "contacto": ["contacto", "contactar", "contactarme", "mail", "correo", "email", "soporte", "escribo", "escribir",
-                 "quejarme", "queja", "reclamo", "quilombo"],
-    "liquidacion": ["liquidacion", "oferta", "personalizado", "personalizada", "descuento", "rebaja"],
+    "contacto": ["contacto", "contactar", "contactarme", "mail", "correo", "email", "soporte", "quejarme", "queja",
+                 "reclamo", "quilombo"],
+    "liquidacion": ["liquidacion", "oferta", "personalizado", "personalizada", "rebaja"],
 }
+# "mail", "correo" o "queja" aparecen en cualquier consulta: por sí solos no alcanzan para decir que el documento de contacto es relevante
+CONCEPTOS_DEBILES = {"contacto"}
 _A_CONCEPTO = {palabra: c for c, palabras in CONCEPTOS.items() for palabra in palabras}
 
 
@@ -71,13 +75,27 @@ def _corregir(t: str) -> str:
     """Una falta de ortografía en una palabra del dominio ("reemoblso") vuelve a la palabra conocida."""
     if len(t) < 6 or not t.isalpha() or t in _A_CONCEPTO or _raiz(t) in _A_CONCEPTO:
         return t
-    cerca = difflib.get_close_matches(t, _PALABRAS_CONCEPTO, n=1, cutoff=0.85)
+    # una falta no cambia la primera letra: sin esa condición "aprender" se corregía a "prende" y "escribe" a "escribo"
+    cerca = difflib.get_close_matches(t, [c for c in _PALABRAS_CONCEPTO if c[0] == t[0]], n=1, cutoff=0.85)
     return cerca[0] if cerca else t
+
+
+_NO_ANDA = re.compile(r"\bno (?:funciona|anda|enciende|prende|arranca|sirve|calienta|enfria|lava|licua)\b")
+# Frases que preguntan por el canal de contacto ("con quién hablo", "a qué mail escribo"): "hablo" o "escribo" por sí solas
+# no dicen nada del dominio, pero la frase entera sí
+_PIDE_CANAL = re.compile(
+    r"\bcon (?:qu?ien|kien) (?:me )?(?:tengo que |debo |puedo |hay que )?(?:hablar|hablo|comunic\w+|contact\w+|contcat\w+|"
+    r"reclam\w+|quej\w+)\b|"
+    r"\ba (?:qu?ien|kien) (?:le )?(?:escribo|reclamo|consulto|me quejo|me dirijo|llamo|contacto)\b|"
+    r"\b(?:a que|que) (?:mail|correo|email|canal)\b|"
+    r"\bdonde (?:reclamo|me quejo|puedo quejarme)\b|\bcomo (?:me comunico|me contacto|contacto|hago un reclamo)\b")
 
 
 def tokenizar(texto: str) -> list[str]:
     tokens: list[str] = []
-    for t in re.findall(r"[a-z0-9]+", normalizar(texto)):
+    # "no funciona", "no enciende"...: un defecto (por sí solas, "funciona" o "anda" no dicen nada del dominio)
+    t_norm = _PIDE_CANAL.sub("contacto canal", _NO_ANDA.sub("defecto", normalizar(texto)))
+    for t in re.findall(r"[a-z0-9]+", t_norm):
         if t in STOPWORDS or len(t) < 2:
             continue
         t = _corregir(t)
@@ -129,7 +147,7 @@ class IndiceBM25:
     """
 
     def __init__(self, fragmentos: list[Fragmento], k1: float = 1.5, b: float = 0.75,
-                 min_puntaje: float = 1.5, rel_top: float = 0.5):
+                 min_puntaje: float = 1.4, rel_top: float = 0.5):
         self.fragmentos = fragmentos
         self._k1, self._b = k1, b
         self.min_puntaje, self.rel_top = min_puntaje, rel_top
@@ -168,7 +186,7 @@ class IndiceBM25:
                 cubierto += self._idf.get(t, 0.0)
             # una sola palabra suelta que no es un concepto del dominio (por ejemplo "capital" en
             # "capital de Francia") no alcanza para considerar relevante a un documento
-            if s > 0 and (len(coincidencias) >= 2 or any(t in CONCEPTOS for t in coincidencias)):
+            if s > 0 and (len(coincidencias) >= 2 or any(t in CONCEPTOS and t not in CONCEPTOS_DEBILES for t in coincidencias)):
                 res.append(Resultado(f, s, cubierto / total if total else 0.0))
         res.sort(key=lambda r: r.puntaje, reverse=True)
         return res
@@ -207,11 +225,13 @@ class RecuperadorHibrido:
     """
 
     def __init__(self, indice: IndiceBM25, cliente: ClienteEmbeddings, fuera_de_alcance: list[str] | None = None,
-                 margen: float = 0.08, rel: float = 0.06, usar_bm25: bool = True, por_oracion: bool = True):
+                 margen: float = 0.08, rel: float = 0.06, usar_bm25: bool = True, por_oracion: bool = True,
+                 fraccion_del_mejor: float = 0.4):
         self.indice, self.cliente = indice, cliente
         self.por_oracion = por_oracion
         self.fuera = fuera_de_alcance or json.loads(FUERA_DE_ALCANCE.read_text(encoding="utf-8"))["preguntas"]
         self.margen, self.rel, self.usar_bm25 = margen, rel, usar_bm25
+        self.fraccion_del_mejor = fraccion_del_mejor
         self.ultimo_respaldo = False
         self._vec_docs: dict[str, list[list[float]]] | None = None
         self._vec_fuera: list[list[float]] | None = None
@@ -250,11 +270,12 @@ class RecuperadorHibrido:
             self.ultimo_respaldo = True
             return self.indice.buscar(consulta, k)
         por_id = {f.id: f for f in self.indice.fragmentos}
+        # Documentos que BM25 reconoce por una palabra explícita de la consulta ("reembolso", "garantía"): ancla léxica
+        ancla = {r.fragmento.id for r in self.indice.buscar(consulta, k)} if self.usar_bm25 else set()
         elegidos: dict[str, tuple[float, float]] = {}        # id -> (fusión, margen sobre lo fuera de alcance)
         for unidad, sims, fuera in calculos:
-            relevantes = {i for i, s in sims.items() if s - fuera >= self.margen}
-            if self.usar_bm25:
-                relevantes |= {r.fragmento.id for r in self.indice.buscar(unidad, k)}
+            ancla_unidad = {r.fragmento.id for r in self.indice.buscar(unidad, 1)} if self.usar_bm25 else set()
+            relevantes = {i for i, s in sims.items() if s - fuera >= self.margen} | ancla_unidad
             if not relevantes:
                 continue
             pos_emb = {i: n for n, i in enumerate(sorted(sims, key=sims.get, reverse=True))}
@@ -263,8 +284,13 @@ class RecuperadorHibrido:
                       for i in relevantes}
             mejor = max(sims[i] for i in relevantes)
             for i in relevantes:
-                if sims[i] >= mejor - self.rel and fusion[i] > elegidos.get(i, (0.0, 0.0))[0]:
+                if (sims[i] >= mejor - self.rel or i in ancla_unidad) and fusion[i] > elegidos.get(i, (0.0, 0.0))[0]:
                     elegidos[i] = (fusion[i], sims[i] - fuera)
+        if elegidos:
+            # Un documento mucho más débil que el mejor (por ejemplo el que trae una cláusula suelta como "hace 5 días")
+            # solo se queda si una palabra explícita de la consulta lo respalda.
+            techo = max(m for _, m in elegidos.values())
+            elegidos = {i: v for i, v in elegidos.items() if v[1] >= self.fraccion_del_mejor * techo or i in ancla}
         orden = sorted(elegidos, key=lambda i: elegidos[i][0], reverse=True)[:k]
         return [Resultado(por_id[i], *elegidos[i]) for i in orden]
 

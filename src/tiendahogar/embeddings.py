@@ -11,11 +11,13 @@ import hashlib
 import json
 import math
 import operator
+import threading
 import time
 from pathlib import Path
 
 from .config import Config
 from .llm import ErrorLLM, _post
+from .tiempos import sumar_embeddings
 
 
 def unitario(v: list[float]) -> list[float]:
@@ -45,6 +47,7 @@ class ClienteEmbeddings:
             raise ErrorLLM("falta EMBEDDING_MODEL")
         self._c = config
         self._memo: dict[str, list[float]] = {}
+        self._cuenta = threading.Lock()
         self.llamadas = 0          # llamadas HTTP al servicio
         self.segundos = 0.0        # tiempo acumulado esperando al servicio
         self.desde_disco = 0       # vectores que se leyeron del disco en lugar de pedirse
@@ -104,8 +107,11 @@ class ClienteEmbeddings:
                 r = _post(self._c.base_url.rstrip("/") + "/embeddings", cab,
                           {"model": self._c.embedding_model, "input": nuevos}, self._c.timeout_s)
             finally:
-                self.llamadas += 1
-                self.segundos += time.perf_counter() - t0
+                dt = time.perf_counter() - t0
+                with self._cuenta:
+                    self.llamadas += 1
+                    self.segundos += dt
+                sumar_embeddings(dt)
             try:
                 vectores = [d["embedding"] for d in sorted(r["data"], key=lambda d: d["index"])]
             except (KeyError, TypeError) as e:
