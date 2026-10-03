@@ -11,7 +11,7 @@ El flujo lo decide el código y el LLM solo redacta con lo recuperado, así que 
 3. Si la pregunta mezcla algo para derivar con algo permitido, responde primero lo permitido y después deriva.
 4. Si menciona un número de pedido, consulta la tool. Entiende `ORD-1001`, `ord1001`, `pedido 1001`, `orden de compra 1001`, "mi pedido es el 1001" y listas, y muestra qué número entendió. Un número inexistente devuelve "No encontrado" sin inventar datos. Si pregunta por un pedido sin dar el número ("ya salió lo que compré?"), lo pide: no busca por nombre de producto.
 5. Busca en los documentos por significado y por palabras (embeddings más BM25, fusionados). Si ninguno es relevante, responde que no tiene esa información.
-6. Redacta la respuesta citando el documento, con el LLM si hay uno configurado o citando el texto del documento si no.
+6. Redacta la respuesta citando el documento, con el LLM si hay uno configurado o citando el texto del documento si no. Con LLM, el código revisa después que la respuesta cubra los dos documentos más relevantes (si la pregunta mezcla garantía y devolución, por ejemplo, completa el que falte) y agrega las aclaraciones obligatorias, como la regla de los $500, sin depender de que el modelo las copie.
 
 ## Requisitos
 

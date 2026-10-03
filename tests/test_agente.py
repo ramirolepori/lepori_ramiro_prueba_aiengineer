@@ -166,3 +166,54 @@ def test_pedir_el_numero_tambien_lo_agrega_el_codigo_cuando_hay_documentos():
 def test_el_modelo_recibe_la_indicacion_de_responder_corto():
     from tiendahogar.agent import SISTEMA
     assert "una o dos oraciones" in SISTEMA
+
+
+# --- cobertura: se completan los documentos relevantes que el modelo no citó ----------------------------------
+
+def test_si_el_modelo_cita_solo_una_politica_se_agrega_la_otra():
+    llm = LLMFalso("No se aceptan devoluciones después de 30 días sin un defecto cubierto [devoluciones].")
+    r = AgenteSoporte(llm=llm).responder("Mi lavadora tiene 45 días y falla, la puedo devolver?")
+    assert {"devoluciones", "garantia"} <= set(r.fuentes)
+    assert r.texto.startswith("No se aceptan devoluciones")
+    assert "Política de garantía: " in r.texto and "12 meses" in r.texto and r.texto.count("[garantia]") == 1
+    assert any(e["tipo"] == "cobertura" and e["agregados"] == ["garantia"] for e in r.traza)
+
+
+def test_si_el_modelo_cita_todo_no_se_agrega_nada():
+    llm = LLMFalso("Se puede devolver hasta 30 días; después solo con defecto de garantía de 12 meses [devoluciones] [garantia].")
+    r = AgenteSoporte(llm=llm).responder("Mi lavadora tiene 45 días y falla, la puedo devolver?")
+    assert "Política de" not in r.texto and not any(e["tipo"] == "cobertura" for e in r.traza)
+
+
+def test_con_un_solo_documento_relevante_no_se_agrega_nada():
+    llm = LLMFalso("La garantía de una licuadora es de 6 meses para electrodomésticos pequeños [garantia].")
+    r = AgenteSoporte(llm=llm).responder("Cuánto dura la garantía de una licuadora?")
+    assert r.fuentes == ["garantia"] and "Política de" not in r.texto
+
+
+def test_la_cobertura_va_antes_de_las_aclaraciones_obligatorias():
+    llm = LLMFalso("Los reembolsos se procesan en 5-10 días hábiles después de recibir el producto [reembolsos].")
+    r = AgenteSoporte(llm=llm).responder("Si devuelvo una compra de $300, cuándo me devuelven el dinero?")
+    partes = r.texto.split("\n\n")
+    assert "Yo no apruebo reembolsos" in partes[-1]
+
+
+def test_solo_se_completan_los_dos_mejores_documentos():
+    from tiendahogar.agent import _completar_cobertura
+    from tiendahogar.rag import Fragmento, Resultado
+    rs = [Resultado(Fragmento(f"{d}#0", d, f"# Titulo {d}\n\nCuerpo {d}."), 1.0, 1.0) for d in ("a", "b", "c")]
+    texto, agregados = _completar_cobertura("Respuesta.", rs)
+    assert agregados == ["a", "b"] and "Cuerpo c" not in texto
+
+
+def test_si_el_modelo_ya_usa_las_cifras_del_documento_no_se_repite_aunque_no_lo_cite():
+    llm = LLMFalso("Pasaron más de 30 días, pero como la lavadora tiene 12 meses de garantía podés reclamarla [devoluciones].")
+    r = AgenteSoporte(llm=llm).responder("Mi lavadora tiene 45 días y falla, la puedo devolver?")
+    assert "Política de garantía" not in r.texto
+
+
+def test_la_cifra_debe_estar_completa_para_contar():
+    from tiendahogar.agent import _usa_las_cifras
+    assert _usa_las_cifras("tarda 5-10 días hábiles", "se procesan en 5-10 días hábiles")
+    assert not _usa_las_cifras("tarda 5 días", "se procesan en 5-10 días hábiles")
+    assert not _usa_las_cifras("son 120 meses", "tienen garantía de 12 meses")

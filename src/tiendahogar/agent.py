@@ -176,6 +176,11 @@ class AgenteSoporte:
                     texto = None
                 else:
                     ev("llm", ok=True)
+                    # Cobertura: si la pregunta toca dos políticas (por ejemplo garantía y devolución) y el modelo
+                    # solo citó una, se agrega el texto de la otra. No depende de que el modelo se acuerde.
+                    texto, agregados = _completar_cobertura(texto, resultados)
+                    if agregados:
+                        ev("cobertura", agregados=agregados)
                     # Las aclaraciones obligatorias (regla de los $500, pedir el número) las agrega el código: un
                     # modelo chico las omite a veces, y no pueden depender de que el modelo las copie.
                     if notas:
@@ -234,6 +239,31 @@ def _limpiar_citas(texto: str, fuentes: list[str]) -> str:
     if texto and fuentes and not any(f"[{f}]" in texto for f in fuentes):
         texto += f" [{fuentes[0]}]"
     return texto
+
+
+MAX_DOCUMENTOS_COMPLETADOS = 2     # solo los dos documentos mejor rankeados: el tercero suele ser un extra marginal
+
+
+def _usa_las_cifras(texto: str, cuerpo: str) -> bool:
+    """¿La respuesta ya trae alguna de las cifras del documento (12 meses, 5-10 días)? Si las trae, aunque no lo
+    cite, ya habla de ese tema y agregarlo repetiría lo mismo."""
+    cifras = set(re.findall(r"\d+(?:-\d+)?", cuerpo))
+    return any(re.search(rf"(?<![\d-]){re.escape(c)}(?![\d-])", texto) for c in cifras)
+
+
+def _completar_cobertura(texto: str, resultados: list[ResultadoRAG]) -> tuple[str, list[str]]:
+    """Agrega, con su título y su cita, el texto de los documentos más relevantes que la respuesta no citó."""
+    agregados: list[str] = []
+    for r in resultados[:MAX_DOCUMENTOS_COMPLETADOS]:
+        doc = r.fragmento.documento
+        titulo = re.match(r"#\s*(.+)", r.fragmento.texto)
+        cuerpo = re.sub(r"^#.*\n+", "", r.fragmento.texto).strip()
+        if f"[{doc}]" in texto or _usa_las_cifras(texto, cuerpo):
+            continue
+        encabezado = f"{titulo.group(1).strip()}: " if titulo else ""
+        texto += f"\n\n{encabezado}{cuerpo} [{doc}]"
+        agregados.append(doc)
+    return texto, agregados
 
 
 def _problema_de_salida(texto: str, prompt: str) -> str | None:
