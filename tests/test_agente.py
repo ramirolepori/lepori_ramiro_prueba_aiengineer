@@ -145,3 +145,24 @@ def test_guarda_trazas_jsonl(tmp_path):
     AgenteSoporte(trazas_dir=tmp_path).responder("Estado de ORD-1001")
     eventos = [json.loads(linea) for linea in (tmp_path / "trazas.jsonl").read_text(encoding="utf-8").splitlines()]
     assert [e["tipo"] for e in eventos][0] == "entrada" and eventos[-1]["tipo"] == "fin"
+
+
+def test_la_aclaracion_de_los_500_la_agrega_el_codigo_aunque_el_modelo_la_omita():
+    """El modelo no recibe las notas: un modelo chico podía omitirlas, y la regla debe estar siempre."""
+    llm = LLMFalso("Los reembolsos se procesan en 5-10 días hábiles después de recibir el producto devuelto [reembolsos].")
+    r = AgenteSoporte(llm=llm).responder("Quiero un reembolso de $500 por mi lavadora")
+    assert r.estado == "respondido"
+    assert "5-10 días hábiles" in r.texto and "Yo no apruebo reembolsos" in r.texto
+    assert "si el valor real de la compra supera $500" in r.texto
+    assert "NOTAS" not in llm.recibido[0][1] and "Yo no apruebo" not in llm.recibido[0][1]
+
+
+def test_pedir_el_numero_tambien_lo_agrega_el_codigo_cuando_hay_documentos():
+    llm = LLMFalso("Los envíos a la capital tardan 2-3 días hábiles y a otras ciudades 5-7 días hábiles [envios].")
+    r = AgenteSoporte(llm=llm).responder("Cuánto tarda el envío y ya salió lo que compré?")
+    assert "2-3 días hábiles" in r.texto and "ORD-XXXX" in r.texto
+
+
+def test_el_modelo_recibe_la_indicacion_de_responder_corto():
+    from tiendahogar.agent import SISTEMA
+    assert "una o dos oraciones" in SISTEMA

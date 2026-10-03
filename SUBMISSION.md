@@ -165,7 +165,22 @@ Resultados actuales (mediana por pregunta nueva, en milisegundos):
 
 Con el modelo de lenguaje, el modelo explica el 98 % del tiempo (la mediana de la herramienta completa, sin contar al modelo de lenguaje, es de unos 90 ms). Los percentiles altos del modelo de lenguaje son de carga y de generación: la primera pregunta tardó 47 s porque Ollama carga el modelo en memoria (se puede evitar manteniéndolo cargado con `OLLAMA_KEEP_ALIVE`) y las respuestas largas llegan a 15 a 45 s en CPU. Esa parte no depende de nuestro código, salvo el largo de la respuesta que se le pide al modelo.
 
-Pendiente de revisar: limitar el largo de la respuesta (menos tokens generados, menos tiempo) midiendo que no empeore la calidad en las preguntas que mezclan políticas, y medir el comportamiento con varias consultas a la vez.
+Largo de la respuesta (experimento con `qwen2.5:7b` local, 10 preguntas con datos esperados fijos, por ejemplo "6 meses" o "5-10"): se compararon cuatro versiones del pedido al modelo.
+
+| Versión | Generación, mediana | Palabras medias | Calidad |
+| --- | --- | --- | --- |
+| A, sin límite | 19,7 s | 20,2 | 8 de 10 |
+| B, "máximo 2 oraciones" | 18,0 s | 18,3 | 8 de 10 |
+| C, "una o dos oraciones, sin repetir la pregunta ni agregar consejos" | 18,2 s | 16,4 | 8 de 10 |
+| D, C con tope de 200 tokens | 17,8 s | 16,4 | 8 de 10 |
+
+Medido aparte contra Ollama: el modelo genera unos 3,1 tokens por segundo en esa CPU, es decir 0,32 s por token, y leer un prompt de unos 400 tokens cuesta entre 7 y 14 s si cambia y casi nada si el comienzo se repite (Ollama reutiliza el prefijo). Conclusiones: (1) limitar el largo ayuda poco en la mediana, porque casi todas las respuestas ya eran cortas, pero sí en la cola: la pregunta de 45 días generaba 93 tokens (31 s) y con la indicación de brevedad baja a la mitad; (2) el tope de tokens no aporta nada y puede cortar respuestas, así que no se usa; (3) se adoptó la versión C dentro del pedido al modelo; (4) el tiempo grande de la generación depende de los tokens que el modelo escribe y de los que lee, y en una GPU o con un modelo comercial es una fracción de esto.
+
+La prueba encontró un fallo de calidad independiente del largo: el modelo omitía a veces la aclaración de la regla de los $500 y el aviso de pedir el número de pedido, que le llegaban como notas en el pedido. Un modelo chico puede ignorar lo que no se le pide con fuerza, y esas aclaraciones son obligatorias. Ahora el modelo no las recibe: las agrega el código al final de la respuesta, con o sin modelo de lenguaje. Con ese cambio la calidad subió de 8 a 10 de 10 en las mismas preguntas.
+
+Opciones que se evaluaron y no se implementaron (cambian el comportamiento del agente y quedan para decidir): (a) responder con la oración exacta del documento, sin modelo de lenguaje, cuando la pregunta corresponde claramente a una sola oración (sería casi instantáneo y no puede inventar, pero es menos natural); (b) agregar al final de la respuesta el texto de los documentos recuperados que el modelo no citó, para asegurar que una pregunta que mezcla garantía y devolución las cubra a las dos.
+
+Pendiente: medir el comportamiento con varias consultas a la vez.
 
 ### Lista de mejoras si queda tiempo
 
