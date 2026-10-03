@@ -28,6 +28,8 @@ La herramienta responde en decenas de milisegundos con embeddings y en unos poco
 
 ## Evidencia
 
+Varias consultas a la vez (`rendimiento --concurrente N`, una conversación nueva por pregunta, 16 preguntas por ronda): con 1, 4, 16 y 32 clientes simultáneos y sin modelos, 0 errores y 0 respuestas distintas a las de un cliente solo, a 1.000 o 1.100 respuestas por segundo. Al medir se corrigieron dos cosas que se pisaban entre hilos: el tiempo de embeddings de cada respuesta (ahora lo lleva el cronómetro de esa respuesta y no un contador compartido) y la escritura de las trazas (ahora con candado). Con embeddings y preguntas nuevas el servicio de embeddings atiende unas 15 por segundo en serie y la latencia sube con la cola, sin errores.
+
 Medición inicial, herramienta con embeddings y sin modelo de lenguaje: 2129 ms de mediana por pregunta nueva, 2102 ms del servicio de embeddings y 33 ms de código propio; arranque en frío de 12,5 s. Después de los cambios de arriba, mediana por pregunta nueva de la herramienta (sin contar al modelo de lenguaje), en milisegundos:
 
 | Modo | Total | Modelo de lenguaje | Modelo de embeddings | Código propio |

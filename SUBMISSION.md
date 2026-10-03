@@ -36,7 +36,7 @@ Todas las decisiones, con sus alternativas descartadas y su evidencia, están en
 
 ## Pruebas automatizadas
 
-Comando exacto: `python -m pytest tests/` (equivale a `pytest tests/` si pytest ya está instalado). Son 721 tests que corren en unos 20 segundos, sin red ni `.env`: usan el modo offline. Hay dos tests opt-in que necesitan Ollama (`TIENDAHOGAR_TEST_OLLAMA=1 pytest tests/test_semantica.py`).
+Comando exacto: `python -m pytest tests/` (equivale a `pytest tests/` si pytest ya está instalado). Son 722 tests que corren en unos 20 segundos, sin red ni `.env`: usan el modo offline. Hay dos tests opt-in que necesitan Ollama (`TIENDAHOGAR_TEST_OLLAMA=1 pytest tests/test_semantica.py`).
 
 Los tres casos críticos que pide el enunciado:
 - Recuperación: `test_rag.py` y `test_recuperador.py` verifican que una pregunta de garantía trae el documento de garantía, que cada documento se recupera con su pregunta, que una pregunta de garantía con devolución trae ambos y que las preguntas fuera de alcance no superan el umbral.
@@ -71,7 +71,7 @@ Mediciones sobre conjuntos de frases (no son tests, se corren con `python -m tie
 - El diccionario de lugares es una muestra, no un catálogo de localidades: un lugar que no figura se trata como desconocido y se repregunta.
 - La memoria se limita a lugar, monto, número de pedido y antigüedad de la compra, y vive en el proceso. Sin una sesión, cada pregunta se trata sola. La heurística que decide cuándo preguntar la antigüedad es conservadora: ante la duda no pregunta y responde con la política.
 - El RAG a veces recupera solo uno de dos documentos en preguntas que los mezclan, y falla en paráfrasis lejanas ("mandan a otros países?"). En modo offline, una pregunta fuera de tema que comparte una palabra del dominio recibe el documento completo y no la respuesta exacta.
-- No medí el comportamiento con varias consultas a la vez.
+- Varias consultas a la vez sobre un mismo agente: sin modelos, 32 clientes simultáneos dan respuestas idénticas a las de uno solo, sin errores y a unas 1.100 respuestas por segundo (`python -m tiendahogar.rendimiento --offline --concurrente 32`). Con embeddings y preguntas nuevas, lo que limita es el servicio de embeddings y no el código (la latencia crece en cola). No medí varios clientes contra un mismo modelo de lenguaje.
 - Los documentos no dicen precios, marcas, garantía extendida ni qué pasa con un reembolso mayor a $500 más allá de la aprobación del supervisor: el agente responde que no tiene esa información.
 - Los tests y las mediciones se corrieron en Windows con Python 3.11.
 
