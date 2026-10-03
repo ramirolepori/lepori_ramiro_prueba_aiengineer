@@ -1,0 +1,1099 @@
+{
+  "descripcion": "Preguntas con los documentos que se espera recuperar. esperado=[] significa que ningún documento es relevante y el agente debe decir que no tiene esa información.",
+  "casos": [
+    {
+      "texto": "Cuánto dura la garantía de una licuadora?",
+      "esperado": [
+        "garantia"
+      ],
+      "tipo": "explicita",
+      "id": "001",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Qué garantía tiene una refrigeradora?",
+      "esperado": [
+        "garantia"
+      ],
+      "tipo": "explicita",
+      "id": "002",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cuántos meses de garantía tiene una lavadora?",
+      "esperado": [
+        "garantia"
+      ],
+      "tipo": "explicita",
+      "id": "003",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "La garantía cubre daños por mal uso?",
+      "esperado": [
+        "garantia"
+      ],
+      "tipo": "explicita",
+      "id": "004",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Qué cubre la garantía?",
+      "esperado": [
+        "garantia"
+      ],
+      "tipo": "explicita",
+      "id": "005",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cuánto dura la garantía de una tostadora?",
+      "esperado": [
+        "garantia"
+      ],
+      "tipo": "explicita",
+      "id": "006",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Y la garantía de una estufa?",
+      "esperado": [
+        "garantia"
+      ],
+      "tipo": "explicita",
+      "id": "007",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Desde cuándo cuenta la garantía?",
+      "esperado": [
+        "garantia"
+      ],
+      "tipo": "explicita",
+      "id": "008",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cuántos días tengo para devolver un producto?",
+      "esperado": [
+        "devoluciones"
+      ],
+      "tipo": "explicita",
+      "id": "009",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Puedo devolver un producto en liquidación?",
+      "esperado": [
+        "devoluciones"
+      ],
+      "tipo": "explicita",
+      "id": "010",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Se aceptan devoluciones de productos personalizados?",
+      "esperado": [
+        "devoluciones"
+      ],
+      "tipo": "explicita",
+      "id": "011",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cómo tiene que estar el producto para devolverlo?",
+      "esperado": [
+        "devoluciones"
+      ],
+      "tipo": "explicita",
+      "id": "012",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Puedo devolver algo después de 30 días?",
+      "esperado": [
+        "devoluciones"
+      ],
+      "tipo": "explicita",
+      "id": "013",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Aceptan devoluciones si el producto ya se usó?",
+      "esperado": [
+        "devoluciones"
+      ],
+      "tipo": "explicita",
+      "id": "014",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Qué pasa si quiero devolver una compra en oferta final?",
+      "esperado": [
+        "devoluciones"
+      ],
+      "tipo": "explicita",
+      "id": "015",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "En qué empaque se devuelve?",
+      "esperado": [
+        "devoluciones"
+      ],
+      "tipo": "explicita",
+      "id": "016",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cuánto tarda el envío a la capital?",
+      "esperado": [
+        "envios"
+      ],
+      "tipo": "explicita",
+      "id": "017",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cuánto demora un envío a otra ciudad?",
+      "esperado": [
+        "envios"
+      ],
+      "tipo": "explicita",
+      "id": "018",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Hacen envíos internacionales?",
+      "esperado": [
+        "envios"
+      ],
+      "tipo": "explicita",
+      "id": "019",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "En cuántos días hábiles llega a la capital?",
+      "esperado": [
+        "envios"
+      ],
+      "tipo": "explicita",
+      "id": "020",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Envían a otros países?",
+      "esperado": [
+        "envios"
+      ],
+      "tipo": "explicita",
+      "id": "021",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Cuánto tarda en llegar a Córdoba?",
+      "esperado": [
+        "envios"
+      ],
+      "tipo": "explicita",
+      "id": "022",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cuánto tarda el envío al interior?",
+      "esperado": [
+        "envios"
+      ],
+      "tipo": "explicita",
+      "id": "023",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Hay envíos al exterior?",
+      "esperado": [
+        "envios"
+      ],
+      "tipo": "explicita",
+      "id": "024",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Cuánto tarda un reembolso?",
+      "esperado": [
+        "reembolsos"
+      ],
+      "tipo": "explicita",
+      "id": "025",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "En cuántos días me hacen el reembolso?",
+      "esperado": [
+        "reembolsos"
+      ],
+      "tipo": "explicita",
+      "id": "026",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "A qué medio de pago se reembolsa?",
+      "esperado": [
+        "reembolsos"
+      ],
+      "tipo": "explicita",
+      "id": "027",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Quién aprueba los reembolsos mayores a $500?",
+      "esperado": [
+        "reembolsos"
+      ],
+      "tipo": "explicita",
+      "id": "028",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cuándo se procesa el reembolso?",
+      "esperado": [
+        "reembolsos"
+      ],
+      "tipo": "explicita",
+      "id": "029",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Se reembolsa al mismo método de pago?",
+      "esperado": [
+        "reembolsos"
+      ],
+      "tipo": "explicita",
+      "id": "030",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Un reembolso de $800 lo puede aprobar el agente?",
+      "esperado": [
+        "reembolsos"
+      ],
+      "tipo": "explicita",
+      "id": "031",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cuánto demora en acreditarse el reembolso después de devolver el producto?",
+      "esperado": [
+        "reembolsos"
+      ],
+      "tipo": "explicita",
+      "id": "032",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "A qué correo escribo por un tema legal?",
+      "esperado": [
+        "contacto"
+      ],
+      "tipo": "explicita",
+      "id": "033",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Con quién hablo si me trataron mal?",
+      "esperado": [
+        "contacto"
+      ],
+      "tipo": "explicita",
+      "id": "034",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Dónde reclamo una disputa de facturación?",
+      "esperado": [
+        "contacto"
+      ],
+      "tipo": "explicita",
+      "id": "035",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cuál es el correo de soporte?",
+      "esperado": [
+        "contacto"
+      ],
+      "tipo": "explicita",
+      "id": "036",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "A quién le escribo para una queja sobre un empleado?",
+      "esperado": [
+        "contacto"
+      ],
+      "tipo": "explicita",
+      "id": "037",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Qué canal uso para un tema legal?",
+      "esperado": [
+        "contacto"
+      ],
+      "tipo": "explicita",
+      "id": "038",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Hasta cuándo tengo cobertura si el electrodoméstico falla de fábrica?",
+      "esperado": [
+        "garantia"
+      ],
+      "tipo": "parafrasis",
+      "id": "039",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Mi licuadora se rompió a los 5 meses, me la cubren?",
+      "esperado": [
+        "garantia"
+      ],
+      "tipo": "parafrasis",
+      "id": "040",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "El producto vino defectuoso, tengo amparo?",
+      "esperado": [
+        "garantia"
+      ],
+      "tipo": "parafrasis",
+      "id": "041",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Me cubren si rompí la plancha por usarla mal?",
+      "esperado": [
+        "garantia"
+      ],
+      "tipo": "parafrasis",
+      "id": "042",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cuánto tiempo me respaldan una lavadora nueva?",
+      "esperado": [
+        "garantia"
+      ],
+      "tipo": "parafrasis",
+      "id": "043",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Un electrodoméstico chico cuánto tiempo viene cubierto?",
+      "esperado": [
+        "garantia"
+      ],
+      "tipo": "parafrasis",
+      "id": "044",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Me arrepentí de la compra, puedo devolverla?",
+      "esperado": [
+        "devoluciones"
+      ],
+      "tipo": "parafrasis",
+      "id": "045",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Quiero cambiar un producto que no usé, hasta cuándo puedo?",
+      "esperado": [
+        "devoluciones"
+      ],
+      "tipo": "parafrasis",
+      "id": "046",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Puedo retornar algo que compré en liquidación?",
+      "esperado": [
+        "devoluciones"
+      ],
+      "tipo": "parafrasis",
+      "id": "047",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Si el producto está en su caja original, me lo aceptan de vuelta?",
+      "esperado": [
+        "devoluciones"
+      ],
+      "tipo": "parafrasis",
+      "id": "048",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Pasaron 40 días, igual puedo devolver el producto?",
+      "esperado": [
+        "devoluciones"
+      ],
+      "tipo": "parafrasis",
+      "id": "049",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Hacen devoluciones de artículos hechos a medida?",
+      "esperado": [
+        "devoluciones"
+      ],
+      "tipo": "parafrasis",
+      "id": "050",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Cuánto se demora en entregar lo que compro?",
+      "esperado": [
+        "envios"
+      ],
+      "tipo": "parafrasis",
+      "id": "051",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cuándo me llegaría un pedido a otra provincia?",
+      "esperado": [
+        "envios"
+      ],
+      "tipo": "parafrasis",
+      "id": "052",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Mandan a otros países?",
+      "esperado": [
+        "envios"
+      ],
+      "tipo": "parafrasis",
+      "id": "053",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Cuántos días hábiles tarda la entrega en la capital?",
+      "esperado": [
+        "envios"
+      ],
+      "tipo": "parafrasis",
+      "id": "054",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Tardan mucho en despachar a ciudades chicas?",
+      "esperado": [
+        "envios"
+      ],
+      "tipo": "parafrasis",
+      "id": "055",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Entregan fuera del país?",
+      "esperado": [
+        "envios"
+      ],
+      "tipo": "parafrasis",
+      "id": "056",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Cuándo me devuelven la plata de mi compra?",
+      "esperado": [
+        "reembolsos"
+      ],
+      "tipo": "parafrasis",
+      "id": "057",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "En qué plazo me reintegran el dinero?",
+      "esperado": [
+        "reembolsos"
+      ],
+      "tipo": "parafrasis",
+      "id": "058",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "El dinero vuelve a mi tarjeta o a otro lado?",
+      "esperado": [
+        "reembolsos"
+      ],
+      "tipo": "parafrasis",
+      "id": "059",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Necesito que un supervisor apruebe mi devolución de dinero?",
+      "esperado": [
+        "reembolsos"
+      ],
+      "tipo": "parafrasis",
+      "id": "060",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cuántos días tarda en volver el dinero?",
+      "esperado": [
+        "reembolsos"
+      ],
+      "tipo": "parafrasis",
+      "id": "061",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Me regresan el pago por el mismo medio que usé?",
+      "esperado": [
+        "reembolsos"
+      ],
+      "tipo": "parafrasis",
+      "id": "062",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Con quién puedo hablar si el vendedor fue grosero?",
+      "esperado": [
+        "contacto"
+      ],
+      "tipo": "parafrasis",
+      "id": "063",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cómo me comunico para una cuestión judicial?",
+      "esperado": [
+        "contacto"
+      ],
+      "tipo": "parafrasis",
+      "id": "064",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "A quién escribo si me cobraron de más?",
+      "esperado": [
+        "contacto"
+      ],
+      "tipo": "parafrasis",
+      "id": "065",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Dónde se atienden los reclamos por la facturación?",
+      "esperado": [
+        "contacto"
+      ],
+      "tipo": "parafrasis",
+      "id": "066",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Necesito hablar con una persona por un tema legal, cómo hago?",
+      "esperado": [
+        "contacto"
+      ],
+      "tipo": "parafrasis",
+      "id": "067",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "cuanto dura la garantia de una licuadora",
+      "esperado": [
+        "garantia"
+      ],
+      "tipo": "ortografia",
+      "id": "068",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "la garantia cubre mal uso?",
+      "esperado": [
+        "garantia"
+      ],
+      "tipo": "ortografia",
+      "id": "069",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "kiero saber la garantia de la lavadora",
+      "esperado": [
+        "garantia"
+      ],
+      "tipo": "ortografia",
+      "id": "070",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "garantia refrijeradora cuantos meses",
+      "esperado": [
+        "garantia"
+      ],
+      "tipo": "ortografia",
+      "id": "071",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "puedo debolver un producto despues de 30 dias",
+      "esperado": [
+        "devoluciones"
+      ],
+      "tipo": "ortografia",
+      "id": "072",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "kiero devolber una cosa que compre",
+      "esperado": [
+        "devoluciones"
+      ],
+      "tipo": "ortografia",
+      "id": "073",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "se aseptan debolusiones de liquidacion?",
+      "esperado": [
+        "devoluciones"
+      ],
+      "tipo": "ortografia",
+      "id": "074",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "debolucion de productos personalisados",
+      "esperado": [
+        "devoluciones"
+      ],
+      "tipo": "ortografia",
+      "id": "075",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "cuanto tarda el envio a la capital",
+      "esperado": [
+        "envios"
+      ],
+      "tipo": "ortografia",
+      "id": "076",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "hasen envios internasionales?",
+      "esperado": [
+        "envios"
+      ],
+      "tipo": "ortografia",
+      "id": "077",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "kuanto demora el envio a otra ciudad",
+      "esperado": [
+        "envios"
+      ],
+      "tipo": "ortografia",
+      "id": "078",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "envio a cordoba cuantos dias",
+      "esperado": [
+        "envios"
+      ],
+      "tipo": "ortografia",
+      "id": "079",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "cuanto tarda un rembolso",
+      "esperado": [
+        "reembolsos"
+      ],
+      "tipo": "ortografia",
+      "id": "080",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "en cuantos dias es el reembolzo?",
+      "esperado": [
+        "reembolsos"
+      ],
+      "tipo": "ortografia",
+      "id": "081",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "el rembolso va al mismo medio de pago?",
+      "esperado": [
+        "reembolsos"
+      ],
+      "tipo": "ortografia",
+      "id": "082",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "kien aprueba los reembolsos de mas de 500",
+      "esperado": [
+        "reembolsos"
+      ],
+      "tipo": "ortografia",
+      "id": "083",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "a ke correo escribo por un tema legal",
+      "esperado": [
+        "contacto"
+      ],
+      "tipo": "ortografia",
+      "id": "084",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "con kien hablo si me trataron mal",
+      "esperado": [
+        "contacto"
+      ],
+      "tipo": "ortografia",
+      "id": "085",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "donde reclamo una disputa de factura",
+      "esperado": [
+        "contacto"
+      ],
+      "tipo": "ortografia",
+      "id": "086",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Mi lavadora tiene 45 días y falla, la puedo devolver?",
+      "esperado": [
+        "garantia",
+        "devoluciones"
+      ],
+      "tipo": "mixta",
+      "id": "087",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Compré una tostadora hace 8 meses y se rompió, puedo devolverla o tengo garantía?",
+      "esperado": [
+        "garantia",
+        "devoluciones"
+      ],
+      "tipo": "mixta",
+      "id": "088",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Si el producto sale defectuoso a los 40 días, es garantía o devolución?",
+      "esperado": [
+        "garantia",
+        "devoluciones"
+      ],
+      "tipo": "mixta",
+      "id": "089",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Puedo devolver algo defectuoso después de 30 días?",
+      "esperado": [
+        "garantia",
+        "devoluciones"
+      ],
+      "tipo": "mixta",
+      "id": "090",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Si devuelvo un producto, cuándo me devuelven el dinero?",
+      "esperado": [
+        "devoluciones",
+        "reembolsos"
+      ],
+      "tipo": "mixta",
+      "id": "091",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Devolví la licuadora, en cuántos días me reembolsan?",
+      "esperado": [
+        "devoluciones",
+        "reembolsos"
+      ],
+      "tipo": "mixta",
+      "id": "092",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Cuánto tarda en volver la plata si devuelvo una compra de $300?",
+      "esperado": [
+        "devoluciones",
+        "reembolsos"
+      ],
+      "tipo": "mixta",
+      "id": "093",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Si el envío no llega puedo pedir un reembolso?",
+      "esperado": [
+        "envios",
+        "reembolsos"
+      ],
+      "tipo": "mixta",
+      "id": "094",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Si la garantía cubre mi estufa, me reembolsan el dinero?",
+      "esperado": [
+        "garantia",
+        "reembolsos"
+      ],
+      "tipo": "mixta",
+      "id": "095",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Cuánto tarda el envío y cuánto dura la garantía de una licuadora?",
+      "esperado": [
+        "envios",
+        "garantia"
+      ],
+      "tipo": "mixta",
+      "id": "096",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cuál es la capital de Francia?",
+      "esperado": [],
+      "tipo": "fuera_de_alcance",
+      "nota": "Nada en los documentos responde esto",
+      "id": "097",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Qué hora es?",
+      "esperado": [],
+      "tipo": "fuera_de_alcance",
+      "nota": "Nada en los documentos responde esto",
+      "id": "098",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Recomendame una película",
+      "esperado": [],
+      "tipo": "fuera_de_alcance",
+      "nota": "Nada en los documentos responde esto",
+      "id": "099",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Cuánto cuesta una refrigeradora?",
+      "esperado": [],
+      "tipo": "fuera_de_alcance",
+      "nota": "Nada en los documentos responde esto",
+      "id": "100",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Qué marcas de lavadoras venden?",
+      "esperado": [],
+      "tipo": "fuera_de_alcance",
+      "nota": "Nada en los documentos responde esto",
+      "id": "101",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cómo cocino arroz?",
+      "esperado": [],
+      "tipo": "fuera_de_alcance",
+      "nota": "Nada en los documentos responde esto",
+      "id": "102",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Qué tiempo hace mañana?",
+      "esperado": [],
+      "tipo": "fuera_de_alcance",
+      "nota": "Nada en los documentos responde esto",
+      "id": "103",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cuál es el horario de la tienda?",
+      "esperado": [],
+      "tipo": "fuera_de_alcance",
+      "nota": "Nada en los documentos responde esto",
+      "id": "104",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cómo programo en Python?",
+      "esperado": [],
+      "tipo": "fuera_de_alcance",
+      "nota": "Nada en los documentos responde esto",
+      "id": "105",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Quién ganó el último mundial?",
+      "esperado": [],
+      "tipo": "fuera_de_alcance",
+      "nota": "Nada en los documentos responde esto",
+      "id": "106",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Tienen sucursales en Madrid?",
+      "esperado": [],
+      "tipo": "fuera_de_alcance",
+      "nota": "Nada en los documentos responde esto",
+      "id": "107",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Hola",
+      "esperado": [],
+      "tipo": "fuera_de_alcance",
+      "nota": "Nada en los documentos responde esto",
+      "id": "108",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Gracias por la ayuda",
+      "esperado": [],
+      "tipo": "fuera_de_alcance",
+      "nota": "Nada en los documentos responde esto",
+      "id": "109",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Qué colores hay de licuadoras?",
+      "esperado": [],
+      "tipo": "fuera_de_alcance",
+      "nota": "Nada en los documentos responde esto",
+      "id": "110",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Hacen descuentos por pago en efectivo?",
+      "esperado": [],
+      "tipo": "fuera_de_alcance",
+      "nota": "Nada en los documentos responde esto",
+      "id": "111",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Tienen garantía extendida?",
+      "esperado": [],
+      "tipo": "fuera_de_alcance",
+      "nota": "Nada en los documentos responde esto",
+      "id": "112",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cómo hago un pedido?",
+      "esperado": [],
+      "tipo": "fuera_de_alcance",
+      "nota": "Nada en los documentos responde esto",
+      "id": "113",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cuánto pesa una lavadora?",
+      "esperado": [],
+      "tipo": "fuera_de_alcance",
+      "nota": "Nada en los documentos responde esto",
+      "id": "114",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Me recomendás una estufa?",
+      "esperado": [],
+      "tipo": "fuera_de_alcance",
+      "nota": "Nada en los documentos responde esto",
+      "id": "115",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cuál es el mejor electrodoméstico?",
+      "esperado": [],
+      "tipo": "fuera_de_alcance",
+      "nota": "Nada en los documentos responde esto",
+      "id": "116",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cuánto cuesta el envío?",
+      "esperado": [
+        "envios"
+      ],
+      "tipo": "casi_igual",
+      "nota": "El tema es envíos pero el dato (precio) no está: se recupera el documento y el agente dice que no sabe",
+      "id": "117",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "El envío a la capital es gratis?",
+      "esperado": [
+        "envios"
+      ],
+      "tipo": "casi_igual",
+      "nota": "El tema es envíos pero el dato (precio) no está: se recupera el documento y el agente dice que no sabe",
+      "id": "118",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Dónde reparan los electrodomésticos en garantía?",
+      "esperado": [
+        "garantia"
+      ],
+      "tipo": "casi_igual",
+      "nota": "Tema garantía, dato que no está",
+      "id": "119",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Cuánto cuesta reparar una licuadora?",
+      "esperado": [
+        "garantia"
+      ],
+      "tipo": "casi_igual",
+      "nota": "Tema garantía, dato que no está",
+      "id": "120",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cómo hago una devolución?",
+      "esperado": [
+        "devoluciones"
+      ],
+      "tipo": "casi_igual",
+      "nota": "Tema devoluciones, el procedimiento no está",
+      "id": "121",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Dónde llevo el producto que quiero devolver?",
+      "esperado": [
+        "devoluciones"
+      ],
+      "tipo": "casi_igual",
+      "nota": "Tema devoluciones, el procedimiento no está",
+      "id": "122",
+      "conjunto": "prueba"
+    }
+  ]
+}

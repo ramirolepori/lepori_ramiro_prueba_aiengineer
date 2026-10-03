@@ -1,6 +1,6 @@
 import pytest
 
-from tiendahogar.guardrails import CONTACTO, detectar_inyeccion, evaluar, extraer_montos
+from tiendahogar.guardrails import CONTACTO, detectar_inyeccion, evaluar
 
 
 def categorias(pregunta: str) -> list[str]:
@@ -70,13 +70,6 @@ def test_el_mensaje_deriva_al_canal_humano():
 def test_varias_categorias_a_la_vez():
     assert set(categorias("El vendedor me trató mal y quiero un reembolso de $900")) == {"queja_trato", "reembolso_mayor_500"}
 
-
-@pytest.mark.parametrize("texto,esperado", [
-    ("$600", [600.0]), ("1.200 dólares", [1200.0]), ("1,200.50 USD", [1200.5]), ("500,5 pesos", [500.5]),
-    ("30 días", []), ("ORD-1001", []), ("dos mil pesos", [1000.0]), ("2 mil dólares", [2000.0]),
-])
-def test_extraer_montos(texto, esperado):
-    assert extraer_montos(texto) == esperado
 
 
 @pytest.mark.parametrize("texto", [

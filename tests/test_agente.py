@@ -67,9 +67,11 @@ def test_fuera_de_alcance_dice_que_no_sabe(agente, pregunta):
     assert r.estado == "sin_informacion" and not r.fuentes
 
 
-def test_reembolso_exacto_de_500_no_escala_y_lo_aclara(agente):
+def test_reembolso_de_500_no_escala_y_aclara_que_el_monto_lo_declara_el_cliente(agente):
     r = agente.responder("Quiero un reembolso de $500 por mi lavadora")
-    assert r.estado == "respondido" and "exactamente $500" in r.texto
+    assert r.estado == "respondido"
+    assert "no haría falta la aprobación de un supervisor" in r.texto
+    assert "si el valor real de la compra supera $500" in r.texto and "Yo no apruebo reembolsos" in r.texto
 
 
 def test_reembolso_mayor_a_500_escala_sin_llamar_al_modelo():
@@ -94,9 +96,9 @@ def test_inyeccion_se_bloquea_sin_llamar_al_modelo():
 # --- con LLM -------------------------------------------------------------------------------------------
 
 def test_el_prompt_lleva_solo_el_contexto_recuperado():
-    llm = LLMFalso("Son 12 meses [garantia].")
+    llm = LLMFalso("La garantía de una lavadora dura 12 meses [garantia].")
     r = AgenteSoporte(llm=llm).responder("Cuánto dura la garantía de una lavadora?")
-    assert r.texto == "Son 12 meses [garantia]."
+    assert r.texto == "La garantía de una lavadora dura 12 meses [garantia]."
     _, usuario = llm.recibido[0]
     assert "[garantia]" in usuario and "[envios]" not in usuario
 
@@ -105,6 +107,30 @@ def test_si_el_llm_falla_responde_en_modo_offline():
     r = AgenteSoporte(llm=LLMFalso(falla=True)).responder("Cuánto dura la garantía de una lavadora?")
     assert r.estado == "respondido" and "12 meses" in r.texto
     assert any(e["tipo"] == "llm" and e["ok"] is False for e in r.traza)
+
+
+@pytest.mark.parametrize("inventado", [
+    "La garantía dura 24 meses [garantia].",
+    "La garantía dura 12 meses. Escribí a otro@tienda.example [garantia].",
+    "   ",
+    "No [envios]",
+])
+def test_respuesta_del_modelo_con_datos_inventados_se_descarta(inventado):
+    r = AgenteSoporte(llm=LLMFalso(inventado)).responder("Cuánto dura la garantía de una lavadora?")
+    assert "12 meses" in r.texto and r.texto != inventado.strip()
+    assert any(e["tipo"] == "llm" and e["ok"] is False for e in r.traza)
+
+
+def test_solo_pedido_usa_la_plantilla_y_no_el_modelo():
+    llm = LLMFalso("texto del modelo")
+    r = AgenteSoporte(llm=llm).responder("Dónde está mi pedido ORD-1003?")
+    assert llm.recibido == [] and "Procesando" in r.texto
+
+
+def test_citas_inventadas_se_quitan_y_se_agrega_la_fuente():
+    r = AgenteSoporte(llm=LLMFalso("La garantía de la lavadora dura 12 meses [PEDIDOS] [otra cosa].")).responder(
+        "Cuánto dura la garantía de una lavadora?")
+    assert "[PEDIDOS]" not in r.texto and "[otra cosa]" not in r.texto and r.texto.endswith("[garantia]")
 
 
 def test_fuera_de_alcance_no_llama_al_modelo():

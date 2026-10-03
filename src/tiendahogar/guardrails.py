@@ -8,10 +8,13 @@ Además hay una detección simple de intentos de inyección de prompt en la entr
 
 from __future__ import annotations
 
+import difflib
 import re
 from dataclasses import dataclass
 
+from .montos import extraer_montos
 from .rag import normalizar
+from .semantica import ClasificadorSemantico
 
 CONTACTO = "soporte@tiendahogar.example"
 TOPE_REEMBOLSO = 500.0
@@ -42,12 +45,13 @@ _FACTURACION = re.compile(
 _INTENCION_REEMBOLSO = re.compile(
     r"(reembols\w+|reintegr\w+|refund|devol\w+|devuelv\w+|regres\w+|dinero|plata)"
 )
-_UNIDADES_TIEMPO = r"(?:dias?|meses|mes|horas?|semanas?|anos?|unidades|unidad|%|kg|litros?)"
-_NUMEROS_PALABRA = {"quinientos": 500, "seiscientos": 600, "setecientos": 700, "ochocientos": 800,
-                    "novecientos": 900, "mil": 1000}
-_RE_NUM = re.compile(
-    r"(?P<moneda_pre>\$|usd|us\$|u\$s|eur|€)?\s*(?P<num>\d[\d.,]*\d|\d)(?P<mil>\s*mil\b)?"
-    r"\s*(?P<moneda_pos>\$|usd|dolares?|pesos|euros?|€)?(?P<tiempo>\s*" + _UNIDADES_TIEMPO + r"\b)?"
+_CONSULTA_CANAL = re.compile(
+    r"^(?:con quien|a quien|a donde|donde|como|por donde|que (?:correo|mail|canal|medio))\b.*\b"
+    r"(?:hablo|escribo|contacto|comunico|reclamo|derivo|consulto|presento|mando|envio)\b"
+)
+_RECLAMO_PERSONAL = re.compile(
+    r"\b(?:voy a|quiero (?:demandar|denunciar|reclamar)|me (?:cobraron|trataron|atendieron|facturaron|debitaron)|"
+    r"pienso|vamos a|los voy)\b"
 )
 
 
@@ -56,81 +60,81 @@ class Escalamiento:
     categoria: str     # "reembolso_mayor_500" | "queja_trato" | "disputa_facturacion" | "tema_legal"
     motivo: str
     mensaje: str       # lo que se le responde al cliente
+    origen: str = "regla"   # "regla" o "semantica"
 
 
-def _parsear_numero(s: str) -> float | None:
-    s = s.strip(".,")
-    if not s:
-        return None
-    if "." in s and "," in s:  # el último separador es el decimal
-        dec = "," if s.rfind(",") > s.rfind(".") else "."
-        ent = "." if dec == "," else ","
-        s = s.replace(ent, "").replace(dec, ".")
-    elif "." in s or "," in s:
-        sep = "." if "." in s else ","
-        partes = s.split(sep)
-        if len(partes) > 2 or (len(partes) == 2 and len(partes[1]) == 3):  # 1.200 / 1.200.000: miles
-            s = "".join(partes)
-        else:
-            s = ".".join(partes)
-    try:
-        return float(s)
-    except ValueError:
-        return None
+def _es_consulta_de_canal(texto_norm: str) -> bool:
+    """'Con quién hablo si tengo un tema legal?' pregunta por el canal: se responde con el Doc 5, no se deriva
+    a ciegas. Una frase con un reclamo propio ('voy a demandar, con quién hablo?') sí se deriva."""
+    return bool(_CONSULTA_CANAL.search(texto_norm.strip(" ¿?¡!"))) and not _RECLAMO_PERSONAL.search(texto_norm)
 
 
-def extraer_montos(texto: str) -> list[float]:
-    """Montos de dinero mencionados. Ignora números de pedido, plazos (30 días, 6 meses) y cantidades."""
-    t = re.sub(r"\bord-\d+\b", " ", normalizar(texto))
-    montos: list[float] = []
-    for m in _RE_NUM.finditer(t):
-        if m.group("tiempo") and not (m.group("moneda_pre") or m.group("moneda_pos")):
-            continue
-        valor = _parsear_numero(m.group("num"))
-        if valor is None:
-            continue
-        if m.group("mil"):
-            valor *= 1000
-        montos.append(valor)
-    for palabra, valor in _NUMEROS_PALABRA.items():
-        if re.search(rf"\b{palabra}\b", t) and not re.search(rf"\d\s*{palabra}\b", t):
-            montos.append(float(valor))
-    return montos
+def _mensaje(categoria: str, monto: float | None = None) -> tuple[str, str]:
+    """(motivo, mensaje al cliente) de cada categoría."""
+    if categoria == "tema_legal":
+        return "tema legal", (f"Los temas legales los atiende una persona del equipo y no puedo resolverlos yo. "
+                              f"Escribí a {CONTACTO} y te van a ayudar.")
+    if categoria == "queja_trato":
+        return "queja sobre el trato de un empleado", (
+            f"Lamento que hayas tenido esa experiencia. Las quejas sobre el trato de un empleado las gestiona "
+            f"una persona y no puedo resolverlas yo. Escribí a {CONTACTO}.")
+    if categoria == "disputa_facturacion":
+        return "disputa de facturación", (
+            f"Las disputas de facturación las resuelve una persona del equipo y no puedo gestionarlas yo. "
+            f"Escribí a {CONTACTO} con los datos de la factura o el cobro.")
+    return f"reembolso de ${monto:,.2f} (mayor a ${TOPE_REEMBOLSO:,.0f})", (
+        f"Los reembolsos mayores a ${TOPE_REEMBOLSO:,.0f} requieren la aprobación de un supervisor humano y no "
+        f"puedo aprobarlos. Escribí a {CONTACTO} para que lo revisen.")
+
+
+_VOCABULARIO_REEMBOLSO = ("reembolso", "reembolsar", "reembolsen", "reembolsan", "reintegro", "reintegrar",
+                          "reintegren", "devolucion", "devolver", "devuelvan", "devuelvo", "regresen", "refund")
+
+
+def _intencion_de_reembolso(texto_norm: str) -> bool:
+    """Palabras de reembolso o devolución de dinero, también con faltas ('rembolso', 'debuelvan')."""
+    if _INTENCION_REEMBOLSO.search(texto_norm):
+        return True
+    return any(difflib.get_close_matches(tok, _VOCABULARIO_REEMBOLSO, n=1, cutoff=0.8)
+               for tok in re.findall(r"[a-z]{5,}", texto_norm))
 
 
 def _reembolso_alto(texto_norm: str, texto: str) -> float | None:
-    if not _INTENCION_REEMBOLSO.search(texto_norm):
+    if not _intencion_de_reembolso(texto_norm):
         return None
     mayores = [m for m in extraer_montos(texto) if m > TOPE_REEMBOLSO]
     return max(mayores) if mayores else None
 
 
-def evaluar(pregunta: str) -> list[Escalamiento]:
-    """Devuelve las escalaciones que aplican (lista vacía si el agente puede responder)."""
+def evaluar(pregunta: str, clasificador: ClasificadorSemantico | None = None) -> list[Escalamiento]:
+    """Devuelve las escalaciones que aplican (lista vacía si el agente puede responder).
+
+    Primero las reglas. Con `clasificador`, se suman las categorías que reconoce por significado (paráfrasis,
+    faltas de ortografía). El reembolso exige además un monto mayor a $500, que siempre lo extrae el parser.
+    """
     t = normalizar(pregunta)
-    res: list[Escalamiento] = []
-    if _LEGAL.search(t):
-        res.append(Escalamiento(
-            "tema_legal", "tema legal",
-            f"Los temas legales los atiende una persona del equipo y no puedo resolverlos yo. "
-            f"Escribí a {CONTACTO} y te van a ayudar."))
-    if _TRATO.search(t):
-        res.append(Escalamiento(
-            "queja_trato", "queja sobre el trato de un empleado",
-            f"Lamento que hayas tenido esa experiencia. Las quejas sobre el trato de un empleado las gestiona "
-            f"una persona y no puedo resolverlas yo. Escribí a {CONTACTO}."))
-    if _FACTURACION.search(t):
-        res.append(Escalamiento(
-            "disputa_facturacion", "disputa de facturación",
-            f"Las disputas de facturación las resuelve una persona del equipo y no puedo gestionarlas yo. "
-            f"Escribí a {CONTACTO} con los datos de la factura o el cobro."))
+    if _es_consulta_de_canal(t):
+        return []
+    res: dict[str, Escalamiento] = {}
+    for cat, patron in (("tema_legal", _LEGAL), ("queja_trato", _TRATO), ("disputa_facturacion", _FACTURACION)):
+        if patron.search(t):
+            res[cat] = Escalamiento(cat, *_mensaje(cat))
     monto = _reembolso_alto(t, pregunta)
     if monto is not None:
-        res.append(Escalamiento(
-            "reembolso_mayor_500", f"reembolso de ${monto:,.2f} (mayor a ${TOPE_REEMBOLSO:,.0f})",
-            f"Los reembolsos mayores a ${TOPE_REEMBOLSO:,.0f} requieren la aprobación de un supervisor humano y no "
-            f"puedo aprobarlos. Escribí a {CONTACTO} para que lo revisen."))
-    return res
+        res["reembolso_mayor_500"] = Escalamiento("reembolso_mayor_500", *_mensaje("reembolso_mayor_500", monto))
+
+    if clasificador is not None:
+        mayor_monto = max(extraer_montos(pregunta), default=0.0)
+        for cat in clasificador.detectar(pregunta):
+            if cat in res:
+                continue
+            if cat == "reembolso_mayor_500":
+                if mayor_monto > TOPE_REEMBOLSO:
+                    res[cat] = Escalamiento(cat, *_mensaje(cat, mayor_monto), origen="semantica")
+            else:
+                res[cat] = Escalamiento(cat, *_mensaje(cat), origen="semantica")
+    orden = ("tema_legal", "queja_trato", "disputa_facturacion", "reembolso_mayor_500")
+    return [res[c] for c in orden if c in res]
 
 
 # --- Inyección de prompts en la entrada -----------------------------------------------------------------

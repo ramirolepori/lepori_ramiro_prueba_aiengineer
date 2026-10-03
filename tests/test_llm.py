@@ -42,13 +42,14 @@ def config(url, proveedor="openai", **kw):
     return Config(proveedor=proveedor, modelo="m", api_key="clave-de-prueba", base_url=url, timeout_s=5, **kw)
 
 
-OK_OPENAI = {"choices": [{"message": {"content": " Son 12 meses. "}}]}
+OK_OPENAI = {"choices": [{"message": {"content": " La garantía de una lavadora es de 12 meses. "}}]}
+RESPUESTA = "La garantía de una lavadora es de 12 meses."
 
 
 def test_openai_compatible_arma_el_pedido_y_lee_la_respuesta():
     s = Servidor(lambda c: (200, OK_OPENAI))
     try:
-        assert OpenAICompatible(config(s.url + "/v1")).generar("sistema", "pregunta") == "Son 12 meses."
+        assert OpenAICompatible(config(s.url + "/v1")).generar("sistema", "pregunta") == RESPUESTA
         p = s.pedidos[0]
         assert p["ruta"] == "/v1/chat/completions" and p["cab"]["Authorization"] == "Bearer clave-de-prueba"
         assert p["cuerpo"]["messages"][0] == {"role": "system", "content": "sistema"}
@@ -65,7 +66,7 @@ def test_openai_reintenta_con_max_completion_tokens_si_rechaza_max_tokens():
 
     s = Servidor(manejar)
     try:
-        assert OpenAICompatible(config(s.url)).generar("s", "p") == "Son 12 meses."
+        assert OpenAICompatible(config(s.url)).generar("s", "p") == RESPUESTA
         assert len(s.pedidos) == 2 and "max_completion_tokens" in s.pedidos[1]["cuerpo"]
     finally:
         s.cerrar()
@@ -90,6 +91,30 @@ def test_clave_invalida_no_se_reintenta():
         s.cerrar()
 
 
+def test_conexion_cortada_sin_respuesta_es_un_error_controlado(monkeypatch):
+    import socket
+
+    monkeypatch.setattr("tiendahogar.llm.time.sleep", lambda s: None)
+    srv = socket.socket()
+    srv.bind(("127.0.0.1", 0))
+    srv.listen()
+
+    def cortar():
+        while True:
+            try:
+                srv.accept()[0].close()      # cierra sin responder, como Ollama cuando se cae el modelo
+            except OSError:
+                return
+
+    threading.Thread(target=cortar, daemon=True).start()
+    try:
+        url = f"http://127.0.0.1:{srv.getsockname()[1]}"
+        with pytest.raises(ErrorLLM, match="no se pudo llamar"):
+            OpenAICompatible(config(url)).generar("s", "p")
+    finally:
+        srv.close()
+
+
 def test_anthropic_arma_el_pedido_y_lee_la_respuesta():
     s = Servidor(lambda c: (200, {"content": [{"type": "text", "text": "Son 6 meses."}]}))
     try:
@@ -112,7 +137,7 @@ def test_agente_con_proveedor_openai_de_punta_a_punta():
     try:
         agente = AgenteSoporte(llm=crear_llm(config(s.url)))
         r = agente.responder("Cuánto dura la garantía de una lavadora?")
-        assert r.texto == "Son 12 meses."
+        assert r.texto == RESPUESTA + " [garantia]"
         assert "[garantia]" in s.pedidos[0]["cuerpo"]["messages"][1]["content"]
     finally:
         s.cerrar()

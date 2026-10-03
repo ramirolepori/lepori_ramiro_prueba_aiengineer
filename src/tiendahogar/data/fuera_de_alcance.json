@@ -1,0 +1,25 @@
+{
+  "descripcion": "Preguntas que los documentos de TiendaHogar no responden. El recuperador las usa de referencia: un documento es relevante si se parece a la consulta más que a estas.",
+  "preguntas": [
+    "Qué día es hoy?",
+    "Cuál es el precio de una lavadora?",
+    "Qué televisor me recomendás?",
+    "Cómo se prepara una torta de chocolate?",
+    "Quién es el presidente del país?",
+    "Cuál es la mejor marca de heladeras?",
+    "Dónde queda la tienda más cercana a mi casa?",
+    "Tienen ofertas esta semana?",
+    "Cómo instalo una lavadora?",
+    "Qué significa inteligencia artificial?",
+    "Contame un chiste",
+    "Traducime esta frase al inglés",
+    "Cómo está el clima hoy?",
+    "Cuántos años tiene la empresa?",
+    "Se puede pagar en cuotas?",
+    "Aceptan tarjeta de crédito?",
+    "Cuál es la potencia de la licuadora?",
+    "Cuántos litros tiene la refrigeradora?",
+    "Qué modelo de estufa es mejor para una familia grande?",
+    "Cómo se llama el gerente de la tienda?"
+  ]
+}

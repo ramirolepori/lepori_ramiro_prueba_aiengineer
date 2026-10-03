@@ -13,7 +13,7 @@ dependencies = []
 where = ["src"]
 
 [tool.setuptools.package-data]
-tiendahogar = ["data/docs/*.md"]
+tiendahogar = ["data/docs/*.md", "data/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

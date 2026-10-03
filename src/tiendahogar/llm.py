@@ -8,6 +8,7 @@ No se probaron contra una API real (ver SUBMISSION.md); los tests usan un client
 
 from __future__ import annotations
 
+import http.client
 import json
 import time
 import urllib.error
@@ -42,7 +43,7 @@ def _post(url: str, cabeceras: dict[str, str], cuerpo: dict, timeout: float, rei
                 except OSError:
                     detalle = ""
                 raise ErrorLLM(f"el proveedor respondió HTTP {e.code}: {detalle}") from e
-        except (urllib.error.URLError, TimeoutError, ValueError) as e:
+        except (OSError, http.client.HTTPException, ValueError) as e:  # red, corte de conexión, timeout, JSON roto
             ultimo = e
         if intento < reintentos:
             time.sleep(2 ** intento)

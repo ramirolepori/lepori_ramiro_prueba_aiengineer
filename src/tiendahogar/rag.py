@@ -8,12 +8,17 @@ La recuperación es BM25 con normalización de tildes, plural simple y una tabla
 
 from __future__ import annotations
 
+import json
 import math
 import re
 import unicodedata
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
+
+from .config import Config
+from .embeddings import ClienteEmbeddings, coseno
+from .llm import ErrorLLM
 
 DOCS_POR_DEFECTO = Path(__file__).resolve().parent / "data" / "docs"
 
@@ -124,7 +129,8 @@ class IndiceBM25:
     def _peso(self, t: str) -> float:
         return self._idf.get(t, self._idf_desconocido)
 
-    def buscar(self, consulta: str, k: int = 3) -> list[Resultado]:
+    def puntuar(self, consulta: str) -> list[Resultado]:
+        """Todos los fragmentos con coincidencia léxica, del mejor al peor, sin aplicar el umbral."""
         q = list(dict.fromkeys(tokenizar(consulta)))
         if not q:
             return []
@@ -147,6 +153,10 @@ class IndiceBM25:
             if s > 0 and (len(coincidencias) >= 2 or any(t in CONCEPTOS for t in coincidencias)):
                 res.append(Resultado(f, s, cubierto / total if total else 0.0))
         res.sort(key=lambda r: r.puntaje, reverse=True)
+        return res
+
+    def buscar(self, consulta: str, k: int = 3) -> list[Resultado]:
+        res = self.puntuar(consulta)
         if not res:
             return []
         mejor = res[0].puntaje
@@ -160,3 +170,84 @@ def cargar_indice(carpeta: Path | None = None, **kwargs: float) -> IndiceBM25:
         if ruta.suffix.lower() in {".md", ".txt"}:
             fragmentos += dividir(ruta.read_text(encoding="utf-8"), ruta.stem)
     return IndiceBM25(fragmentos, **kwargs)
+
+
+# --- Recuperación híbrida: embeddings + BM25 -----------------------------------------------------------------
+
+FUERA_DE_ALCANCE = DOCS_POR_DEFECTO.parent / "fuera_de_alcance.json"
+_K_RRF = 60      # constante de la fusión por posición (reciprocal rank fusion)
+
+
+class RecuperadorHibrido:
+    """Recupera documentos por significado (embeddings) y por palabras (BM25), y los fusiona por posición.
+
+    Relevancia: un documento cuenta si su similitud con la consulta supera por `margen` a la de las preguntas
+    "fuera de alcance". Comparar contra lo que no se sabe responder, en lugar de usar un número absoluto, lo
+    hace portable entre modelos de embeddings, que tienen escalas de similitud distintas. Con `usar_bm25` también
+    cuenta lo que BM25 considera relevante. Después se descartan los que quedan más de `rel` por debajo del mejor.
+    Si el servicio de embeddings falla, responde con BM25 solo (`ultimo_respaldo`).
+    """
+
+    def __init__(self, indice: IndiceBM25, cliente: ClienteEmbeddings, fuera_de_alcance: list[str] | None = None,
+                 margen: float = 0.08, rel: float = 0.06, usar_bm25: bool = True, por_oracion: bool = True):
+        self.indice, self.cliente = indice, cliente
+        self.por_oracion = por_oracion
+        self.fuera = fuera_de_alcance or json.loads(FUERA_DE_ALCANCE.read_text(encoding="utf-8"))["preguntas"]
+        self.margen, self.rel, self.usar_bm25 = margen, rel, usar_bm25
+        self.ultimo_respaldo = False
+        self._vec_docs: dict[str, list[list[float]]] | None = None
+        self._vec_fuera: list[list[float]] | None = None
+
+    def _preparar(self) -> None:
+        if self._vec_docs is None:
+            partes = {f.id: self._partes(f.texto) for f in self.indice.fragmentos}
+            planas = [t for ts in partes.values() for t in ts]
+            vec = dict(zip(planas, self.cliente.embeber(planas + self.fuera)[:len(planas)]))
+            self._vec_docs = {i: [vec[t] for t in ts] for i, ts in partes.items()}
+            self._vec_fuera = self.cliente.embeber(self.fuera)
+
+    def _partes(self, texto: str) -> list[str]:
+        """El documento entero y, con `por_oracion`, cada una de sus oraciones (sin el título)."""
+        if not self.por_oracion:
+            return [texto]
+        cuerpo = re.sub(r"^#.*\n+", "", texto).strip()
+        oraciones = [o.strip() for o in re.split(r"(?<=[.!?])\s+", cuerpo) if len(o.strip()) > 20]
+        return list(dict.fromkeys([texto] + oraciones))
+
+    def similitudes(self, consulta: str) -> tuple[dict[str, float], float]:
+        """Similitud de la consulta con cada documento y la mayor con una pregunta fuera de alcance."""
+        self._preparar()
+        q = self.cliente.embeber([consulta])[0]
+        sims = {i: max(coseno(q, v) for v in vs) for i, vs in self._vec_docs.items()}
+        return sims, max(coseno(q, v) for v in self._vec_fuera)
+
+    def buscar(self, consulta: str, k: int = 3) -> list[Resultado]:
+        self.ultimo_respaldo = False
+        try:
+            sims, fuera = self.similitudes(consulta)
+        except ErrorLLM:
+            self.ultimo_respaldo = True
+            return self.indice.buscar(consulta, k)
+        por_id = {f.id: f for f in self.indice.fragmentos}
+        relevantes = {i for i, s in sims.items() if s - fuera >= self.margen}
+        if self.usar_bm25:
+            relevantes |= {r.fragmento.id for r in self.indice.buscar(consulta, k)}
+        if not relevantes:
+            return []
+        pos_emb = {i: n for n, i in enumerate(sorted(sims, key=sims.get, reverse=True))}
+        pos_bm = {r.fragmento.id: n for n, r in enumerate(self.indice.puntuar(consulta))}
+        fusion = {i: 1 / (_K_RRF + pos_emb[i]) + (1 / (_K_RRF + pos_bm[i]) if i in pos_bm else 0.0)
+                  for i in relevantes}
+        mejor = max(sims[i] for i in relevantes)
+        elegidos = [i for i in sorted(relevantes, key=fusion.get, reverse=True) if sims[i] >= mejor - self.rel][:k]
+        return [Resultado(por_id[i], fusion[i], sims[i] - fuera) for i in elegidos]
+
+
+def crear_recuperador(config: Config | None = None, cliente: ClienteEmbeddings | None = None
+                      ) -> IndiceBM25 | RecuperadorHibrido:
+    """Híbrido si hay EMBEDDING_MODEL (con proveedor openai); si no, BM25 solo."""
+    config = config or Config()
+    indice = cargar_indice()
+    if config.embedding_model and config.proveedor == "openai":
+        return RecuperadorHibrido(indice, cliente or ClienteEmbeddings(config))
+    return indice

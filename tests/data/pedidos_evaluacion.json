@@ -1,0 +1,546 @@
+{
+  "descripcion": "Frases para la extracción de números de pedido y la intención de consulta de estado. ids=[] y intencion=true significa que consulta un pedido sin dar el número.",
+  "casos": [
+    {
+      "texto": "Dónde está mi pedido ORD-1001?",
+      "ids": [
+        "ORD-1001"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "001",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "ord-1001 donde esta",
+      "ids": [
+        "ORD-1001"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "002",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Estado de ORD1001",
+      "ids": [
+        "ORD-1001"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "003",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Mi pedido es ORD 1001, cuándo llega?",
+      "ids": [
+        "ORD-1001"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "004",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Consulta por Ord. 1001",
+      "ids": [
+        "ORD-1001"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "005",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Estado del pedido ORD–1001",
+      "ids": [
+        "ORD-1001"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "006",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "ORD—1001 cuándo llega?",
+      "ids": [
+        "ORD-1001"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "007",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "ORD_1001 estado por favor",
+      "ids": [
+        "ORD-1001"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "008",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Quisiera saber algo de ORD - 1001",
+      "ids": [
+        "ORD-1001"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "009",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Mi pedido es el 1003, dónde está?",
+      "ids": [
+        "ORD-1003"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "010",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "pedido 1003",
+      "ids": [
+        "ORD-1003"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "011",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Pedido nro 1003, cuándo llega?",
+      "ids": [
+        "ORD-1003"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "012",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Pedido n° 1003 cómo va?",
+      "ids": [
+        "ORD-1003"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "013",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Pedido Nº 1003 estado",
+      "ids": [
+        "ORD-1003"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "014",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Pedido #1003 por favor",
+      "ids": [
+        "ORD-1003"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "015",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Orden 1003, cuándo llega?",
+      "ids": [
+        "ORD-1003"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "016",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Mi orden de compra 1003 sigue procesando?",
+      "ids": [
+        "ORD-1003"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "017",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Número de pedido: 1003",
+      "ids": [
+        "ORD-1003"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "018",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "El número de mi pedido es 1003",
+      "ids": [
+        "ORD-1003"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "019",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Hola! Quería saber del pedido numero 1003",
+      "ids": [
+        "ORD-1003"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "020",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Mi pedido es el ORD-1002, ya llegó?",
+      "ids": [
+        "ORD-1002"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "021",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "pedido ord-1002 entregado?",
+      "ids": [
+        "ORD-1002"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "022",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Mi pedido 1002 dice entregado pero no lo recibí",
+      "ids": [
+        "ORD-1002"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "023",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Estado de ORD-1001 y ORD-1004",
+      "ids": [
+        "ORD-1001",
+        "ORD-1004"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "024",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Pedidos 1001 y 1004, cómo van?",
+      "ids": [
+        "ORD-1001",
+        "ORD-1004"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "025",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Me pasan el estado de los pedidos ORD-1001, ORD-1004",
+      "ids": [
+        "ORD-1001",
+        "ORD-1004"
+      ],
+      "intencion": true,
+      "tipo": "id_formato",
+      "id": "026",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Estado de ORD-9999",
+      "ids": [
+        "ORD-9999"
+      ],
+      "intencion": true,
+      "tipo": "id_inexistente",
+      "id": "027",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "pedido 9999 donde esta",
+      "ids": [
+        "ORD-9999"
+      ],
+      "intencion": true,
+      "tipo": "id_inexistente",
+      "id": "028",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Mi pedido es el ORD-0000",
+      "ids": [
+        "ORD-0000"
+      ],
+      "intencion": true,
+      "tipo": "id_inexistente",
+      "id": "029",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Orden 4321 cuándo llega?",
+      "ids": [
+        "ORD-4321"
+      ],
+      "intencion": true,
+      "tipo": "id_inexistente",
+      "id": "030",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Dónde está mi pedido?",
+      "ids": [],
+      "intencion": true,
+      "tipo": "sin_id",
+      "id": "031",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Quiero saber el estado de mi pedido",
+      "ids": [],
+      "intencion": true,
+      "tipo": "sin_id",
+      "id": "032",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cuándo me llega mi compra?",
+      "ids": [],
+      "intencion": true,
+      "tipo": "sin_id",
+      "id": "033",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Ya salió lo que compré?",
+      "ids": [],
+      "intencion": true,
+      "tipo": "sin_id",
+      "id": "034",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Mi lavadora no llega",
+      "ids": [],
+      "intencion": true,
+      "tipo": "sin_id",
+      "id": "035",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Hace una semana que espero mi pedido",
+      "ids": [],
+      "intencion": true,
+      "tipo": "sin_id",
+      "id": "036",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "No me llegó la heladera",
+      "ids": [],
+      "intencion": true,
+      "tipo": "sin_id",
+      "id": "037",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Me pueden decir cómo va mi envío?",
+      "ids": [],
+      "intencion": true,
+      "tipo": "sin_id",
+      "id": "038",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Sigue sin llegar mi refrigeradora",
+      "ids": [],
+      "intencion": true,
+      "tipo": "sin_id",
+      "id": "039",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Hola, compré una licuadora y quiero saber en qué estado está",
+      "ids": [],
+      "intencion": true,
+      "tipo": "sin_id",
+      "id": "040",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Pueden rastrear mi compra?",
+      "ids": [],
+      "intencion": true,
+      "tipo": "sin_id",
+      "id": "041",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Mi pedido se demora mucho, qué pasó?",
+      "ids": [],
+      "intencion": true,
+      "tipo": "sin_id",
+      "id": "042",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "donde esta lo que pedi",
+      "ids": [],
+      "intencion": true,
+      "tipo": "sin_id",
+      "id": "043",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Necesito el seguimiento de mi tostadora",
+      "ids": [],
+      "intencion": true,
+      "tipo": "sin_id",
+      "id": "044",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Quiero un reembolso de $1000",
+      "ids": [],
+      "intencion": false,
+      "tipo": "no_es_pedido",
+      "nota": "Tienen números o la palabra pedido, pero no consultan un estado",
+      "id": "045",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Compré la lavadora hace 600 días y quiero devolverla",
+      "ids": [],
+      "intencion": false,
+      "tipo": "no_es_pedido",
+      "nota": "Tienen números o la palabra pedido, pero no consultan un estado",
+      "id": "046",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Reembolso de $1001",
+      "ids": [],
+      "intencion": false,
+      "tipo": "no_es_pedido",
+      "nota": "Tienen números o la palabra pedido, pero no consultan un estado",
+      "id": "047",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Cuánto dura la garantía de una licuadora?",
+      "ids": [],
+      "intencion": false,
+      "tipo": "no_es_pedido",
+      "nota": "Tienen números o la palabra pedido, pero no consultan un estado",
+      "id": "048",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cuánto tarda el envío a la capital?",
+      "ids": [],
+      "intencion": false,
+      "tipo": "no_es_pedido",
+      "nota": "Tienen números o la palabra pedido, pero no consultan un estado",
+      "id": "049",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Hacen envíos internacionales?",
+      "ids": [],
+      "intencion": false,
+      "tipo": "no_es_pedido",
+      "nota": "Tienen números o la palabra pedido, pero no consultan un estado",
+      "id": "050",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Puedo devolver un producto en liquidación?",
+      "ids": [],
+      "intencion": false,
+      "tipo": "no_es_pedido",
+      "nota": "Tienen números o la palabra pedido, pero no consultan un estado",
+      "id": "051",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Tengo 1001 dudas sobre la garantía",
+      "ids": [],
+      "intencion": false,
+      "tipo": "no_es_pedido",
+      "nota": "Tienen números o la palabra pedido, pero no consultan un estado",
+      "id": "052",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Mi lavadora tiene 45 días y falla",
+      "ids": [],
+      "intencion": false,
+      "tipo": "no_es_pedido",
+      "nota": "Tienen números o la palabra pedido, pero no consultan un estado",
+      "id": "053",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "Hola",
+      "ids": [],
+      "intencion": false,
+      "tipo": "no_es_pedido",
+      "nota": "Tienen números o la palabra pedido, pero no consultan un estado",
+      "id": "054",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Gracias por la ayuda",
+      "ids": [],
+      "intencion": false,
+      "tipo": "no_es_pedido",
+      "nota": "Tienen números o la palabra pedido, pero no consultan un estado",
+      "id": "055",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Cuál es la capital de Francia?",
+      "ids": [],
+      "intencion": false,
+      "tipo": "no_es_pedido",
+      "nota": "Tienen números o la palabra pedido, pero no consultan un estado",
+      "id": "056",
+      "conjunto": "prueba"
+    },
+    {
+      "texto": "A qué correo escribo por un tema legal?",
+      "ids": [],
+      "intencion": false,
+      "tipo": "no_es_pedido",
+      "nota": "Tienen números o la palabra pedido, pero no consultan un estado",
+      "id": "057",
+      "conjunto": "desarrollo"
+    },
+    {
+      "texto": "Mi pedido de 2 productos llegó hace 3 días, puedo devolver uno?",
+      "ids": [],
+      "intencion": false,
+      "tipo": "no_es_pedido",
+      "nota": "Tienen números o la palabra pedido, pero no consultan un estado",
+      "id": "058",
+      "conjunto": "desarrollo"
+    }
+  ]
+}

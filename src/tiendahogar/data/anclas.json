@@ -1,0 +1,68 @@
+{
+  "descripcion": "Frases de ejemplo por categoría para el clasificador semántico. No se usan para evaluar.",
+  "categorias": {
+    "reembolso_mayor_500": [
+      "Quiero un reembolso de $800 por mi compra",
+      "Necesito que me devuelvan 1000 dólares de la lavadora",
+      "Me tienen que reintegrar $2.500 que pagué por la refrigeradora",
+      "Quiero mi dinero de vuelta, pagué $1.500 por la estufa",
+      "Solicito el reembolso total de $900",
+      "Devuélvanme los 600 dólares del electrodoméstico",
+      "Quiero cancelar y que me regresen los $750 que pagué",
+      "Pido reembolso de USD 1200"
+    ],
+    "queja_trato": [
+      "El cajero me respondió con insolencia",
+      "Quiero presentar una queja contra un empleado",
+      "La persona que me atendió fue grosera",
+      "Me atendieron pésimo y me faltaron el respeto",
+      "El repartidor fue maleducado conmigo",
+      "Tuve un trato horrible por parte del personal",
+      "Un asesor me habló de mala manera",
+      "Quiero denunciar la mala atención de un empleado"
+    ],
+    "disputa_facturacion": [
+      "Veo el mismo cargo repetido en mi tarjeta",
+      "Quiero disputar un cobro de mi factura",
+      "La factura tiene un monto incorrecto",
+      "No reconozco este cargo en mi tarjeta",
+      "Me facturaron de más",
+      "Hay un cobro duplicado en mi cuenta",
+      "Quiero reclamar un cargo indebido",
+      "Me debitaron un importe que no corresponde"
+    ],
+    "tema_legal": [
+      "Presentaré una demanda por lo ocurrido",
+      "Voy a consultar con mi abogado cómo actuar",
+      "Voy a tomar acciones legales",
+      "Los voy a denunciar por esto",
+      "Esto es un tema legal y quiero que lo traten como tal",
+      "Voy a ir a la justicia si no me responden",
+      "Esto vulnera mis derechos como consumidor",
+      "Quiero presentar una reclamación judicial"
+    ],
+    "permitida": [
+      "Cuántos meses de garantía tiene un electrodoméstico grande?",
+      "Puedo devolver un producto después de 30 días?",
+      "Cuántos días demora una entrega fuera de la capital?",
+      "En cuánto tiempo me reembolsan?",
+      "Se puede devolver un producto en liquidación?",
+      "La garantía cubre un defecto de fábrica?",
+      "Hacen envíos internacionales?",
+      "Cómo se reembolsa el dinero, al mismo método de pago?",
+      "Tengo la factura de compra, sirve para la garantía?",
+      "Quiero devolver mi licuadora, está sin usar",
+      "Me atendieron muy bien, gracias por la ayuda"
+    ],
+    "consulta_pedido": [
+      "Todavía no recibí lo que compré, qué pasó?",
+      "Cómo va el envío de mi compra?",
+      "Necesito seguir mi encargo",
+      "Mi encomienda está demorada, dónde está?",
+      "Hace días que pedí y no llega",
+      "Pueden decirme cuándo me entregan lo que compré?",
+      "Quisiera saber el estado de mi orden",
+      "En qué situación está mi pedido, ya salió?"
+    ]
+  }
+}
