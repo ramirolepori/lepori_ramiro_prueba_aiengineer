@@ -150,6 +150,12 @@ class AgenteSoporte:
                                  [e.categoria for e in escalamientos], pedidos)
             return Respuesta(derivacion, "escalado", escalamientos=[e.categoria for e in escalamientos])
 
+        if _es_saludo(pregunta):
+            ev("saludo")
+            return Respuesta(MENSAJE_SALUDO, "respondido")
+        if _es_despedida(pregunta):
+            ev("despedida")
+            return Respuesta(MENSAJE_DESPEDIDA, "respondido")
         if _es_agradecimiento(pregunta):
             ev("agradecimiento")
             return Respuesta(MENSAJE_AGRADECIMIENTO, "respondido")
@@ -436,6 +442,35 @@ def _pregunta_por_su_compra(pregunta: str, fuentes: list[str]) -> bool:
     return bool(fuentes and set(fuentes) <= {"devoluciones", "garantia"} and _SU_COMPRA.search(p)
                 and not _PREGUNTA_DE_POLITICA.search(p) and not TIEMPO.search(p) and not _COMPRA_FUTURA.search(p)
                 and not _NO_SE_DEVUELVE.search(p) and not _PIDE_PLATA.search(p))
+
+
+MENSAJE_SALUDO = ("¡Hola! Soy el asistente de soporte de TiendaHogar. Puedo ayudarte con garantías, devoluciones, tiempos de "
+                  "envío, reembolsos y el estado de un pedido (con su número ORD-XXXX). ¿En qué te ayudo?")
+MENSAJE_DESPEDIDA = "¡Chau! Que tengas un buen día. Si necesitás algo más, acá estoy."
+_SALUDO = re.compile(r"(?:(?:hola|holi|holis|buenas|buen dia|buenos dias|buenas tardes|buenas noches|hey|ey|que tal|como estas|"
+                     r"como andas|como va|todo bien|buen dia a todos|saludos)\s*)+|solo te salude|solo salude")
+_DESPEDIDA = re.compile(r"(?:(?:chau|chao|adios|hasta luego|hasta pronto|nos vemos|hasta manana|bye|saludos|un saludo|"
+                        r"buenas noches|que andes bien|nos hablamos|cuidate|gracias|muchas gracias)\s*)+")
+
+
+def _solo_palabras(pregunta: str) -> str:
+    return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9 ]", " ", guardrails.normalizar(pregunta))).strip()
+
+
+def _es_saludo(pregunta: str) -> bool:
+    """Un mensaje que solo saluda: se saluda y se dice en qué se puede ayudar, no se responde "no tengo esa información"."""
+    p = _solo_palabras(pregunta)
+    if p.startswith("pero "):
+        p = p[5:]
+    palabras = p.split()
+    repetida = bool(palabras) and max(palabras.count(w) for w in palabras) > 2     # "hola hola hola ..." es ruido
+    return bool(palabras) and len(palabras) <= 6 and not repetida and _SALUDO.fullmatch(p) is not None
+
+
+def _es_despedida(pregunta: str) -> bool:
+    p = _solo_palabras(pregunta)
+    return bool(re.search(r"\b(?:chau|chao|adios|hasta luego|hasta pronto|nos vemos|bye|hasta manana)\b", p)
+                and _DESPEDIDA.fullmatch(p + " "))
 
 
 def _es_agradecimiento(pregunta: str) -> bool:
