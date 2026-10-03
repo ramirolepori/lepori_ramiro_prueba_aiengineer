@@ -99,7 +99,7 @@ Conviene escribir `127.0.0.1` y no `localhost`: en Windows `localhost` prueba pr
 
 `EMBEDDINGS_CACHE` es la carpeta donde se guardan los embeddings de los textos fijos (documentos y frases de ejemplo del guardrail) para que el arranque no los pida de nuevo; por defecto `.cache/` y `none` la desactiva. Nunca se guardan preguntas de clientes.
 
-Si el proveedor falla (red, clave, tiempo), el agente lo registra en la traza y sigue en modo offline: el guardrail pasa a n-gramas y la respuesta cita el documento.
+Si el proveedor falla (red, clave, tiempo), el agente lo registra en la traza y sigue en modo offline: el guardrail pasa a n-gramas, la recuperación a BM25 y la respuesta cita el documento. Una conexión rechazada falla enseguida y un servicio que falló no se vuelve a intentar durante 30 segundos, así que un servidor caído no ralentiza cada pregunta. Una configuración inválida (`LLM_PROVIDER` desconocido, falta de modelo o de clave) termina con un mensaje claro y código de salida 2. Las consultas de más de 2000 caracteres se recortan.
 
 ## Medir el agente
 

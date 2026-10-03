@@ -186,6 +186,17 @@ Costo de completar la cobertura, medido en el peor caso (se supone que el modelo
 
 Pendiente: medir el comportamiento con varias consultas a la vez.
 
+### Prueba del CLI desde un clon limpio, sin `.env`
+
+Se clonó el repositorio en una carpeta nueva, sin `.env` ni entorno virtual, con el Python del sistema (solo librería estándar) y los comandos del README. Sin configuración, el agente corre en modo offline (reglas, n-gramas de caracteres y BM25) y responde en unos 0,3 s por pregunta. Se probaron 13 preguntas representativas (garantía, devoluciones, mixtas, pedidos con distintos formatos, derivaciones, fuera de alcance e intento de inyección), el chat interactivo y los casos límite: todo respondió sin errores. Hallazgos y correcciones:
+- Con un servidor de modelos caído, una sola pregunta tardaba 9 s (solo modelo de lenguaje) y hasta 37 s (con embeddings), porque cada llamada del agente esperaba sus propios reintentos. Ahora una conexión rechazada falla enseguida, sin reintentos, y un servicio que acaba de fallar no se vuelve a intentar durante 30 segundos. Tiempos actuales: 2,3 s la primera vez (lo que tarda Windows en rechazar la conexión) y sin espera en las llamadas siguientes. La detección de la conexión rechazada ya no depende del idioma del sistema, que antes fallaba en Windows en español porque comparaba el texto del mensaje.
+- Una consulta vacía respondía "no tengo esa información" y ahora pide la consulta.
+- Una consulta de 22.500 caracteres tardaba 0,73 s y una línea de 200.000 caracteres tardaba 4 s; ahora se recortan a 2000 caracteres (queda un evento en la traza) y tardan 0,3 s.
+- La traza guardaba el texto de la cláusula del cliente en las preguntas mixtas. Ahora guarda solo la cantidad.
+- Probado y sin problemas: caracteres nulos y de control, emoji, texto mal codificado (se responde que no hay información), cierre de la entrada estándar, proveedor desconocido (mensaje claro y código de salida 2), modelo o clave faltante (mensaje claro y código de salida 2).
+
+Qué guardan las trazas (`trazas/trazas.jsonl`, ignorada por git): largo de la consulta, categorías del guardrail, documentos recuperados con sus puntajes, números de pedido consultados, si el modelo de lenguaje respondió o se descartó su respuesta y los tiempos. No guardan el texto de la consulta ni de la respuesta. Los números de pedido son identificadores que permiten rastrear una conversación: en producción habría que decidir su retención junto con el resto de los datos de la conversación.
+
 ### Lista de mejoras si queda tiempo
 
 - Memoria entre mensajes (por ejemplo, unir el número de pedido dado antes con una pregunta posterior).
