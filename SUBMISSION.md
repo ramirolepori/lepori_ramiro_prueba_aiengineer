@@ -36,7 +36,7 @@ Todas las decisiones, con sus alternativas descartadas y su evidencia, están en
 
 ## Pruebas automatizadas
 
-Comando exacto: `python -m pytest tests/` (equivale a `pytest tests/` si pytest ya está instalado). Son 771 tests que corren en unos 20 segundos, sin red ni `.env`: usan el modo offline. Hay dos tests opt-in que necesitan Ollama (`TIENDAHOGAR_TEST_OLLAMA=1 pytest tests/test_semantica.py`).
+Comando exacto: `python -m pytest tests/` (equivale a `pytest tests/` si pytest ya está instalado). Son 782 tests que corren en unos 20 segundos, sin red ni `.env`: usan el modo offline. Hay dos tests opt-in que necesitan Ollama (`TIENDAHOGAR_TEST_OLLAMA=1 pytest tests/test_semantica.py`).
 
 Los tres casos críticos que pide el enunciado:
 - Recuperación: `test_rag.py` y `test_recuperador.py` verifican que una pregunta de garantía trae el documento de garantía, que cada documento se recupera con su pregunta, que una pregunta de garantía con devolución trae ambos y que las preguntas fuera de alcance no superan el umbral.

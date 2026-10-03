@@ -50,6 +50,9 @@ _CANDADO_TRAZAS = threading.Lock()
 MAX_CARACTERES = 2000
 MENSAJE_VACIO = "No recibí ninguna consulta. Contame en qué te puedo ayudar: garantías, devoluciones, envíos, reembolsos o el estado de un pedido."
 MENSAJE_BLOQUEO ="No puedo procesar ese pedido porque intenta cambiar mis reglas de funcionamiento."
+MENSAJE_SIN_ACCIONES = ("No puedo realizar esa acción (enviar correos o mensajes, reservar, comprar, modificar un pedido o "
+                        "generar comprobantes): solo puedo informarte sobre garantías, devoluciones, envíos, reembolsos y el estado "
+                        f"de un pedido. Si necesitás que lo gestione una persona, escribí a {guardrails.CONTACTO}.")
 TEXTO_CANAL = (f"Para hablar con una persona, escribí a {guardrails.CONTACTO}. Es el canal de atención humana para quejas "
                f"sobre el trato de un empleado, disputas de facturación y temas legales. [contacto]")
 MENSAJE_SIN_INFO = (
@@ -234,6 +237,9 @@ class AgenteSoporte:
         fuentes = [r.fragmento.documento for r in resultados]
 
         notas = _notas(pregunta, fuentes, consulta_sin_numero)
+        accion = bool(_ACCION_QUE_NO_PUEDE.search(guardrails.normalizar(pregunta)))
+        if accion:
+            notas.append(MENSAJE_SIN_ACCIONES)          # pide algo que el agente no hace: se aclara, no se finge
         if repreguntar and "reembolsos" in fuentes and _pide_reembolso(pregunta) and not guardrails.extraer_montos(pregunta):
             # Quiere un reembolso y no dijo el monto: de eso depende la respuesta, así que se pregunta en vez de volcar la
             # política. Si la pregunta toca otros temas, la pregunta se agrega al final de lo que se responde.
@@ -262,6 +268,8 @@ class AgenteSoporte:
             fuentes.append("contacto")
         if canal and not resultados and not pedidos:
             return Respuesta(TEXTO_CANAL, "respondido", ["contacto"])
+        if accion and not resultados and not pedidos:
+            return Respuesta(MENSAJE_SIN_ACCIONES, "respondido")
         if not resultados and not pedidos:
             if not con_respaldo:
                 return None
@@ -398,6 +406,13 @@ _SIN_COMPROBANTE = re.compile(r"no (?:me )?(?:dieron|dio|entregaron|entrego|envi
 _NO_DEVOLVIBLE = re.compile(r"liquidacion|personalizad|oferta final|a medida|a pedido|"
                             r"(?:hech[oa]s?|hicieron|fabricaron|fabricad[oa]|disenaron|armaron) (?:solo |especialmente |exclusivamente )?"
                             r"(?:para mi|a pedido)")
+_ACCION_QUE_NO_PUEDE = re.compile(
+    r"reserv\w+|apart\w+ (?:un|una|el|la)|compr\w+ por mi|(?:hace|hag\w+) (?:la |una |mi )?(?:compra|reserva) por mi|agend\w+|"
+    r"program\w+ (?:una |la |mi )?(?:entrega|llamada|visita)|llam\w*me|"
+    r"\b(?:envi|mand)(?:a|e|es|ar|ame|arme)\b (?:me )?(?:un |el |la |una |mi )?(?:correo|mail|email|resumen|factura|comprobante|mensaje|sms)|"
+    r"\b(?:gener|emit|hag|hac)\w* (?:me )?(?:una |la |mi |un )?(?:factura|comprobante)|"
+    r"actualiz\w+ (?:el )?estado|modific\w+ (?:mi |el |la )?(?:pedido|direccion|compra)|cambi\w+ (?:la |mi )?direccion|"
+    r"avis\w+ (?:a|al) (?:la |el )?(?:empresa|transportista|correo)")
 _PIDE_COSTO = re.compile(r"cuesta|costo|precio|tarifa|cobran|gratis|cuanto sale|cuanto vale|cuanto se paga|pagar")
 AVISO_SIN_COSTO = "Los documentos no indican el costo del envío."
 _INTENCION_ENVIO = re.compile(r"envi|entreg|llega|despach|manda|demora|tarda|recib|flete|domicilio|reparto|repart")

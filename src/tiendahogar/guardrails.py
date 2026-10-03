@@ -131,7 +131,7 @@ _TEMA = {
                              r"consumidor|carta documento|indemniz|policia|comisaria|mediacion|arbitraje|perjuicio|danos|\bsue\b|lawyer|attorney|lawsuit|court|illegal|clausula|abusiv|contrato|firme|lejal"),
     "queja_trato": re.compile(r"emplead|vendedor|atencion|atendi|atendio|cajer|repartidor|encargad|guardia|seguridad|personal|trabaj|"
                               r"chico|chica|pibe|piba|senor|senora|gerente|supervisor|asesor|agente|operador|mozo|persona|"
-                              r"tipo\b|tipa\b|chabon|\bman\b|trato|trat[oa]|maltrat|groser|insult|respeto|\bmal\b|mala|complain|employee|staff|rude|treated|colg|telefono|llamada"),
+                              r"tipo\b|tipa\b|chabon|\bman\b|trato|trat[oa]|maltrat|groser|insult|respeto|\bmal\b|mala|complain|employee|staff|rude|treated|colg"),
     "disputa_facturacion": re.compile(r"cobr|factur|cargo|cargar|cargaron|debit|tarjeta|extracto|\bpag[ao]|pagu|descont|monto|importe|"
                                       r"doble|dos veces|2 veces|duplic|resumen|movimiento|transferencia|chup|clav|sacaron|cuenta|"
                                       r"comprobante|recibo|saldo|cuota|plata|dinero|guita|charged|billed|twice|invoice"),
@@ -201,6 +201,13 @@ _SENALES_INYECCION = [
     r"you are now",
     r"modo (?:desarrollador|dios|sin restricciones)|developer mode|do anything now",
     r"aprob\w+ (?:el |mi )?reembolso (?:igual|de todos modos|sin)",
+    # variantes de los jailbreaks conocidos (DAN, "ignorá lo que te dijeron antes", "desde ahora actuás como...")
+    r"ignor\w* (?:all |todas |todo )?(?:the |las |lo )?(?:instructions|rules|instrucciones|reglas|anterior)",
+    r"from now on,? (?:you|your)\b|you are going to (?:act|pretend|be)|(?:act|pretend|behave) as (?:a |an )?(?:dan|unfiltered|"
+    r"jailbroken|unrestricted|uncensored)|stay in character|you have (?:no|been freed from) (?:restrictions|limits|rules)",
+    r"(?:desde|a partir de) (?:ahora|este momento),? (?:vas a|ten[eé]s que|tienes que|deb[eé]s)|vas a (?:actuar|hacer de|interpretar) como|"
+    r"(?:finge|finj[aá]s?|fingi|pretend[eé]) (?:que|ser)|(?:sin|ignor\w+) (?:restricciones|filtros|limites|censura)|"
+    r"actu[aá] como (?:dan|una ia sin)",
 ]
 _RE_INYECCION = [re.compile(p) for p in _SENALES_INYECCION]
 
