@@ -21,8 +21,8 @@ Trade-offs por el límite de tiempo y los datos que dan los documentos:
 - Guardrail en tres capas: reglas (lo evidente), embeddings contra frases de ejemplo (paráfrasis y faltas de ortografía) y n-gramas como respaldo sin red. El modelo generativo no clasifica. [ADR 0003](docs/adr/0003-guardrail-en-tres-capas.md).
 - Los documentos dejan huecos y los resolví con decisiones declaradas: hasta $500 el agente informa la política y no deriva, sin prometer la aprobación ([ADR 0006](docs/adr/0006-reembolsos-hasta-500.md)); "la capital" es la Ciudad de Buenos Aires y el plazo de envío lo decide el código según el lugar ([ADR 0007](docs/adr/0007-envios-segun-el-lugar.md)).
 - Pedidos: se acepta el número escrito de varias formas, no se busca por nombre de producto y no se corrige en silencio un identificador raro. [ADR 0005](docs/adr/0005-consulta-de-pedidos-en-tres-capas.md).
-- Después de generar, el código valida la salida (cifras o correos inventados) y agrega las aclaraciones obligatorias. [ADR 0010](docs/adr/0010-el-modelo-solo-redacta.md).
-- Lo que no tiene que ver con la tienda no llega al modelo, y las órdenes de cambiar sus reglas se bloquean. [ADR 0013](docs/adr/0013-robustez-ante-intentos-de-sacarlo-de-alcance.md).
+- Después de generar, el código valida la salida (cifras o correos inventados) y agrega las aclaraciones obligatorias. [ADR 0002](docs/adr/0002-orquestacion-deterministica-sin-framework.md).
+- Lo que no tiene que ver con la tienda no llega al modelo, y las órdenes de cambiar sus reglas se bloquean. [ADR 0011](docs/adr/0011-robustez-ante-intentos-de-sacarlo-de-alcance.md).
 
 Todas las decisiones, con sus alternativas y su evidencia, están en [docs/adr](docs/adr/README.md). Los módulos y cómo extender el agente, en [docs/arquitectura.md](docs/arquitectura.md).
 
@@ -34,7 +34,7 @@ Todas las decisiones, con sus alternativas y su evidencia, están en [docs/adr](
 
 ## Pruebas automatizadas
 
-Comando exacto: `python -m pytest tests/` (o `pytest tests/` si pytest ya está instalado). Son 835 tests que corren en unos 20 segundos, sin red ni `.env`, en modo offline. Hay dos opt-in que necesitan Ollama (`TIENDAHOGAR_TEST_OLLAMA=1`).
+Comando exacto: `python -m pytest tests/` (o `pytest tests/` si pytest ya está instalado). Son 828 tests que corren en unos 20 segundos, sin red ni `.env`, en modo offline. Hay dos opt-in que necesitan Ollama (`TIENDAHOGAR_TEST_OLLAMA=1`).
 
 Lo primero que hay que leer es `tests/test_criticos.py`: los tres casos críticos del enunciado y los límites ($500 no escala y $501 sí, liquidación, pedido inexistente) en pocos tests. El detalle está repartido así:
 - Recuperación: `test_rag.py` y `test_recuperador.py`. Cada documento se recupera con su pregunta y las preguntas fuera de alcance no superan el umbral.
@@ -44,7 +44,7 @@ Lo primero que hay que leer es `tests/test_criticos.py`: los tres casos crítico
 - Conversación: `test_sesion.py` y `test_lugares.py`. Repreguntas, límites de turnos y que el guardrail corre dentro de una sesión.
 - Clientes de modelo: `test_llm.py`, contra un servidor local que imita cada API.
 
-Mediciones sobre conjuntos de frases (no son tests; se corren con `python -m tiendahogar.evaluacion` y `python -m tiendahogar.independiente medir`). Con embeddings el guardrail detecta el 98,9 % del riesgo en desarrollo y el 97,6 % en prueba, con 0 falsos positivos, pero esas cifras son optimistas porque el conjunto lo escribí yo. La cifra honesta es la de un lote de 42 frases escrito al final y medido una sola vez antes de tocar nada: 8 de 10 en riesgo con 0 falsos positivos en 29 (5 o 6 de 10 sin embeddings). Sus fallos se corrigieron con reglas generales y están en el [ADR 0011](docs/adr/0011-estrategia-de-evaluacion.md).
+Mediciones sobre conjuntos de frases (no son tests; se corren con `python -m tiendahogar.evaluacion` y `python -m tiendahogar.independiente medir`). Con embeddings el guardrail detecta el 98,9 % del riesgo en desarrollo y el 97,6 % en prueba, con 0 falsos positivos, pero esas cifras son optimistas porque el conjunto lo escribí yo. La cifra honesta es la de un lote de 42 frases escrito al final y medido una sola vez antes de tocar nada: 8 de 10 en riesgo con 0 falsos positivos en 29 (5 o 6 de 10 sin embeddings). Sus fallos se corrigieron con reglas generales y están en el [ADR 0010](docs/adr/0010-estrategia-de-evaluacion.md).
 
 ## Cómo mapearías esto a producción
 

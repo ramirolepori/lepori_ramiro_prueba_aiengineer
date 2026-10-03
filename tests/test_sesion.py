@@ -211,7 +211,7 @@ def test_la_antiguedad_no_se_pregunta_si_hay_un_pedido(agente):
 
 def test_un_saludo_con_algo_pendiente_se_contesta_y_se_repregunta(agente):
     s, (r1, r2) = charlar(agente, "Quiero saber el estado de mi compra", "Hola me llamo ramiro")
-    assert r2.texto.startswith("¡Hola, Ramiro!") and "número de pedido" in r2.texto and s.pendiente == "pedido"
+    assert r2.texto.startswith("¡Hola!") and "número de pedido" in r2.texto and s.pendiente == "pedido"
     r3 = agente.responder("ORD-1003", s)
     assert "Lavadora" in r3.texto and s.pendiente is None
 
@@ -224,23 +224,6 @@ def test_una_despedida_con_algo_pendiente_cierra_lo_pendiente(agente):
 def test_algo_ajeno_con_algo_pendiente_se_contesta_y_se_repregunta(agente):
     s, (r1, r2) = charlar(agente, "Quiero saber el estado de mi compra", "Quién es el presidente de Argentina?")
     assert "No tengo esa información" in r2.texto and "número de pedido" in r2.texto and s.pendiente == "pedido"
-
-
-def test_recuerda_el_nombre_con_que_se_presento(agente):
-    s, (r1, r2, r3) = charlar(agente, "Hola soy ramiro", "Quiero saber el estado de mi compra", "Como me llamo?")
-    assert r2.estado == "respondido" and "Te llamás Ramiro" in r3.texto
-    assert "número de pedido" in r3.texto and s.pendiente == "pedido"      # además repregunta lo que faltaba
-
-
-def test_sin_haberse_presentado_no_sabe_el_nombre_ni_lo_inventa(agente):
-    s, (r1,) = charlar(agente, "Cómo me llamo?")
-    assert "Todavía no me dijiste tu nombre" in r1.texto
-    assert "Todavía no me dijiste" in agente.responder("Cómo me llamo?").texto           # sin sesión tampoco
-
-
-def test_el_nombre_no_se_olvida_con_lo_pendiente(agente):
-    s, _ = charlar(agente, "Hola soy ramiro", "Quiero saber el estado de mi compra", "ORD-1003")
-    assert s.pendiente is None and "Ramiro" in agente.responder("Sabés mi nombre?", s).texto
 
 
 def test_recuerda_el_pedido_que_se_le_paso(agente):
@@ -264,7 +247,7 @@ def test_la_memoria_es_de_cada_sesion_y_no_se_filtra_a_otra(agente):
     a, _ = charlar(agente, "Hola soy ramiro", "ORD-1001")
     b, (r,) = charlar(agente, "Cuál fue la orden que te pasé?")
     assert "ORD-1001" in agente.responder("Cuál fue la orden que te pasé?", a).texto
-    assert "ORD-1001" not in r.texto and "Ramiro" not in agente.responder("Cómo me llamo?", b).texto
+    assert "ORD-1001" not in r.texto
     assert "ORD-1001" not in agente.responder("Cuál fue la orden que te pasé?").texto      # sin sesión, tampoco
 
 

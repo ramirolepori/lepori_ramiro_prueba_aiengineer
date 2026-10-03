@@ -71,7 +71,7 @@ class Respuesta:
     escalamientos: list[str] = field(default_factory=list)
     pedidos: list[dict[str, Any]] = field(default_factory=list)
     traza: list[dict[str, Any]] = field(default_factory=list)
-    conversacional: bool = False                  # charla (nombre, saludo): no cambia lo que el agente esperaba del cliente
+    conversacional: bool = False                  # charla (saludo, un dato ya dicho): no cambia lo que el agente esperaba del cliente
     tiempos: dict[str, float] = field(default_factory=dict)   # ms por etapa y por balde (ver tiempos.py)
 
 
@@ -142,8 +142,7 @@ class AgenteSoporte:
                 if sesion.turnos <= MAX_TURNOS:
                     ev("cortesia_con_pendiente", pendiente=sesion.pendiente)
                     if _es_saludo(pregunta):
-                        _recordar_nombre(pregunta, sesion)
-                        return Respuesta(_saludar(pregunta, pregunta_pendiente(sesion)), "respondido")
+                        return Respuesta(f"¡Hola! {pregunta_pendiente(sesion)}", "respondido")
                     return Respuesta(f"¡De nada! {pregunta_pendiente(sesion)}", "respondido")
                 sesion.limpiar()
         if sesion is not None and sesion.pendiente and guardrails.evaluar(pregunta, self.clasificador):
@@ -182,10 +181,7 @@ class AgenteSoporte:
                              conversacional=True)
         if _es_saludo(pregunta):
             ev("saludo")
-            nombre = _nombre_dicho(pregunta)
-            if sesion is not None and nombre:
-                sesion.datos["nombre"] = nombre
-            return Respuesta(MENSAJE_SALUDO.replace("¡Hola!", f"¡Hola, {nombre}!", 1) if nombre else MENSAJE_SALUDO, "respondido")
+            return Respuesta(MENSAJE_SALUDO, "respondido")
         if _es_despedida(pregunta):
             ev("despedida")
             return Respuesta(MENSAJE_DESPEDIDA, "respondido")
@@ -501,37 +497,6 @@ def _es_saludo(pregunta: str) -> bool:
     palabras = p.split()
     repetida = bool(palabras) and max(palabras.count(w) for w in palabras) > 2     # "hola hola hola ..." es ruido
     return bool(palabras) and len(palabras) <= 6 and not repetida and _SALUDO.fullmatch(p) is not None
-
-
-_PRESENTACION = re.compile(r"(?:me llamo|mi nombre es|soy)\s+([A-Za-zÁÉÍÓÚÜÑáéíóúüñ]{2,20})(?:\s+([A-Za-zÁÉÍÓÚÜÑáéíóúüñ]{2,20}))?\s*[.!]*$",
-                           re.IGNORECASE)
-# palabras que no son un nombre (roles, artículos, la propia tienda): con ellas se saluda sin nombre
-_NO_ES_NOMBRE = {"un", "una", "el", "la", "los", "las", "de", "del", "tu", "su", "mi", "cliente", "usuario", "admin", "administrador",
-                 "gerente", "supervisor", "jefe", "dueno", "dueño", "desarrollador", "programador", "tienda", "tiendahogar", "sistema",
-                 "bot", "robot", "ia", "dan", "aim", "chatgpt", "claude", "asistente", "agente", "yo", "nadie", "alguien", "persona"}
-
-
-def _nombre_dicho(pregunta: str) -> str | None:
-    """El nombre con que se presenta quien saluda ("hola, me llamo ramiro"), solo si parece un nombre: una o dos palabras de
-    letras que no sean un rol ni una palabra común. Si no, None y se saluda sin nombre."""
-    m = _PRESENTACION.search(pregunta.strip())
-    if not m:
-        return None
-    palabras = [g for g in m.groups() if g]
-    if any(guardrails.normalizar(w) in _NO_ES_NOMBRE for w in palabras):
-        return None
-    return " ".join(w.capitalize() for w in palabras)
-
-
-def _recordar_nombre(pregunta: str, sesion: Sesion | None) -> None:
-    nombre = _nombre_dicho(pregunta)
-    if sesion is not None and nombre:
-        sesion.datos["nombre"] = nombre
-
-
-def _saludar(pregunta: str, resto: str) -> str:
-    nombre = _nombre_dicho(pregunta)
-    return f"¡Hola, {nombre}!" + (f" {resto}" if resto else "") if nombre else f"¡Hola!" + (f" {resto}" if resto else "")
 
 
 def _es_despedida(pregunta: str) -> bool:

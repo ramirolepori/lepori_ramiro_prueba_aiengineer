@@ -60,7 +60,7 @@ class Sesion:
     repreguntas: int = 0
     turnos: int = 0                     # mensajes desde que quedó pendiente
     ultima: str = ""                    # la pregunta tal como se le hizo al cliente, para volver a hacerla
-    datos: dict = field(default_factory=dict)   # lo que el cliente dijo (nombre, pedido, lugar, monto); ver recuerdos.py
+    datos: dict = field(default_factory=dict)   # lo que el cliente dijo (pedido, lugar, monto); ver recuerdos.py
 
     def esperar(self, pendiente: str, base: str, si: Lugar | None = None, no: Lugar | None = None) -> None:
         if self.pendiente != pendiente or self.base != base:

@@ -39,7 +39,7 @@ python -m tiendahogar            # chat interactivo, línea vacía para salir
 
 En Windows, si la consola muestra mal las tildes: `$env:PYTHONUTF8 = "1"`.
 
-Con una sola pregunta el agente no recuerda nada. En el chat interactivo (o desde código con `agente.responder(pregunta, Sesion())`) recuerda qué dato le pidió al cliente (el lugar de un envío, el monto de un reembolso, el número de un pedido o hace cuánto compró, y también cómo se presentó, para contestar "cómo me llamo?"), lo repregunta como máximo 2 veces y se olvida a los 5 mensajes. Sin sesión, cada pregunta es independiente (en el chat se logra con `python -m tiendahogar --sin-memoria`).
+Con una sola pregunta el agente no recuerda nada. En el chat interactivo (o desde código con `agente.responder(pregunta, Sesion())`) recuerda qué dato le pidió al cliente (el lugar de un envío, el monto de un reembolso, el número de un pedido o hace cuánto compró) y lo que ya dijo (pedido, lugar y monto), lo repregunta como máximo 2 veces y se olvida a los 5 mensajes. Sin sesión, cada pregunta es independiente (en el chat se logra con `python -m tiendahogar --sin-memoria`).
 
 Desde código:
 
@@ -90,7 +90,7 @@ python -m tiendahogar.independiente medir                    # lotes de frases e
 python -m tiendahogar.rendimiento [--sin-llm|--offline]      # latencia por etapa
 ```
 
-Los conjuntos de frases están en `tests/data/`, divididos en desarrollo y prueba. Los resultados y sus salvedades están en los ADR [0003](docs/adr/0003-guardrail-en-tres-capas.md), [0004](docs/adr/0004-rag-hibrido-y-umbral-por-margen.md), [0011](docs/adr/0011-estrategia-de-evaluacion.md), [0012](docs/adr/0012-rendimiento-y-respaldo-offline.md) y [0013](docs/adr/0013-robustez-ante-intentos-de-sacarlo-de-alcance.md).
+Los conjuntos de frases están en `tests/data/`, divididos en desarrollo y prueba. Los resultados y sus salvedades están en los ADR [0003](docs/adr/0003-guardrail-en-tres-capas.md), [0004](docs/adr/0004-rag-hibrido-y-umbral-por-margen.md), [0009](docs/adr/0009-modelos-locales-y-clientes-sin-sdk.md), [0010](docs/adr/0010-estrategia-de-evaluacion.md) y [0011](docs/adr/0011-robustez-ante-intentos-de-sacarlo-de-alcance.md).
 
 ## Estructura
 

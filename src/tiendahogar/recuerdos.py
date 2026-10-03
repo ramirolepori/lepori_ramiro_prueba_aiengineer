@@ -1,8 +1,8 @@
-"""Lo que el cliente ya dijo en la conversación y puede volver a preguntar ("cómo me llamo?", "cuál fue la orden que te
-pasé?", "en qué ciudad dije que estaba?").
+"""Lo que el cliente ya dijo en la conversación y puede volver a preguntar ("cuál fue la orden que te pasé?", "en qué
+ciudad dije que estaba?").
 
 La sesión guarda un diccionario chico de datos que el cliente dio él mismo, ya pasados por los extractores del agente: el
-nombre (validado), el número de pedido (normalizado a ORD-XXXX), el lugar (solo uno reconocido) y el monto (un número).
+número de pedido (normalizado a ORD-XXXX), el lugar (solo uno reconocido) y el monto (un número).
 Nunca se guarda ni se repite texto libre, y las respuestas salen de plantillas fijas, así que esto no abre un camino para
 meter instrucciones ni para ver datos de otra persona: lo único que se puede recuperar es lo que esa misma sesión puso.
 """
@@ -16,16 +16,13 @@ from .montos import extraer_montos
 from .pedidos import extraer_referencias
 from .rag import normalizar
 
-_RECUERDO = {"nombre": "Te llamás {}.", "pedido": "El pedido que me pasaste es {}.",
+_RECUERDO = {"pedido": "El pedido que me pasaste es {}.",
              "lugar": "Me dijiste que estás en {}.", "monto": "El monto que me dijiste es ${}."}
-_SIN_DATO = {"nombre": "Todavía no me dijiste tu nombre. Si querés, decime cómo te llamás.",
-             "pedido": "Todavía no me pasaste ningún número de pedido.",
+_SIN_DATO = {"pedido": "Todavía no me pasaste ningún número de pedido.",
              "lugar": "Todavía no me dijiste dónde estás.",
              "monto": "Todavía no me dijiste ningún monto."}
 
 _PREGUNTAS = {
-    "nombre": re.compile(r"como me llamo|cual es mi nombre|como es mi nombre|sabes (?:mi nombre|como me llamo)|"
-                         r"te acordas de mi nombre|recordas mi nombre|(?:decime|dime) mi nombre"),
     "pedido": re.compile(r"\b(?:que|cual|cuales)\b.{0,25}\b(?:orden|ordenes|pedido|pedidos|numero)\b.{0,30}"
                          r"\b(?:pase|di|dije|escribi|mande|mencione|consulte|use|puse)\b|"
                          r"cual era (?:mi|el) (?:pedido|orden|numero de pedido)|que (?:pedido|orden) (?:consulte|mire|vimos)|"
@@ -50,8 +47,7 @@ def responder_recuerdo(datos: dict[str, str] | None, clave: str) -> str:
 
 
 def anotar(datos: dict[str, str], mensaje: str) -> None:
-    """Guarda lo que `mensaje` dice del pedido, el lugar o el monto (lo último que dijo pisa lo anterior). El nombre se
-    guarda aparte, cuando se presenta al saludar."""
+    """Guarda lo que `mensaje` dice del pedido, el lugar o el monto (lo último que dijo pisa lo anterior)."""
     refs = extraer_referencias(mensaje)
     if refs:
         datos["pedido"] = refs[-1][0]
