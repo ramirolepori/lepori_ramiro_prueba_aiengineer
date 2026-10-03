@@ -46,8 +46,10 @@ Desde la raíz del repo, con `PYTHONPATH=src` (PowerShell: `$env:PYTHONPATH = "s
 
 ```
 python -m tiendahogar "Cuánto dura la garantía de una licuadora?"
-python -m tiendahogar            # chat interactivo, línea vacía para salir
+python -m tiendahogar            # chat interactivo con memoria de sesión, línea vacía para salir
 ```
+
+Con una sola pregunta el agente no recuerda nada. En el chat interactivo (o desde código con `agente.responder(pregunta, Sesion())`) recuerda qué dato le pidió al cliente: si falta el lugar, el monto de un reembolso o el número de pedido, lo repregunta (como máximo 2 veces, y se olvida a los 5 mensajes) y usa la respuesta. Sin sesión, cada pregunta es independiente.
 
 En Windows, si la consola muestra mal las tildes: `$env:PYTHONUTF8 = "1"`.
 
@@ -137,6 +139,7 @@ src/tiendahogar/
   embeddings.py   cliente de embeddings (/v1/embeddings) y similitud coseno
   pedidos.py      tool consultar_estado_pedido, tabla mock y extracción flexible de números de pedido
   lugares.py      plazo de envío según el lugar: gazetteer (data/lugares.json) y reglas; "la capital" es la Ciudad de Buenos Aires
+  sesion.py       memoria de la conversación: qué dato pidió el agente (lugar, monto, número de pedido) y cómo se lee la respuesta
   llm.py          clientes OpenAI-compatible y Anthropic (urllib, sin dependencias)
   evaluacion.py   medición del guardrail, de los pedidos y del RAG
   independiente.py  conjunto de frases escritas por otra persona: importar, variantes y medir

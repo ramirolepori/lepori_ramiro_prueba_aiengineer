@@ -183,14 +183,28 @@ def _linea(l: Lugar) -> str:
         return (f"Los envíos a {l.nombre} se consideran envíos a otras ciudades (distintas de la capital, {CAPITAL_EN_PARENTESIS}) y "
                 f"tardan {PLAZO_OTRAS}.")
     if l.tipo == "ambiguo_ba":
-        return (f"Si estás en {CAPITAL}, que es la capital, el envío tarda {PLAZO_CAPITAL}; si estás en otra localidad "
-                f"de la provincia de Buenos Aires (por ejemplo del Gran Buenos Aires o La Plata), tarda {PLAZO_OTRAS}. "
-                f"Decime cuál es tu caso y te lo confirmo.")
+        return (f"¿Estás en {CAPITAL}? Si es así, el envío tarda {PLAZO_CAPITAL}; si estás en otra localidad de la "
+                f"provincia de Buenos Aires (por ejemplo del Gran Buenos Aires o La Plata), tarda {PLAZO_OTRAS}.")
     if l.tipo == "exterior":
         return f"No hacemos envíos a {l.nombre}: los envíos internacionales no están disponibles actualmente."
-    return (f"No reconozco \"{l.nombre}\" como destino. Los envíos a la capital ({CAPITAL_EN_PARENTESIS}) tardan {PLAZO_CAPITAL}, a otras "
-            f"ciudades {PLAZO_OTRAS} y los internacionales no están disponibles actualmente. Decime en qué ciudad y país "
-            f"estás y te confirmo cuál corresponde.")
+    return (f"No ubico \"{l.nombre}\". ¿Es una ciudad de Argentina fuera de {CAPITAL}? Si es así, el envío tarda "
+            f"{PLAZO_OTRAS}.")
+
+
+def confirmacion(lugares: list[Lugar]) -> tuple[Lugar | None, Lugar | None] | None:
+    """Si la respuesta es una pregunta de sí o no, qué lugar queda con un sí y con un no (None: hay que preguntar de
+    nuevo). Devuelve None si no se le preguntó nada al cliente (hay un solo lugar claro, o varios)."""
+    if len(lugares) != 1:
+        return None
+    l = lugares[0]
+    if l.tipo == "ambiguo_ba":
+        return Lugar(CAPITAL, "capital"), Lugar("la provincia de Buenos Aires", "otra")
+    if l.tipo == "desconocido":
+        return Lugar(l.nombre, "otra"), None
+    return None
+
+
+PREGUNTA_LUGAR = "¿En qué ciudad y país estás? Con eso te confirmo el plazo."
 
 
 def respuesta_envio(lugares: list[Lugar]) -> str:
@@ -198,7 +212,7 @@ def respuesta_envio(lugares: list[Lugar]) -> str:
     return " ".join(_linea(l) for l in lugares) + " [envios]"
 
 
-def respuesta_envio_sin_lugar() -> str:
-    return (f"Los envíos a la capital ({CAPITAL_EN_PARENTESIS}) tardan {PLAZO_CAPITAL} y a otras ciudades {PLAZO_OTRAS}. Los envíos "
-            f"internacionales no están disponibles actualmente. Decime tu ciudad y te confirmo cuál plazo te "
-            f"corresponde. [envios]")
+def respuesta_envio_sin_lugar(preguntar: bool = True) -> str:
+    texto = (f"Los envíos a la capital ({CAPITAL_EN_PARENTESIS}) tardan {PLAZO_CAPITAL} y a otras ciudades {PLAZO_OTRAS}. "
+             f"Los envíos internacionales no están disponibles actualmente.")
+    return f"{texto} {PREGUNTA_LUGAR if preguntar else ''}".strip() + " [envios]"

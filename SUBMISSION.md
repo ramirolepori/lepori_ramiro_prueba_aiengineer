@@ -170,6 +170,25 @@ Decisión de Ramiro: derivar una pregunta por el canal de contacto a una persona
 
 Variantes automáticas (174, sin tildes, mayúsculas y errores de tipeo sobre las frases de los lotes): guardrail 38/38 con 0 falsos positivos en 132, pedidos 29/29 y documentos 66/73 (BM25 solo 61/73). Las variantes encontraron dos faltas que las reglas no cubrían ("reemoblso", "arreepntí"): el recuperador ahora corrige faltas leves en las palabras del dominio y el reconocedor de reembolsos tolera "arrepentí" mal escrito. Con eso BM25 solo subió de 78,6 % a 91,4 % en desarrollo.
 
+### Criterio de alcance (decisión de Ramiro)
+
+Esto es una prueba técnica: se evalúa la calidad de lo que se hace, no el tiempo ni la preparación para producción. Cada decisión de arquitectura y diseño se toma para este alcance, con pruebas y mediciones, y la sección de producción solo describe cómo se mapearía (Foundry, Databricks, Apigee, Kafka), sin implementar infraestructura.
+
+### Decisión: memoria de sesión y repreguntas (decisión de Ramiro)
+
+Motivo: con memoria el agente puede repreguntar un dato que falta en vez de volcar todo el documento ("Soy de Zapala" → pregunta si es una ciudad de Argentina fuera de la Ciudad de Buenos Aires y da el plazo; "quiero un reembolso" sin monto → pregunta de cuánto fue la compra).
+
+Lo que se decidió, y por qué:
+- **Estado estructurado, no historial.** `sesion.py` guarda qué dato está pendiente (lugar, confirmación de lugar, monto o número de pedido), la consulta que quedó incompleta y cuántas veces se repreguntó. Es el patrón de slot filling de los chatbots de tareas ([Rasa Forms](https://rasa.com/docs/rasa/forms): se define qué dato falta, se pregunta y el formulario se cierra al completarse) y la recomendación de tratar la memoria como un sistema estructurado y no como una lista plana de mensajes. Es más chico, no necesita al modelo y no guarda texto del cliente.
+- **La respuesta del cliente se lee con los mismos extractores** (`lugares`, `montos`, `pedidos`). Si calza, se arma la consulta completa y pasa por el flujo normal, guardrail incluido: la memoria no es un atajo. Un mensaje que debe derivarse (legal, trato...) o que es una inyección se trata como tal aunque haya algo pendiente.
+- **La memoria es opcional y la maneja quien llama.** `responder(pregunta)` sin sesión no recuerda nada (cada pregunta es independiente, también si se reutiliza el agente, lo que evita que un escenario contamine al siguiente); `responder(pregunta, sesion)` sí. El chat interactivo crea una sesión.
+- **La repregunta trae el plazo condicional.** Un evaluador de un solo mensaje no puede contestar, así que la respuesta sirve sola ("Si es así, el envío tarda 5-7 días hábiles").
+- **Repregunta cuando el lugar es ambiguo ("Buenos Aires")**, con los dos plazos incluidos (decisión de Ramiro). Con un sí es la Ciudad (2-3 días hábiles), con un no es otra localidad de la provincia (5-7).
+- **Límites:** el dato pendiente se olvida a los 5 mensajes (decisión de Ramiro, sin tiempo de vida por reloj) y se repregunta como máximo 2 veces por dato; después se responde con la información completa. Un mensaje largo, con pregunta o de otro tema descarta lo pendiente. "No sé" en el monto se responde con la política sin insistir.
+- **Cuándo se pregunta el monto:** solo si pide plata ("quiero un reembolso", "que me devuelvan la plata"), no dijo cuánto y no está preguntando por la política ("cuánto tardan los reembolsos?" no repregunta).
+- **Alcance:** lugar, monto y número de pedido. Pendiente, para el final si queda tiempo: preguntar hace cuánto compró en garantías y devoluciones.
+- **El modelo no maneja la memoria:** el estado, la extracción y la decisión de repreguntar son código. 29 tests en `tests/test_sesion.py` con conversaciones de varios turnos (dato dado, dato dado tarde, sí y no, cambio de tema, límite de repreguntas, olvido a los 5 mensajes, sesiones que no se mezclan, guardrail e inyección dentro de una sesión). Hallazgo al probar: un mensaje corto para derivar ("los voy a denunciar") se tomaba como intento de respuesta y se repreguntaba antes del guardrail; ahora el guardrail corre primero.
+
 ### Principio para elegir el modelo de lenguaje (decisión de Ramiro)
 
 Cuanto mejor es el modelo, menos defensas necesita el código. Para que el diseño sea realista, no se apunta a un modelo de última generación (no es lo que se usaría en un soporte de este tipo por costo) ni a uno viejo (obligaría a sobreajustar el código). Se apunta a la clase de modelos más usada por su relación costo y calidad: los modelos chicos de los proveedores comerciales (la gama "mini", "flash" o "haiku") y, en local, un modelo abierto de 7 a 8 mil millones de parámetros. En las pruebas locales se usó `qwen2.5:7b` como referencia, por ser una clase igual o inferior a los modelos chicos comerciales: si el agente funciona bien con él, debería funcionar con un modelo de esa gama. El 3B se descartó porque falló en las preguntas que mezclan garantía y devolución. La lentitud medida (unos 20 segundos por respuesta) se debe al hardware de la máquina de desarrollo (CPU, sin GPU) y no al diseño.
@@ -236,7 +255,7 @@ Qué guardan las trazas (`trazas/trazas.jsonl`, ignorada por git): largo de la c
 
 ### Lista de mejoras si queda tiempo
 
-- Memoria entre mensajes (por ejemplo, unir el número de pedido dado antes con una pregunta posterior).
+- Repreguntar hace cuánto compró en garantías y devoluciones (pendiente del diseño de memoria; hecho: lugar, monto y número de pedido).
 - Ingeniería adicional contra inyección de prompt, más allá de lo inequívoco.
 - Respuestas más útiles a preguntas fuera de alcance, por ejemplo ofrecer derivar a una persona.
 - Soporte de otros idiomas.

@@ -23,8 +23,9 @@ from .llm import LLM, ErrorLLM
 from .pedidos import consultar_estado_pedido, extraer_identificadores_raros, extraer_referencias
 from .config import Config
 from .embeddings import ClienteEmbeddings
-from .lugares import resolver_lugares, respuesta_envio, respuesta_envio_sin_lugar
+from .lugares import confirmacion, resolver_lugares, respuesta_envio, respuesta_envio_sin_lugar
 from .rag import IndiceBM25, RecuperadorHibrido, Resultado as ResultadoRAG, crear_recuperador
+from .sesion import PREGUNTA_MONTO, Sesion, interpretar
 from .semantica import INTENCIONES, ClasificadorSemantico, crear_clasificador, segmentar
 from .tiempos import Cronometro, activar, etapa
 
@@ -76,7 +77,8 @@ class AgenteSoporte:
         # reglas + capa semántica (embeddings si hay EMBEDDING_MODEL, si no n-gramas de caracteres)
         self.clasificador = clasificador or crear_clasificador(config, cliente)
 
-    def responder(self, pregunta: str) -> Respuesta:
+    def responder(self, pregunta: str, sesion: Sesion | None = None) -> Respuesta:
+        """Sin `sesion`, cada pregunta es independiente. Con una, el agente recuerda qué dato le pidió al cliente (ver sesion.py)."""
         traza_id, t0 = uuid.uuid4().hex[:12], time.perf_counter()
         traza: list[dict[str, Any]] = []
 
@@ -87,7 +89,7 @@ class AgenteSoporte:
         cron, cliente = Cronometro(), self.cliente_embeddings
         emb0 = (cliente.segundos, cliente.llamadas) if cliente else (0.0, 0)
         with activar(cron):
-            r = self._decidir(pregunta, ev)
+            r = self._decidir(pregunta, ev, sesion)
         total_ms = (time.perf_counter() - t0) * 1000
         emb_ms = ((cliente.segundos - emb0[0]) * 1000) if cliente else 0.0
         r.tiempos = cron.resumen(total_ms, emb_ms, (cliente.llamadas - emb0[1]) if cliente else 0)
@@ -97,7 +99,7 @@ class AgenteSoporte:
             self._guardar(traza)
         return r
 
-    def _decidir(self, pregunta: str, ev: Callable[..., None]) -> Respuesta:
+    def _decidir(self, pregunta: str, ev: Callable[..., None], sesion: Sesion | None = None) -> Respuesta:
         pregunta = pregunta.strip()
         ev("entrada", chars=len(pregunta))
         if not pregunta:
@@ -111,9 +113,23 @@ class AgenteSoporte:
             ev("guardrail", categoria="inyeccion")
             return Respuesta(MENSAJE_BLOQUEO, "bloqueado")
 
+        # Con sesión: si el mensaje responde a lo que se le preguntó, se arma la consulta completa y sigue el flujo normal
+        lugar_dado, repreguntar = None, True
+        if sesion is not None and sesion.pendiente and guardrails.evaluar(pregunta, self.clasificador):
+            sesion.limpiar()           # un mensaje para derivar (legal, trato...) no es la respuesta al dato pendiente
+        if sesion is not None:
+            turno = interpretar(sesion, pregunta)
+            if turno is not None:
+                ev("sesion", repregunta=bool(turno.repregunta), lugar=bool(turno.lugar))
+                if turno.repregunta:
+                    return Respuesta(turno.repregunta, "respondido")
+                pregunta, lugar_dado, repreguntar = turno.consulta, turno.lugar, turno.repreguntar
+
         with etapa("guardrail"):
             escalamientos = guardrails.evaluar(pregunta, self.clasificador)
         if escalamientos:
+            if sesion is not None:
+                sesion.limpiar()           # se deriva a una persona: no queda nada pendiente
             ev("guardrail", categorias=[e.categoria for e in escalamientos],
                origenes=[e.origen for e in escalamientos], capa=self.clasificador.nombre,
                respaldo=self.clasificador.ultimo_respaldo)
@@ -126,7 +142,8 @@ class AgenteSoporte:
                                  [e.categoria for e in escalamientos], pedidos)
             return Respuesta(derivacion, "escalado", escalamientos=[e.categoria for e in escalamientos])
 
-        return self._responder(pregunta, ev, con_respaldo=True)
+        return self._responder(pregunta, ev, con_respaldo=True, sesion=sesion, lugar_dado=lugar_dado,
+                               repreguntar=repreguntar)
 
     def _responder_parte_permitida(self, pregunta: str, ev: Callable[..., None]
                                    ) -> tuple[str, list[str], list[dict[str, Any]]] | None:
@@ -142,7 +159,8 @@ class AgenteSoporte:
         return None if r is None else (r.texto, r.fuentes, r.pedidos)
 
     def _responder(self, pregunta: str, ev: Callable[..., None], con_respaldo: bool,
-                   excluir: set[str] | None = None) -> Respuesta | None:
+                   excluir: set[str] | None = None, sesion: Sesion | None = None, lugar_dado=None,
+                   repreguntar: bool = True) -> Respuesta | None:
         """RAG y tool de pedidos sobre `pregunta` y redacción. Sin `con_respaldo`, devuelve None cuando no hay
         nada relevante en lugar de un mensaje de 'no sé' (para la parte permitida de una pregunta mixta)."""
         pedidos = []
@@ -162,6 +180,8 @@ class AgenteSoporte:
             consulta_sin_numero = not pedidos and self._consulta_de_pedido(pregunta)
         if consulta_sin_numero:
             ev("intencion", categoria="consulta_pedido_sin_numero")
+            if sesion is not None and repreguntar:
+                sesion.esperar("pedido", pregunta)
 
         with etapa("recuperacion"):
             resultados = [r for r in self.indice.buscar(pregunta) if r.fragmento.documento not in (excluir or set())]
@@ -170,6 +190,10 @@ class AgenteSoporte:
         fuentes = [r.fragmento.documento for r in resultados]
 
         notas = _notas(pregunta, fuentes, consulta_sin_numero)
+        if repreguntar and "reembolsos" in fuentes and _pide_reembolso(pregunta) and not guardrails.extraer_montos(pregunta):
+            notas.append(PREGUNTA_MONTO)       # quiere un reembolso y no dijo el monto: de eso depende la respuesta
+            if sesion is not None:
+                sesion.esperar("monto", pregunta)
         if not resultados and not pedidos:
             if not con_respaldo:
                 return None
@@ -181,11 +205,19 @@ class AgenteSoporte:
         # capital. Esa parte se saca de lo que redacta el modelo y se agrega ya resuelta.
         envio = None
         if "envios" in fuentes:
-            lugares = resolver_lugares(pregunta)
+            lugares = [lugar_dado] if lugar_dado else resolver_lugares(pregunta)
             if lugares:
-                envio = respuesta_envio(lugares)
+                por_confirmar = confirmacion(lugares)      # lugar ambiguo o desconocido: se le pregunta
+                if por_confirmar and not repreguntar:
+                    envio = respuesta_envio_sin_lugar(preguntar=False)
+                else:
+                    envio = respuesta_envio(lugares)
+                    if por_confirmar and sesion is not None:
+                        sesion.esperar("lugar_confirmar", pregunta, *por_confirmar)
             elif fuentes == ["envios"] and not pedidos and not consulta_sin_numero:
-                envio = respuesta_envio_sin_lugar()
+                envio = respuesta_envio_sin_lugar(preguntar=repreguntar)
+                if repreguntar and sesion is not None:
+                    sesion.esperar("lugar", pregunta)
             if envio:
                 ev("envio", lugares=[(l.tipo) for l in lugares])
         redactables = [r for r in resultados if not (envio and r.fragmento.documento == "envios")]
@@ -250,7 +282,18 @@ _COMPRA_FUTURA = re.compile(
 _COMPRA_PROPIA = re.compile(
     r"\b(mi|mis|mio|mia|nuestro|nuestra|pedi|pedimos|compre|compramos|encargue|hice|hicimos|realice|ordene|adquiri|"
     r"me (?:llego|falta|entregaron|mandaron|despacharon))\b")
+_PIDE_PLATA = re.compile(r"reembols|reintegr|\bplata\b|dinero|guita|\b(?:me )?devuelv\w+(?:me)? (?:la|el|mi|los|las)\b")
+_PEDIDO_PERSONAL = re.compile(r"\b(?:quiero|quisiera|necesito|pido|solicito|exijo)\b|\bme (?:devuelven|reembolsan|reintegran)\b|"
+                              r"\b(?:devuelvan|reembolsen|reintegren)\b")
+_PREGUNTA_DE_POLITICA = re.compile(r"cuanto|cuando|como|quien|plazo|tarda|demora|politica|condicion|requisito|aprueba|"
+                                   r"aprobacion|donde|que pasa|metodo")
 _PRODUCTOS = ("refrigeradora", "heladera", "nevera", "lavadora", "estufa", "licuadora", "plancha", "tostadora")
+
+
+def _pide_reembolso(pregunta: str) -> bool:
+    """¿Pide que le devuelvan plata (y no pregunta por la política de reembolsos)?"""
+    p = guardrails.normalizar(pregunta)
+    return bool(_PIDE_PLATA.search(p) and _PEDIDO_PERSONAL.search(p) and not _PREGUNTA_DE_POLITICA.search(p))
 
 
 def _pedir_numero(pregunta: str) -> str:

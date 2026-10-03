@@ -71,13 +71,13 @@ def test_respuesta_exterior_no_hay_envio(agente):
 
 def test_respuesta_buenos_aires_ambigua_da_los_dos_plazos(agente):
     r = agente.responder("Vivo en Buenos Aires, cuánto tarda el envío?")
-    assert "2-3 días hábiles" in r.texto and "5-7 días hábiles" in r.texto and "Decime cuál es tu caso" in r.texto
+    assert "2-3 días hábiles" in r.texto and "5-7 días hábiles" in r.texto and "¿Estás en la Ciudad de Buenos Aires" in r.texto
 
 
 def test_sin_lugar_da_todos_los_plazos_y_pide_la_ciudad(agente):
     r = agente.responder("Voy a hacer una compra de una heladera, cuánto tarda en llegar a mi casa?")
     assert "2-3 días hábiles" in r.texto and "5-7 días hábiles" in r.texto and "internacionales" in r.texto
-    assert "Decime tu ciudad" in r.texto
+    assert "¿En qué ciudad" in r.texto
 
 
 def test_el_lugar_no_pide_numero_de_pedido(agente):

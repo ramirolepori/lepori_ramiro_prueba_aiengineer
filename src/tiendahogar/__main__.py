@@ -6,6 +6,7 @@ import sys
 from .agent import AgenteSoporte
 from .config import RAIZ
 from .llm import ErrorLLM, crear_llm
+from .sesion import Sesion
 
 
 def main() -> int:
@@ -19,6 +20,7 @@ def main() -> int:
         print(agente.responder(" ".join(sys.argv[1:])).texto)
         return 0
     print(f"Soporte TiendaHogar [{modo}]. Línea vacía para salir.")
+    sesion = Sesion()          # en el chat interactivo el agente recuerda lo que le preguntó al cliente
     while True:
         try:
             pregunta = input("> ").strip()
