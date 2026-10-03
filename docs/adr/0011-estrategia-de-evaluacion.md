@@ -12,7 +12,7 @@ Un agente que se ajusta mirando las mismas frases con las que se mide da cifras 
 - Lotes independientes: frases escritas por una persona que no escribió el código ni las anclas (`python -m tiendahogar.independiente`). Cada línea lleva un código de lo esperado (por ejemplo `R` reembolso de más de $500, `T` queja de trato, `F` facturación, `L` legal, `OK` no derivar, `P=1001` pregunta por un pedido con su número, `PX=DRO-1002` identificador con formato raro, `D=garantia+devoluciones` documentos esperados, `X` fuera de alcance). Un `~` al final indica que derivar también es válido (preguntas por el canal de contacto).
 - Orígenes que se reportan por separado: las frases de Ramiro, un lote 2 escrito por Claude con el estilo y la jerga de las de Ramiro (lunfardo y colombianismos) y variantes automáticas (sin tildes, mayúsculas, errores de tipeo). Las frases del lote 2 no son independientes (las escribió quien escribió el código) y sirven como material de desarrollo.
 - Regla: la primera medición de un lote es la limpia. Después de corregir fallos a partir de un lote, sus cifras pasan a ser optimistas y la prueba vuelve a ser un lote nuevo. Las correcciones se hacen con reglas generales y no copiando frases.
-- Además, los 722 tests de `pytest` fijan los comportamientos (ver la sección de pruebas de `SUBMISSION.md`).
+- Además, los 771 tests de `pytest` fijan los comportamientos (ver la sección de pruebas de `SUBMISSION.md`).
 
 ## Alternativas descartadas
 
@@ -35,4 +35,9 @@ Primera medición de cada lote, antes de corregir, y estado actual (riesgo detec
 
 En el conjunto de desarrollo y el de prueba no hubo regresión (ADR 0003 y ADR 0004).
 
-Pendiente: un lote nuevo y definitivo escrito por Ramiro, que se mide una sola vez antes de tocar nada.
+Lote 3 de Ramiro (42 frases escritas el 3 de octubre, `tests/data/independiente_lote3.txt`): es la única medición limpia del proyecto, hecha una sola vez antes de tocar nada. Con embeddings: riesgo detectado 8 de 10 con 0 falsos positivos en 29, números de pedido 5 de 5, documentos correctos 15 de 15, preguntas ajenas rechazadas 8 de 8 y un identificador con formato raro respondido bien 0 de 1. Sin embeddings, el riesgo daba 5 de 10 y 6 de 10. Fallos y qué se hizo:
+- `DOR--1002` dentro de "ordené una licuadora (DOR--1002)": el agente decía "no tengo esa información" en vez de "no encontré ese identificador". Ahora se reconoce un código con doble guion o dentro de un paréntesis cuando la frase habla de un pedido.
+- Quejas de trato dichas de otra forma ("lo hizo tan mal que mi novia salió llorando", "me tiró un vaso de agua en la cara", "actitudes que me faltaron el respeto"): reglas nuevas, de modo que ya no dependen de los embeddings.
+- Las dos frases que Ramiro agrupó como "temas legales" ("no me dieron factura de compra", "cómo hago valer mi garantía si no recibí comprobante"): no mencionan un reclamo legal y los documentos no dicen qué hacer. Decisión de Ramiro: el agente responde que no tiene esa información (y da lo que sí dice la garantía si preguntó por ella), pregunta si quiere hacer un reclamo y, si responde que sí, deriva a una persona.
+- Lectura de las respuestas completas con el modelo: un agradecimiento ("estoy muy conforme con la compra") recibía la política de devoluciones y el pedido del número de pedido; ahora recibe un agradecimiento. "A la Quiaca" no estaba en el diccionario de lugares (se agregaron unos cien); un producto "hecho solo para mí" preguntaba hace cuánto se compró en vez de decir que no se devuelve; y las respuestas mostraban la indicación interna de los documentos ("el asistente de IA no debe intentar resolver estos casos"), que ahora se saca de lo que ve el cliente.
+Después de estas correcciones el lote 3 da riesgo 8 de 8 (con las dos frases ambiguas resueltas por la pregunta de reclamo), identificador raro 1 de 1 y las demás cifras iguales, pero ya no es una medición limpia. El siguiente lote que haga falta tiene que ser nuevo.

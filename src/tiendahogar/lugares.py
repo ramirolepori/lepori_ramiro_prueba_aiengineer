@@ -85,6 +85,7 @@ _DESCONOCIDO = re.compile(
     r"(?!(?:mi|mis|su|sus|el|la|los|las|un|una|otro|otra|esa|ese|casa|domicilio|direccion|ahi|aca|alla|donde|todo|todos|"
     r"cualquier|tu|tus|nuestra|nuestro)\b)"
     r"([a-z]+(?:\s+(?:de |del |la |los |las |san |santa )?[a-z]+){0,2})")
+_DESCONOCIDO_ENVIO = re.compile(r"\ba (?!(?:mi|su|la|el|los|las|un|una)\s+(?:casa|domicilio|direccion)\b)(?:la |el )?([a-z]+(?: (?!las\b|los\b)[a-z]+)?) (?:las |los )?(?:compras|envios|pedidos|paquetes)\b")
 _CORTE = {"y", "o", "e", "u", "que", "cuanto", "cuantos", "cuantas", "cuando", "como", "se", "me", "tarda", "tardan", "demora",
           "demoran", "llega", "llegan", "en", "a", "con", "por", "para", "si", "pero", "no", "es", "esta", "tarda", "dias", "cuantos"}
 
@@ -155,7 +156,7 @@ def resolver_lugares(texto: str) -> list[Lugar]:
         lugares.append(Lugar("la capital", "capital"))
 
     if not lugares:      # lugar que no está en el gazetteer, pero que la persona dijo con una pista fuerte
-        m = _DESCONOCIDO.search(p)
+        m = _DESCONOCIDO.search(p) or _DESCONOCIDO_ENVIO.search(p)
         if m:
             palabras = m.group(1).split()
             while palabras and palabras[-1] in _CORTE:

@@ -33,6 +33,8 @@ PREGUNTA_ANTIGUEDAD = ("¿Hace cuánto lo compraste? Con eso te digo cómo sigue
                        "compra, con el producto sin usar y en su empaque original, y pasado ese plazo solo si tiene un defecto "
                        "cubierto por la garantía, que dura 12 meses en los electrodomésticos grandes y 6 en los pequeños. "
                        "[devoluciones] [garantia]")
+PREGUNTA_RECLAMO = f"¿Querés hacer un reclamo? Si es así, te derivo a {guardrails.CONTACTO}."
+SIN_RECLAMO = "Está bien. Si necesitás algo más, puedo ayudarte con garantías, devoluciones, envíos, reembolsos o el estado de un pedido."
 PREGUNTA_PEDIDO = "Necesito el número de pedido (formato ORD-XXXX) para consultarlo."
 SIN_PEDIDO = ("Sin el número de pedido (formato ORD-XXXX) no puedo consultar su estado. Cuando lo tengas, escribilo y "
               "lo reviso.")
@@ -75,6 +77,7 @@ class Turno:
     lugar: Lugar | None = None          # lugar ya confirmado por el cliente con un sí o un no
     repregunta: str | None = None
     repreguntar: bool = True            # False: no vuelvas a preguntar este dato (se superó el máximo)
+    derivar: str | None = None          # categoría del guardrail a la que derivar (el cliente confirmó que quiere reclamar)
 
 
 def _es_un_intento(mensaje: str) -> bool:
@@ -99,6 +102,16 @@ def interpretar(sesion: Sesion, mensaje: str) -> Turno | None:
         return None
     t = normalizar(mensaje).strip(" ¿?¡!.,")
     base, pendiente = sesion.base, sesion.pendiente
+
+    if pendiente == "reclamo":
+        if _SI.match(t):
+            sesion.limpiar()
+            return Turno(derivar="disputa_facturacion")
+        if _NO.match(t):
+            sesion.limpiar()
+            return Turno(repregunta=SIN_RECLAMO)
+        sesion.limpiar()                        # otra cosa: se responde el mensaje solo
+        return None
 
     if pendiente == "lugar_confirmar":
         if _SI.match(t) and sesion.si:

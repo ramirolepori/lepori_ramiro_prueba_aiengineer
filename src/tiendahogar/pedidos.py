@@ -55,7 +55,11 @@ _RE_RARO = re.compile(
     r"(?<![a-z0-9@])(?:pedidos?|ordenes|orden|compras?|encargos?|transaccion(?:es)?|operacion(?:es)?|ticket|codigo|"
     r"referencia|n[º°]|nro\.?|numero|num\.?|#)"
     r"[\s:.#]*(?:de (?:pedido|compra|orden)[\s:.]*)?(?:(?:es|era|seria)\s+)?(?:el |la )?[\s#:]*"
-    r"([a-z0-9]+(?:[-_][a-z0-9]+)+|[a-z]{2,8}\d[a-z0-9]*)(?![a-z0-9@.])")
+    r"([a-z0-9]+(?:[-_]+[a-z0-9]+)+|[a-z]{2,8}\d[a-z0-9]*)(?![a-z0-9@.])")
+# El mismo tipo de código suelto en cualquier parte de la frase ("ordené una licuadora (DOR--1002) y quería saber el
+# estado"): solo si la frase habla de un pedido, para no tomar un modelo de producto por un número de pedido
+_RE_CODIGO_SUELTO = re.compile(r"(?<![a-z0-9@])([a-z]{2,6}[-_]{1,2}\d{3,8})(?![a-z0-9@.])")
+_HABLA_DE_UN_PEDIDO = re.compile(r"\b(?:ordene|orden|pedido|pedi|compra|compre|adquiri|encargue|estado|seguimiento|numero|nro)\b")
 
 
 def _sin_tildes(texto: str) -> str:
@@ -91,7 +95,10 @@ def extraer_identificadores_raros(texto: str) -> list[str]:
     No se corrigen en silencio: el agente dice que no lo encontró y cuál es el formato."""
     t = _sin_tildes(texto)
     raros: list[str] = []
-    for m in _RE_RARO.finditer(t):
+    candidatos = list(_RE_RARO.finditer(t))
+    if _HABLA_DE_UN_PEDIDO.search(t):
+        candidatos += list(_RE_CODIGO_SUELTO.finditer(t))
+    for m in candidatos:
         tok = m.group(1)
         if re.fullmatch(r"ord[\s\-_.:#]*\d{3,8}", tok) or tok[0].isdigit():
             continue                                            # ya es un ORD-XXXX válido, o empieza con un número

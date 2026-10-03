@@ -21,12 +21,13 @@ from typing import Any, Callable
 
 from . import guardrails
 from .llm import LLM, ErrorLLM
+from .plazos import PLAZO_DEVOLUCION_DIAS, dias_desde_la_compra, nota_de_devolucion
 from .pedidos import consultar_estado_pedido, extraer_identificadores_raros, extraer_referencias
 from .config import Config
 from .embeddings import ClienteEmbeddings
 from .lugares import confirmacion, resolver_lugares, respuesta_envio, respuesta_envio_sin_lugar
-from .rag import IndiceBM25, RecuperadorHibrido, Resultado as ResultadoRAG, crear_recuperador, tokenizar
-from .sesion import PREGUNTA_ANTIGUEDAD, PREGUNTA_MONTO, TIEMPO, Sesion, interpretar
+from .rag import IndiceBM25, RecuperadorHibrido, Resultado as ResultadoRAG, crear_recuperador, tokenizar, _PIDE_CANAL
+from .sesion import PREGUNTA_ANTIGUEDAD, PREGUNTA_MONTO, PREGUNTA_RECLAMO, TIEMPO, Sesion, interpretar
 from .semantica import INTENCIONES, ClasificadorSemantico, crear_clasificador, segmentar
 from .tiempos import Cronometro, activar, etapa
 
@@ -49,6 +50,8 @@ _CANDADO_TRAZAS = threading.Lock()
 MAX_CARACTERES = 2000
 MENSAJE_VACIO = "No recibí ninguna consulta. Contame en qué te puedo ayudar: garantías, devoluciones, envíos, reembolsos o el estado de un pedido."
 MENSAJE_BLOQUEO ="No puedo procesar ese pedido porque intenta cambiar mis reglas de funcionamiento."
+TEXTO_CANAL = (f"Para hablar con una persona, escribí a {guardrails.CONTACTO}. Es el canal de atención humana para quejas "
+               f"sobre el trato de un empleado, disputas de facturación y temas legales. [contacto]")
 MENSAJE_SIN_INFO = (
     "No tengo esa información en nuestras políticas. Puedo ayudarte con garantías, devoluciones, tiempos de envío, "
     "reembolsos y el estado de un pedido (con su número ORD-XXXX)."
@@ -121,6 +124,8 @@ class AgenteSoporte:
             turno = interpretar(sesion, pregunta)
             if turno is not None:
                 ev("sesion", repregunta=bool(turno.repregunta), lugar=bool(turno.lugar))
+                if turno.derivar:                     # el cliente confirmó que quiere hacer un reclamo
+                    return Respuesta(guardrails._mensaje(turno.derivar)[1], "escalado", escalamientos=[turno.derivar])
                 if turno.repregunta:
                     return Respuesta(turno.repregunta, "respondido")
                 pregunta, lugar_dado, repreguntar = turno.consulta, turno.lugar, turno.repreguntar
@@ -142,8 +147,42 @@ class AgenteSoporte:
                                  [e.categoria for e in escalamientos], pedidos)
             return Respuesta(derivacion, "escalado", escalamientos=[e.categoria for e in escalamientos])
 
+        if _es_agradecimiento(pregunta):
+            ev("agradecimiento")
+            return Respuesta(MENSAJE_AGRADECIMIENTO, "respondido")
+        if repreguntar and _sin_comprobante(pregunta):
+            ev("sin_comprobante")
+            return self._sin_comprobante(pregunta, sesion)
+
         return self._responder(pregunta, ev, con_respaldo=True, sesion=sesion, lugar_dado=lugar_dado,
                                repreguntar=repreguntar)
+
+    def _respuesta_de_plazo(self, dias: int, fuentes: list[str]) -> str:
+        texto = f"{nota_de_devolucion(dias)} [devoluciones]"
+        if dias > PLAZO_DEVOLUCION_DIAS and "garantia" in fuentes:
+            garantia = next((f for f in getattr(self.indice, "indice", self.indice).fragmentos if f.documento == "garantia"), None)
+            if garantia is not None:
+                cuerpo = re.sub(r"^#.*\n+", "", garantia.texto).strip()
+                texto += f"\n\n{_para_el_cliente(cuerpo)} [garantia]"
+        return texto
+
+    def _sin_comprobante(self, pregunta: str, sesion: Sesion | None) -> Respuesta:
+        """No le dieron la factura o el comprobante de compra: los documentos no dicen qué hacer, y no se inventa. Se
+        responde eso, se da lo que sí dice la garantía si preguntó por ella y se pregunta si quiere hacer un reclamo (si
+        dice que sí, se deriva a una persona)."""
+        partes: list[str] = []
+        fuentes: list[str] = []
+        if "garantia" in guardrails.normalizar(pregunta):
+            garantia = next((f for f in getattr(self.indice, "indice", self.indice).fragmentos if f.documento == "garantia"), None)
+            if garantia is not None:
+                cuerpo = re.sub(r"^#.*\n+", "", garantia.texto).strip()
+                partes.append(f"{_para_el_cliente(cuerpo)} [garantia]")
+                fuentes.append("garantia")
+        partes.append("Mis documentos no dicen qué hacer cuando no se recibe la factura o el comprobante de compra. "
+                      + PREGUNTA_RECLAMO)
+        if sesion is not None:
+            sesion.esperar("reclamo", pregunta)
+        return Respuesta("\n\n".join(partes), "respondido", fuentes)
 
     def _responder_parte_permitida(self, pregunta: str, ev: Callable[..., None]
                                    ) -> tuple[str, list[str], list[dict[str, Any]]] | None:
@@ -208,6 +247,21 @@ class AgenteSoporte:
             if sesion is not None:
                 sesion.esperar("antiguedad", pregunta)
             return Respuesta(PREGUNTA_ANTIGUEDAD, "respondido", fuentes)
+        # Devolver algo que compró hace tantos días: es una cuenta del Doc 2, no una opinión. Se responde por código (un modelo
+        # chico a veces decía "no se acepta después de 30 días si no fue usado", y a veces lo contrario).
+        dias = dias_desde_la_compra(pregunta) if "devoluciones" in fuentes else None
+        if (dias is not None and not pedidos and set(fuentes) <= {"devoluciones", "garantia"}
+                and not _NO_DEVOLVIBLE.search(guardrails.normalizar(pregunta))):
+            ev("plazo_de_devolucion", dias=dias)
+            return Respuesta(self._respuesta_de_plazo(dias, fuentes), "respondido", fuentes)
+        # "Con quién hablo...?": el único canal humano que figura en los documentos es el del Doc 5. Se responde con
+        # una frase fija y no con el modelo, que a veces la completaba con un motivo inventado ("quejas sobre reembolsos").
+        p_norm = guardrails.normalizar(pregunta)
+        canal = not excluir and bool(guardrails._es_consulta_de_canal(p_norm) or _PIDE_CANAL.search(p_norm))
+        if canal and "contacto" not in fuentes:
+            fuentes.append("contacto")
+        if canal and not resultados and not pedidos:
+            return Respuesta(TEXTO_CANAL, "respondido", ["contacto"])
         if not resultados and not pedidos:
             if not con_respaldo:
                 return None
@@ -236,7 +290,10 @@ class AgenteSoporte:
                 envio = f"{AVISO_SIN_COSTO} {envio}"      # los documentos no dicen cuánto cuesta enviar: no se inventa
             if envio:
                 ev("envio", lugares=[(l.tipo) for l in lugares])
-        redactables = [r for r in resultados if not (envio and r.fragmento.documento == "envios")]
+        redactables = [r for r in resultados if not (envio and r.fragmento.documento == "envios")
+                       and not (canal and r.fragmento.documento == "contacto")]
+        if canal:
+            envio = f"{envio}\n\n{TEXTO_CANAL}" if envio else TEXTO_CANAL
         fuentes_red = [r.fragmento.documento for r in redactables]
 
         texto = None
@@ -298,7 +355,7 @@ class AgenteSoporte:
         if _COMPRA_PROPIA.search(p) and _OBJETO_DE_COMPRA.search(p) and INTENCIONES[0] in self.clasificador.detectar(pregunta, INTENCIONES):
             return True
         return bool(re.search(r"\b(mi|mis)\s+(pedido|orden|compra|encargo|envio)s?\b|lo que (compre|pedi|encargue)", p)
-                    and re.search(r"estado|donde|rastre|llega|seguimiento|cuando|demora", p))
+                    and re.search(r"estado|donde|rastre|llega|seguimiento|cuando|demora|info|detalle", p))
 
     def _guardar(self, traza: list[dict[str, Any]]) -> None:
         texto = "".join(json.dumps(e, ensure_ascii=False) + "\n" for e in traza)
@@ -328,6 +385,19 @@ _OBJETO_DE_COMPRA = re.compile(r"\b(?:pedidos?|compras?|compre|ordenes|orden|enc
 _TAREA_AJENA = re.compile(r"\b(?:escrib|cont[ae]|cuent|decime|dime|dame|armame|haceme|traduc|traduz|resum|explic|cant[ae]|dibuj|invent|"
                           r"recomend|ayudame|program|calcul|resolv|imagin|pretend|actu[ae]|jug[aá]|simul)\w*|"
                           r"\b(?:respond|habl|conte?st)\w* (?:en|como|con|solo)\b|\b(?:poema|cuento|chiste|receta|rima|cancion)\b")
+MENSAJE_AGRADECIMIENTO = ("¡Gracias por tu mensaje! Me alegra que haya salido todo bien. Si necesitás algo más, puedo ayudarte "
+                          "con garantías, devoluciones, tiempos de envío, reembolsos y el estado de un pedido.")
+_AGRADECE = re.compile(r"agradec|gracias|felicit|conforme|satisfech|content[oa]|excelente|amabl|muy bien|todo bien|"
+                       r"salio todo bien|genial|me encanto|me gusto")
+_NO_ES_SOLO_AGRADECIMIENTO = re.compile(r"\?|devol|reembols|reclam|queja|problema|falla|\brot[oa]|no funciona|no (?:me )?(?:llego|dieron|gust)|"
+                                        r"cuando|cuanto|como|donde|quiero|necesito|puedo|\bpero\b|\bmal\b|demor|tard")
+_SIN_COMPROBANTE = re.compile(r"no (?:me )?(?:dieron|dio|entregaron|entrego|enviaron|mandaron|emitieron|hicieron|llego|llegaron)"
+                              r" (?:la |el |una |un )?(?:factura|comprobante|ticket|recibo)|"
+                              r"no (?:recibi|recibimos|tengo) (?:la |el |una |un |ninguna? )?(?:factura|comprobante|ticket|recibo)|"
+                              r"sin (?:la |el |una |un )?(?:factura|comprobante)")
+_NO_DEVOLVIBLE = re.compile(r"liquidacion|personalizad|oferta final|a medida|a pedido|"
+                            r"(?:hech[oa]s?|hicieron|fabricaron|fabricad[oa]|disenaron|armaron) (?:solo |especialmente |exclusivamente )?"
+                            r"(?:para mi|a pedido)")
 _PIDE_COSTO = re.compile(r"cuesta|costo|precio|tarifa|cobran|gratis|cuanto sale|cuanto vale|cuanto se paga|pagar")
 AVISO_SIN_COSTO = "Los documentos no indican el costo del envío."
 _INTENCION_ENVIO = re.compile(r"envi|entreg|llega|despach|manda|demora|tarda|recib|flete|domicilio|reparto|repart")
@@ -337,7 +407,9 @@ _SU_COMPRA = re.compile(r"\b(?:mi|mis|compre|compramos|hice|pedi)\b|"
                         r"\b(?:quiero|quisiera|necesito|puedo|podria|se puede) (?:devolver|cambiar|reparar|arreglar)\b|"
                         r"\b(?:la|lo|las|los) (?:puedo|podria|se puede) (?:devolver|cambiar)\b|\bse me\b|"
                         r"\bme (?:la|lo|las|los) (?:cubre|cubren|aceptan|cambian|reparan|devuelven)\b")
-_NO_SE_DEVUELVE = re.compile(r"liquidacion|personalizad|oferta final|a medida|"
+_NO_SE_DEVUELVE = re.compile(r"liquidacion|personalizad|oferta final|a medida|a pedido|"
+                             r"(?:hech[oa]s?|hicieron|fabricaron|fabricad[oa]|disenaron|armaron) (?:solo |especialmente |exclusivamente )?"
+                             r"(?:para mi|a pedido)|"
                              r"\bporque\b|mal uso|se me cayo|golpe|\bmoj[eo]\b")    # o dice la causa: puede decidir otra regla
 
 
@@ -349,6 +421,16 @@ def _pregunta_por_su_compra(pregunta: str, fuentes: list[str]) -> bool:
     return bool(fuentes and set(fuentes) <= {"devoluciones", "garantia"} and _SU_COMPRA.search(p)
                 and not _PREGUNTA_DE_POLITICA.search(p) and not TIEMPO.search(p) and not _COMPRA_FUTURA.search(p)
                 and not _NO_SE_DEVUELVE.search(p) and not _PIDE_PLATA.search(p))
+
+
+def _es_agradecimiento(pregunta: str) -> bool:
+    """Un mensaje que solo agradece o felicita (sin pregunta ni pedido): se agradece, no se responde con una política."""
+    p = guardrails.normalizar(pregunta)
+    return bool(_AGRADECE.search(p) and not _NO_ES_SOLO_AGRADECIMIENTO.search(p))
+
+
+def _sin_comprobante(pregunta: str) -> bool:
+    return bool(_SIN_COMPROBANTE.search(guardrails.normalizar(pregunta)))
 
 
 def _pide_reembolso(pregunta: str) -> bool:
@@ -374,6 +456,10 @@ def _notas(pregunta: str, fuentes: list[str], consulta_sin_numero: bool = False)
         notas.append(f"Con el monto que indicás (${max(montos):,.0f}) no hace falta la aprobación de un supervisor "
                      f"(si el valor real de la compra supera ${guardrails.TOPE_REEMBOLSO:,.0f}, sí la requiere y "
                      f"tenés que escribir a {guardrails.CONTACTO}).")
+    if "devoluciones" in fuentes and not _NO_DEVOLVIBLE.search(guardrails.normalizar(pregunta)):
+        dias = dias_desde_la_compra(pregunta)
+        if dias is not None:
+            notas.append(nota_de_devolucion(dias))        # el plazo del Doc 2 aplicado por código a lo que dijo el cliente
     if consulta_sin_numero:
         notas.append(_pedir_numero(pregunta))
     return notas
@@ -401,7 +487,7 @@ MAX_DOCUMENTOS_COMPLETADOS = 2     # solo los dos documentos mejor rankeados: el
 def _usa_las_cifras(texto: str, cuerpo: str) -> bool:
     """¿La respuesta ya trae alguna de las cifras del documento (12 meses, 5-10 días)? Si las trae, aunque no lo
     cite, ya habla de ese tema y agregarlo repetiría lo mismo."""
-    cifras = set(re.findall(r"\d+(?:-\d+)?", cuerpo))
+    cifras = set(re.findall(r"\d+(?:-\d+)?|[\w.+-]+@[\w-]+(?:\.[\w-]+)+", cuerpo))      # un dato del documento: cifra o correo
     return any(re.search(rf"(?<![\d-]){re.escape(c)}(?![\d-])", texto) for c in cifras)
 
 
@@ -419,7 +505,7 @@ def _completar_cobertura(texto: str, resultados: list[ResultadoRAG], pregunta: s
         if _CONCEPTO_DEL_DOCUMENTO.get(doc, doc) not in mencionados:
             continue
         titulo = re.match(r"#\s*(.+)", r.fragmento.texto)
-        cuerpo = re.sub(r"^#.*\n+", "", r.fragmento.texto).strip()
+        cuerpo = _para_el_cliente(re.sub(r"^#.*\n+", "", r.fragmento.texto).strip())
         if f"[{doc}]" in texto or _usa_las_cifras(texto, cuerpo):
             continue
         encabezado = f"{titulo.group(1).strip()}: " if titulo else ""
@@ -465,8 +551,18 @@ def _palabras_sin_respaldo(texto: str, prompt: str) -> list[str]:
     return sorted(w for r, w in raices(texto).items() if r not in conocidas)
 
 
+_INSTRUCCION_AL_AGENTE = re.compile(r"\s*[—–]\s*el (?:asistente(?: de ia)?|agente) no debe [^.\n]*", re.IGNORECASE)
+
+
+def _para_el_cliente(texto: str) -> str:
+    """Los documentos 4 y 5 terminan con una indicación para el agente ("— el agente no debe aprobarlos
+    automáticamente"). Está bien dársela al agente, pero un cliente no tiene por qué leerla: se saca de lo que se muestra
+    y de lo que se le da al modelo para que no la repita. Los documentos en disco no se tocan."""
+    return _INSTRUCCION_AL_AGENTE.sub("", texto)
+
+
 def _prompt(pregunta: str, resultados: list[ResultadoRAG], pedidos: list[dict[str, Any]]) -> str:
-    docs = "\n\n".join(f"[{r.fragmento.documento}]\n{r.fragmento.texto}" for r in resultados) or "(ninguno)"
+    docs = "\n\n".join(f"[{r.fragmento.documento}]\n{_para_el_cliente(r.fragmento.texto)}" for r in resultados) or "(ninguno)"
     peds = "\n".join(str(p) for p in pedidos) or "(ninguno)"
     return f"DOCUMENTOS:\n{docs}\n\nPEDIDOS:\n{peds}\n\nPREGUNTA DEL CLIENTE:\n{pregunta}"
 
@@ -486,7 +582,7 @@ def _redactar_offline(resultados: list[ResultadoRAG], pedidos: list[dict[str, An
             partes.append(f"{entendido}No encontré ningún pedido con el número {p['order_id']}. "
                           f"Revisá que esté bien escrito.")
     for r in resultados:
-        cuerpo = re.sub(r"^#.*\n+", "", r.fragmento.texto).strip()
+        cuerpo = _para_el_cliente(re.sub(r"^#.*\n+", "", r.fragmento.texto).strip())
         partes.append(f"{cuerpo} [{r.fragmento.documento}]")
     if envio:
         partes.append(envio)

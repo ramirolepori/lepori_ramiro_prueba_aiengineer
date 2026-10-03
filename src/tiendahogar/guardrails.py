@@ -41,7 +41,11 @@ _TRATO = re.compile(
     r"no me (?:dejo|dejaron|permitio|permitieron|quiso|quisieron) (?:entrar|pasar|atender|escuchar|ayudar)|"
     r"desubicad\w+|maleducad\w+|mal educad\w+|prepotent\w+|"
     r"(?:con|de) (?:desprecio|mala onda|malas formas|malos modos|mala cara|desgano)|"
-    r"me trat(?:o|aron) como)"
+    r"me trat(?:o|aron) como|"
+    r"(?:me|nos|lo|la|les?) (?:atendi\w+|hizo|hicieron|trat\w+) (?:tan |muy |re )?mal|"
+    r"(?:me|nos|le|les) (?:falt\w+|falto) (?:el |al )?respeto|(?:falt\w+|falto) (?:el |al )?respeto|"
+    r"(?:me|nos|le) (?:tir|arroj|lanz|escup)\w* .{0,30}(?:cara|encima|cuerpo)|"
+    r"actitud(?:es)? (?:agresiv|hostil|ofensiv|irrespetuos|desubicad)\w*)"
 )
 _FACTURACION = re.compile(
     r"((?:disput\w+|reclam\w+|impugn\w+|contest\w+|no reconozco)\b.{0,50}\b(?:factura\w*|cobro\w*|cargo\w*)|"

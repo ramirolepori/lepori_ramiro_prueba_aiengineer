@@ -1,0 +1,60 @@
+# Lote 3 (definitivo) escrito por Ramiro el 2026-10-03. Es la medición limpia: se midió una sola vez antes de tocar el código.
+# Las etiquetas las puso Claude a partir de las categorías en que Ramiro agrupó las frases (a confirmar con él).
+
+# --- pedidos ---
+P | Que onda con mi pedido?
+P=1004 | quiero mas info sobre mi compra 1004
+PX=DOR--1002 | Hace unos días estaba en el centro y pase por la sucursal y ordene una licuadora (DOR--1002) y quería saber el estado
+P | Quiero saber mas info sobre mi pedido
+P=1000 | Me podrías pasar mas info sobre mi adquisición (ORD-1000)
+
+# --- reembolsos ---
+D=reembolsos | Tengo una consulta, hace 6 días que envpie el producto para que me devuelvan el dinero, cuando va a impactar en mi tarjeta?
+D=reembolsos | Quiero reembolsar mi compra que fue de $150
+R | Quiero devolver mi refrigerador que compre por $800
+D=devoluciones | Ayer fui al local e hice una compra por $499,99 y quería devolverlo
+
+# --- quejas por el trato ---
+T | MIra ayer fui al local con mi novia y la persona que nos atendió lo hizo tan mal que cuando nos fuimos mi novia salió llorando
+T | Mira casi me voy a las manos con uno que atiende ahí
+T | Hace unos días fui al local y me trataron muy mal
+T | Quiero levantar una queja por maltrato ya que la quise dejar en el libro de quejas en el local pero me dijeron que no tenían
+T | Ayer un empleado de ahí me tiro un vaso de agua en la cara
+T | Hace unos días una persona que trabaja ahí tuvo actitudes que me faltaron el respeto
+
+# --- temas legales (Ramiro los agrupó así; decidió que se responda que no hay información y se ofrezca hacer un reclamo) ---
+OK | Ayer hice una compra pero no me dieron factura de compra
+OK | Como puedo hacer valer mi garantía si no recibí comprobante de compra
+
+# --- preguntas sobre los documentos ---
+D=devoluciones | Quiero devolver mi heladera que compre hace 25 días, solo la conecté para probarla
+D=devoluciones | Compré mi tostadora hace 45 días pero no la saque del empaque... la quiero devolver
+D=devoluciones | Compré un producto que estaba muy barato porque estaba en liquidación, pero me arrepentí y lo quiero devolver
+D=devoluciones | Compré una heladera que hicieron solo para mi, de color PURPURA, pero la quiero devolver
+D=envios | Si compro desde salta capital, cuanto tarada en llegar la compra
+D=envios | Esto en CABA, la compra llegaría pasado mañana?
+D=envios | Quiero comprar pero no se si la misma va a llegar antes de que me vaya de vieja, estoy en Ushuaia
+D=envios | Puede ser que a la quiaca las compras tarden 4 días en llegar?
+D=contacto~ | Tengo un tema legal por resolver, con quien me tengo que contactar?
+D=reembolsos+contacto~ | Hace unos días que no recibo mi reembolso, con quien me puedo contactar?
+D=reembolsos+contacto~ | Hace 11 días que estoy esperando mi reembolso de dinero (ya fue aprobado y el producto ya lo recibieron ustedes), con quien me tengo que contactar?
+
+# --- fuera de alcance ---
+X | Cuantos años tiene la humanidad?
+X | Cual es el radio de la tierra?
+X | Cual es el ultimo iphone?
+X | Cuantos años tiene dios
+X | Que color se mezcla entre rojo y verde
+X | Cual es el resultado de elevar el numero 5 a la potencia 10000000000202020220
+X | Si yo te digo mi fecha de nacimiento, vos me podes pasar mi carta astral?
+X | Mi novia es de aries y yo soy de tauro, hacemos buen match?
+
+# --- combinadas ---
+D=devoluciones | Ayer compré un refrigerador por $490 pero lo quiero devolver y quiero que me hagas una calculadora en javascript
+T | Cuantos años tiene el sol y quiero realizar una queja por maltrato de un empleado
+P=1004 | Cuanto tarda en llegar una compra si estoy en cordoba capital y que estado tiene mi orden ORD-1004
+
+# --- casos que no se deben derivar ---
+OK | Ayer compre mi licuadora ORD-1002 y la verdad que salió todo bien, estoy muy agradecido
+OK | Hace unos días compre mi refrigerador y estoy muy conforme con la compra
+OK | Hace unos días fui a la sucursal y me atendió uno de los chicos que trabaja ahí y quería felicitarlos porque me atendió muy amablemente
