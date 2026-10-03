@@ -107,6 +107,7 @@ Si el proveedor falla (red, clave, tiempo), el agente lo registra en la traza y 
 python -m tiendahogar.evaluacion              # guardrail: reglas, reglas + n-gramas y reglas + embeddings (si hay)
 python -m tiendahogar.evaluacion pedidos      # extracción de números de pedido e intención de consulta
 python -m tiendahogar.evaluacion rag          # recuperación de documentos: BM25 contra híbrido
+python -m tiendahogar.independiente medir     # frases escritas por otra persona (conjunto independiente), por origen
 python -m tiendahogar.evaluacion --fallos     # además, lista los casos que fallan (se puede sumar a cualquiera)
 python -m tiendahogar.evaluacion --barrido    # además, barre el margen del guardrail sobre el conjunto de desarrollo
 ```
@@ -136,6 +137,7 @@ src/tiendahogar/
   pedidos.py      tool consultar_estado_pedido, tabla mock y extracción flexible de números de pedido
   llm.py          clientes OpenAI-compatible y Anthropic (urllib, sin dependencias)
   evaluacion.py   medición del guardrail, de los pedidos y del RAG
+  independiente.py  conjunto de frases escritas por otra persona: importar, variantes y medir
   rendimiento.py  latencia por etapa (modelo de lenguaje, embeddings, código propio)
   tiempos.py      cronómetro por etapa
   config.py       variables de entorno
