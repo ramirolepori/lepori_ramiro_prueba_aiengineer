@@ -109,7 +109,7 @@ def _mensaje(categoria: str, monto: float | None = None) -> tuple[str, str]:
 
 
 _VOCABULARIO_REEMBOLSO = ("reembolso", "reembolsar", "reembolsen", "reembolsan", "reintegro", "reintegrar",
-                          "reintegren", "devolucion", "devolver", "devuelvan", "devuelvo", "regresen", "refund")
+                          "reintegren", "devolucion", "devolver", "devuelvan", "devuelvo", "regresen", "refund", "arrepenti", "arrepiento", "arrepentimiento")
 
 
 def _intencion_de_reembolso(texto_norm: str) -> bool:

@@ -409,12 +409,13 @@
       "id": "i039",
       "origen": "Ramiro",
       "texto": "Ayer hubo quilombo con una persona que trabaja ahí, con quien me tengo que contactar?",
-      "codigo": "D=contacto",
+      "codigo": "D=contacto~",
       "grupo": "rag",
       "esperado_guardrail": [],
       "esperado_docs": [
         "contacto"
-      ]
+      ],
+      "acepta_derivacion": true
     },
     {
       "id": "i040",
@@ -1690,6 +1691,2186 @@
         "garantia",
         "envios"
       ]
+    },
+    {
+      "codigo": "P=50000",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-50000"
+      ],
+      "intencion": true,
+      "id": "i001-mayusculas",
+      "texto": "QUIERO SABER EL ESTADO DE LA COMPRA 50000",
+      "origen": "variante",
+      "base": "i001",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "P=50000",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-50000"
+      ],
+      "intencion": true,
+      "id": "i001-con_error",
+      "texto": "Quireo saber el estado de la compra 50000",
+      "origen": "variante",
+      "base": "i001",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "P=50000",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-50000"
+      ],
+      "intencion": true,
+      "id": "i001-estilo_chat",
+      "texto": "quiero saber el estado de la compra 50000",
+      "origen": "variante",
+      "base": "i001",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "P=1004",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1004"
+      ],
+      "intencion": true,
+      "id": "i002-mayusculas",
+      "texto": "HICE UN PEDIDO NUMERO 1004, QUIERO SABER CUANDO LLEGA",
+      "origen": "variante",
+      "base": "i002",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "P=1004",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1004"
+      ],
+      "intencion": true,
+      "id": "i002-con_error",
+      "texto": "Hice un peddio numero 1004, quiero saber cuando llega",
+      "origen": "variante",
+      "base": "i002",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "P=1004",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1004"
+      ],
+      "intencion": true,
+      "id": "i002-estilo_chat",
+      "texto": "hice un pedido numero 1004 quiero saber cuando llega",
+      "origen": "variante",
+      "base": "i002",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "PX=DRO-1002",
+      "grupo": "pedido_mal",
+      "esperado_guardrail": [],
+      "literal": "DRO-1002",
+      "id": "i003-sin_tildes",
+      "texto": "El otro dia hice una transaccion, n° DRO-1002, quiero saber el producto y el estado",
+      "origen": "variante",
+      "base": "i003",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "PX=DRO-1002",
+      "grupo": "pedido_mal",
+      "esperado_guardrail": [],
+      "literal": "DRO-1002",
+      "id": "i003-mayusculas",
+      "texto": "EL OTRO DÍA HICE UNA TRANSACCIÓN, N° DRO-1002, QUIERO SABER EL PRODUCTO Y EL ESTADO",
+      "origen": "variante",
+      "base": "i003",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "PX=DRO-1002",
+      "grupo": "pedido_mal",
+      "esperado_guardrail": [],
+      "literal": "DRO-1002",
+      "id": "i003-con_error",
+      "texto": "El otro día hice una transcación, n° DRO-1002, quiero saber el producto y el estado",
+      "origen": "variante",
+      "base": "i003",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "PX=DRO-1002",
+      "grupo": "pedido_mal",
+      "esperado_guardrail": [],
+      "literal": "DRO-1002",
+      "id": "i003-estilo_chat",
+      "texto": "el otro dia hice una transaccion n° dro-1002 quiero saber el producto y el estado",
+      "origen": "variante",
+      "base": "i003",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "P=1003",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1003"
+      ],
+      "intencion": true,
+      "id": "i004-sin_tildes",
+      "texto": "Estoy esperando hace mucho lo que compre, orden 1003... cuanto le falta para que llegue?",
+      "origen": "variante",
+      "base": "i004",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "P=1003",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1003"
+      ],
+      "intencion": true,
+      "id": "i004-mayusculas",
+      "texto": "ESTOY ESPERANDO HACE MUCHO LO QUE COMPRÉ, ORDEN 1003... CUANTO LE FALTA PARA QUE LLEGUE?",
+      "origen": "variante",
+      "base": "i004",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "P=1003",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1003"
+      ],
+      "intencion": true,
+      "id": "i004-con_error",
+      "texto": "Estoy espearndo hace mucho lo que compré, orden 1003... cuanto le falta para que llegue?",
+      "origen": "variante",
+      "base": "i004",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "P=1003",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1003"
+      ],
+      "intencion": true,
+      "id": "i004-estilo_chat",
+      "texto": "estoy esperando hace mucho lo que compre orden 1003 cuanto le falta para que llegue",
+      "origen": "variante",
+      "base": "i004",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "P",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [],
+      "intencion": true,
+      "id": "i005-mayusculas",
+      "texto": "CHE QUIERO SABER EL ESTADO DE MI COMPRA",
+      "origen": "variante",
+      "base": "i005",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "P",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [],
+      "intencion": true,
+      "id": "i005-con_error",
+      "texto": "Che quireo saber el estado de mi compra",
+      "origen": "variante",
+      "base": "i005",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "P",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [],
+      "intencion": true,
+      "id": "i005-estilo_chat",
+      "texto": "che quiero saber el estado de mi compra",
+      "origen": "variante",
+      "base": "i005",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "P",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [],
+      "intencion": true,
+      "id": "i006-mayusculas",
+      "texto": "QUIERO SABER CUANDO LLEGA MI ORDEN",
+      "origen": "variante",
+      "base": "i006",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "P",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [],
+      "intencion": true,
+      "id": "i006-con_error",
+      "texto": "Quireo saber cuando llega mi orden",
+      "origen": "variante",
+      "base": "i006",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "P",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [],
+      "intencion": true,
+      "id": "i006-estilo_chat",
+      "texto": "quiero saber cuando llega mi orden",
+      "origen": "variante",
+      "base": "i006",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "P=2000",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-2000"
+      ],
+      "intencion": true,
+      "id": "i007-sin_tildes",
+      "texto": "Hola, loco quiero saber que productos compro mi hija (n°2000)",
+      "origen": "variante",
+      "base": "i007",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "P=2000",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-2000"
+      ],
+      "intencion": true,
+      "id": "i007-mayusculas",
+      "texto": "HOLA, LOCO QUIERO SABER QUE PRODUCTOS COMPRÓ MI HIJA (N°2000)",
+      "origen": "variante",
+      "base": "i007",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "P=2000",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-2000"
+      ],
+      "intencion": true,
+      "id": "i007-con_error",
+      "texto": "Hola, loco quiero saber que prodcutos compró mi hija (n°2000)",
+      "origen": "variante",
+      "base": "i007",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "P=2000",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-2000"
+      ],
+      "intencion": true,
+      "id": "i007-estilo_chat",
+      "texto": "hola loco quiero saber que productos compro mi hija (n°2000)",
+      "origen": "variante",
+      "base": "i007",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "D=devoluciones+reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones",
+        "reembolsos"
+      ],
+      "id": "i008-mayusculas",
+      "texto": "MI HIJO HIZO UN PEDIDO POR ERROR Y QUIERO HACER EL REEMBOLSO",
+      "origen": "variante",
+      "base": "i008",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "D=devoluciones+reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones",
+        "reembolsos"
+      ],
+      "id": "i008-con_error",
+      "texto": "Mi hijo hizo un pedido por error y quiero hacer el reemoblso",
+      "origen": "variante",
+      "base": "i008",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "D=devoluciones+reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones",
+        "reembolsos"
+      ],
+      "id": "i008-estilo_chat",
+      "texto": "mi hijo hizo un pedido por error y quiero hacer el reembolso",
+      "origen": "variante",
+      "base": "i008",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "P=1003",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1003"
+      ],
+      "intencion": true,
+      "id": "i009-mayusculas",
+      "texto": "EL OTRO DIA HICE UNA COMPRA NRO 1003",
+      "origen": "variante",
+      "base": "i009",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "P=1003",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1003"
+      ],
+      "intencion": true,
+      "id": "i009-con_error",
+      "texto": "El otro dia hice una comrpa nro 1003",
+      "origen": "variante",
+      "base": "i009",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "P=1003",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1003"
+      ],
+      "intencion": true,
+      "id": "i009-estilo_chat",
+      "texto": "el otro dia hice una compra nro 1003",
+      "origen": "variante",
+      "base": "i009",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "P=1002",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1002"
+      ],
+      "intencion": true,
+      "id": "i010-mayusculas",
+      "texto": "AYER HICE UN PEDIDO, CON EL NRO DE ORDEN ORD-1002",
+      "origen": "variante",
+      "base": "i010",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "P=1002",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1002"
+      ],
+      "intencion": true,
+      "id": "i010-con_error",
+      "texto": "Ayer hice un peddio, con el nro de orden ORD-1002",
+      "origen": "variante",
+      "base": "i010",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "P=1002",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1002"
+      ],
+      "intencion": true,
+      "id": "i010-estilo_chat",
+      "texto": "ayer hice un pedido con el nro de orden ord-1002",
+      "origen": "variante",
+      "base": "i010",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "PX=DRARD-100101",
+      "grupo": "pedido_mal",
+      "esperado_guardrail": [],
+      "literal": "DRARD-100101",
+      "id": "i011-mayusculas",
+      "texto": "HOY HICE LA ORDEN DRARD-100101, QUIERO SABER QUE ONDA",
+      "origen": "variante",
+      "base": "i011",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "PX=DRARD-100101",
+      "grupo": "pedido_mal",
+      "esperado_guardrail": [],
+      "literal": "DRARD-100101",
+      "id": "i011-con_error",
+      "texto": "Hoy hice la orden DRARD-100101, quireo saber que onda",
+      "origen": "variante",
+      "base": "i011",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "PX=DRARD-100101",
+      "grupo": "pedido_mal",
+      "esperado_guardrail": [],
+      "literal": "DRARD-100101",
+      "id": "i011-estilo_chat",
+      "texto": "hoy hice la orden drard-100101 quiero saber que onda",
+      "origen": "variante",
+      "base": "i011",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "OK",
+      "grupo": "guardrail",
+      "esperado_guardrail": [],
+      "id": "i012-mayusculas",
+      "texto": "QUIERO DEVOLVER LO QUE COMPRE, QUE VALE $499,99",
+      "origen": "variante",
+      "base": "i012",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "OK",
+      "grupo": "guardrail",
+      "esperado_guardrail": [],
+      "id": "i012-con_error",
+      "texto": "Quiero devovler lo que compre, que vale $499,99",
+      "origen": "variante",
+      "base": "i012",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "OK",
+      "grupo": "guardrail",
+      "esperado_guardrail": [],
+      "id": "i012-estilo_chat",
+      "texto": "quiero devolver lo que compre que vale $499,99",
+      "origen": "variante",
+      "base": "i012",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ],
+      "id": "i013-sin_tildes",
+      "texto": "Me arrepenti de mi compra de 500,01",
+      "origen": "variante",
+      "base": "i013",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ],
+      "id": "i013-mayusculas",
+      "texto": "ME ARREPENTÍ DE MI COMPRA DE 500,01",
+      "origen": "variante",
+      "base": "i013",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ],
+      "id": "i013-con_error",
+      "texto": "Me arreepntí de mi compra de 500,01",
+      "origen": "variante",
+      "base": "i013",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ],
+      "id": "i013-estilo_chat",
+      "texto": "me arrepenti de mi compra de 500,01",
+      "origen": "variante",
+      "base": "i013",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ],
+      "id": "i014-sin_tildes",
+      "texto": "El otro dia estuve por el local e hice una compra de un refrigerador por $900 y quiero devolverlo porque no entra en mi cocina",
+      "origen": "variante",
+      "base": "i014",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ],
+      "id": "i014-mayusculas",
+      "texto": "EL OTRO DÍA ESTUVE POR EL LOCAL E HICE UNA COMPRA DE UN REFRIGERADOR POR $900 Y QUIERO DEVOLVERLO PORQUE NO ENTRA EN MI COCINA",
+      "origen": "variante",
+      "base": "i014",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ],
+      "id": "i014-con_error",
+      "texto": "El otro día estuve por el local e hice una compra de un refrigreador por $900 y quiero devolverlo porque no entra en mi cocina",
+      "origen": "variante",
+      "base": "i014",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ],
+      "id": "i014-estilo_chat",
+      "texto": "el otro dia estuve por el local e hice una compra de un refrigerador por $900 y quiero devolverlo porque no entra en mi cocina",
+      "origen": "variante",
+      "base": "i014",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "OK",
+      "grupo": "guardrail",
+      "esperado_guardrail": [],
+      "id": "i015-sin_tildes",
+      "texto": "Compre una tostadora por 400 pesos pero no me gusto el color",
+      "origen": "variante",
+      "base": "i015",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "OK",
+      "grupo": "guardrail",
+      "esperado_guardrail": [],
+      "id": "i015-mayusculas",
+      "texto": "COMPRÉ UNA TOSTADORA POR 400 PESOS PERO NO ME GUSTÓ EL COLOR",
+      "origen": "variante",
+      "base": "i015",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "OK",
+      "grupo": "guardrail",
+      "esperado_guardrail": [],
+      "id": "i015-con_error",
+      "texto": "Compré una tostdaora por 400 pesos pero no me gustó el color",
+      "origen": "variante",
+      "base": "i015",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "OK",
+      "grupo": "guardrail",
+      "esperado_guardrail": [],
+      "id": "i015-estilo_chat",
+      "texto": "compre una tostadora por 400 pesos pero no me gusto el color",
+      "origen": "variante",
+      "base": "i015",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ],
+      "id": "i016-sin_tildes",
+      "texto": "El viernes pasado adquiri una licuadora, gaste pesos 1200 pesos pero hace mucho ruido por eso no la quiero mas",
+      "origen": "variante",
+      "base": "i016",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ],
+      "id": "i016-mayusculas",
+      "texto": "EL VIERNES PASADO ADQUIRÍ UNA LICUADORA, GASTÉ PESOS 1200 PESOS PERO HACE MUCHO RUIDO POR ESO NO LA QUIERO MAS",
+      "origen": "variante",
+      "base": "i016",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ],
+      "id": "i016-con_error",
+      "texto": "El viernes pasado adquirí una licudaora, gasté pesos 1200 pesos pero hace mucho ruido por eso no la quiero mas",
+      "origen": "variante",
+      "base": "i016",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ],
+      "id": "i016-estilo_chat",
+      "texto": "el viernes pasado adquiri una licuadora gaste pesos 1200 pesos pero hace mucho ruido por eso no la quiero mas",
+      "origen": "variante",
+      "base": "i016",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i017-sin_tildes",
+      "texto": "El otro dia fui al local y una persona que trabaja ahi me grito muy fuerte",
+      "origen": "variante",
+      "base": "i017",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i017-mayusculas",
+      "texto": "EL OTRO DÍA FUI AL LOCAL Y UNA PERSONA QUE TRABAJA AHÍ ME GRITÓ MUY FUERTE",
+      "origen": "variante",
+      "base": "i017",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i017-con_error",
+      "texto": "El otro día fui al local y una perosna que trabaja ahí me gritó muy fuerte",
+      "origen": "variante",
+      "base": "i017",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i017-estilo_chat",
+      "texto": "el otro dia fui al local y una persona que trabaja ahi me grito muy fuerte",
+      "origen": "variante",
+      "base": "i017",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i018-sin_tildes",
+      "texto": "Ayer estuve por la sucursal centro con mi amigo y un trabajador no me dejo entrar",
+      "origen": "variante",
+      "base": "i018",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i018-mayusculas",
+      "texto": "AYER ESTUVE POR LA SUCURSAL CENTRO CON MI AMIGO Y UN TRABAJADOR NO ME DEJÓ ENTRAR",
+      "origen": "variante",
+      "base": "i018",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i018-con_error",
+      "texto": "Ayer estuve por la sucursal centro con mi amigo y un trabaajdor no me dejó entrar",
+      "origen": "variante",
+      "base": "i018",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i018-estilo_chat",
+      "texto": "ayer estuve por la sucursal centro con mi amigo y un trabajador no me dejo entrar",
+      "origen": "variante",
+      "base": "i018",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i019-mayusculas",
+      "texto": "LA SEMANA PASADA FUI Y UN EMPLEADO ME HECHO PORQUE ESTABA CERRANDO",
+      "origen": "variante",
+      "base": "i019",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i019-con_error",
+      "texto": "La semana pasada fui y un emplaedo me hecho porque estaba cerrando",
+      "origen": "variante",
+      "base": "i019",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i019-estilo_chat",
+      "texto": "la semana pasada fui y un empleado me hecho porque estaba cerrando",
+      "origen": "variante",
+      "base": "i019",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "L",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "tema_legal"
+      ],
+      "id": "i020-mayusculas",
+      "texto": "VOY A INICIAR ACCIONES LEGALES!!!",
+      "origen": "variante",
+      "base": "i020",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "L",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "tema_legal"
+      ],
+      "id": "i020-con_error",
+      "texto": "Voy a iniciar accinoes legales!!!",
+      "origen": "variante",
+      "base": "i020",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "L",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "tema_legal"
+      ],
+      "id": "i020-estilo_chat",
+      "texto": "voy a iniciar acciones legales",
+      "origen": "variante",
+      "base": "i020",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i021-sin_tildes",
+      "texto": "Estoy re caliente, casi me agarro a las pinas con uno que trabaja ahi",
+      "origen": "variante",
+      "base": "i021",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i021-mayusculas",
+      "texto": "ESTOY RE CALIENTE, CASI ME AGARRO A LAS PIÑAS CON UNO QUE TRABAJA AHÍ",
+      "origen": "variante",
+      "base": "i021",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i021-con_error",
+      "texto": "Estoy re calinete, casi me agarro a las piñas con uno que trabaja ahí",
+      "origen": "variante",
+      "base": "i021",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i021-estilo_chat",
+      "texto": "estoy re caliente casi me agarro a las pinas con uno que trabaja ahi",
+      "origen": "variante",
+      "base": "i021",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i022-sin_tildes",
+      "texto": "Casi me voy a las manos con un empleado porque me escupio",
+      "origen": "variante",
+      "base": "i022",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i022-mayusculas",
+      "texto": "CASI ME VOY A LAS MANOS CON UN EMPLEADO PORQUE ME ESCUPIÓ",
+      "origen": "variante",
+      "base": "i022",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i022-con_error",
+      "texto": "Casi me voy a las manos con un emplaedo porque me escupió",
+      "origen": "variante",
+      "base": "i022",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i022-estilo_chat",
+      "texto": "casi me voy a las manos con un empleado porque me escupio",
+      "origen": "variante",
+      "base": "i022",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ],
+      "id": "i023-sin_tildes",
+      "texto": "Me compre un refrigerador, cuanto tiene de garantia?",
+      "origen": "variante",
+      "base": "i023",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ],
+      "id": "i023-mayusculas",
+      "texto": "ME COMPRÉ UN REFRIGERADOR, CUANTO TIENE DE GARANTÍA?",
+      "origen": "variante",
+      "base": "i023",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ],
+      "id": "i023-con_error",
+      "texto": "Me compré un refrigreador, cuanto tiene de garantía?",
+      "origen": "variante",
+      "base": "i023",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ],
+      "id": "i023-estilo_chat",
+      "texto": "me compre un refrigerador cuanto tiene de garantia",
+      "origen": "variante",
+      "base": "i023",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ],
+      "id": "i024-sin_tildes",
+      "texto": "Ordene un electrodomestico chico, pero mi duda es cuanto tiempo tiene de garantia",
+      "origen": "variante",
+      "base": "i024",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ],
+      "id": "i024-mayusculas",
+      "texto": "ORDENÉ UN ELECTRODOMÉSTICO CHICO, PERO MI DUDA ES CUANTO TIEMPO TIENE DE GARANTÍA",
+      "origen": "variante",
+      "base": "i024",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ],
+      "id": "i024-con_error",
+      "texto": "Ordené un electrodmoéstico chico, pero mi duda es cuanto tiempo tiene de garantía",
+      "origen": "variante",
+      "base": "i024",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ],
+      "id": "i024-estilo_chat",
+      "texto": "ordene un electrodomestico chico pero mi duda es cuanto tiempo tiene de garantia",
+      "origen": "variante",
+      "base": "i024",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ],
+      "id": "i025-sin_tildes",
+      "texto": "Me compre una plancha hace 2 meses pero se me cayo de un 4to piso, me cubre la garantia?",
+      "origen": "variante",
+      "base": "i025",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ],
+      "id": "i025-mayusculas",
+      "texto": "ME COMPRÉ UNA PLANCHA HACE 2 MESES PERO SE ME CAYÓ DE UN 4TO PISO, ME CUBRE LA GARANTÍA?",
+      "origen": "variante",
+      "base": "i025",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ],
+      "id": "i025-con_error",
+      "texto": "Me compré una plancha hace 2 meses pero se me cayó de un 4to piso, me cubre la garatnía?",
+      "origen": "variante",
+      "base": "i025",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ],
+      "id": "i025-estilo_chat",
+      "texto": "me compre una plancha hace 2 meses pero se me cayo de un 4to piso me cubre la garantia",
+      "origen": "variante",
+      "base": "i025",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ],
+      "id": "i026-sin_tildes",
+      "texto": "Me compre una estufa hace 7 meses pero se empezo a despegar una pata, yo no le hice nada para que pase eso... me lo cubre la garantia?",
+      "origen": "variante",
+      "base": "i026",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ],
+      "id": "i026-mayusculas",
+      "texto": "ME COMPRE UNA ESTUFA HACE 7 MESES PERO SE EMPEZÓ A DESPEGAR UNA PATA, YO NO LE HICE NADA PARA QUE PASE ESO... ME LO CUBRE LA GARANTÍA?",
+      "origen": "variante",
+      "base": "i026",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ],
+      "id": "i026-con_error",
+      "texto": "Me compre una estufa hace 7 meses pero se empezó a despgear una pata, yo no le hice nada para que pase eso... me lo cubre la garantía?",
+      "origen": "variante",
+      "base": "i026",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ],
+      "id": "i026-estilo_chat",
+      "texto": "me compre una estufa hace 7 meses pero se empezo a despegar una pata yo no le hice nada para que pase eso me lo cubre la garantia",
+      "origen": "variante",
+      "base": "i026",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ],
+      "id": "i027-sin_tildes",
+      "texto": "Adquiri una plancha hace un par de meses pero se apaga sola luego de 5 min de uso, me cubre el service oficial?",
+      "origen": "variante",
+      "base": "i027",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ],
+      "id": "i027-mayusculas",
+      "texto": "ADQUIRÍ UNA PLANCHA HACE UN PAR DE MESES PERO SE APAGA SOLA LUEGO DE 5 MIN DE USO, ME CUBRE EL SERVICE OFICIAL?",
+      "origen": "variante",
+      "base": "i027",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ],
+      "id": "i027-con_error",
+      "texto": "Adqiurí una plancha hace un par de meses pero se apaga sola luego de 5 min de uso, me cubre el service oficial?",
+      "origen": "variante",
+      "base": "i027",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ],
+      "id": "i027-estilo_chat",
+      "texto": "adquiri una plancha hace un par de meses pero se apaga sola luego de 5 min de uso me cubre el service oficial",
+      "origen": "variante",
+      "base": "i027",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ],
+      "id": "i028-sin_tildes",
+      "texto": "Compre un producto en promocion y lo quiero devolver",
+      "origen": "variante",
+      "base": "i028",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ],
+      "id": "i028-mayusculas",
+      "texto": "COMPRÉ UN PRODUCTO EN PROMOCIÓN Y LO QUIERO DEVOLVER",
+      "origen": "variante",
+      "base": "i028",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ],
+      "id": "i028-con_error",
+      "texto": "Compré un producto en promcoión y lo quiero devolver",
+      "origen": "variante",
+      "base": "i028",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ],
+      "id": "i028-estilo_chat",
+      "texto": "compre un producto en promocion y lo quiero devolver",
+      "origen": "variante",
+      "base": "i028",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ],
+      "id": "i029-sin_tildes",
+      "texto": "Adquiri hace 5 dias un producto y lo use 1 dia, lo puedo devolver?",
+      "origen": "variante",
+      "base": "i029",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ],
+      "id": "i029-mayusculas",
+      "texto": "ADQUIRÍ HACE 5 DÍAS UN PRODUCTO Y LO USÉ 1 DÍA, LO PUEDO DEVOLVER?",
+      "origen": "variante",
+      "base": "i029",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ],
+      "id": "i029-con_error",
+      "texto": "Adquirí hace 5 días un prodcuto y lo usé 1 día, lo puedo devolver?",
+      "origen": "variante",
+      "base": "i029",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ],
+      "id": "i029-estilo_chat",
+      "texto": "adquiri hace 5 dias un producto y lo use 1 dia lo puedo devolver",
+      "origen": "variante",
+      "base": "i029",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ],
+      "id": "i030-sin_tildes",
+      "texto": "Ordene un producto hace 50 dias, no lo use, y quiero gestionar el retorno del mismo",
+      "origen": "variante",
+      "base": "i030",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ],
+      "id": "i030-mayusculas",
+      "texto": "ORDENÉ UN PRODUCTO HACE 50 DÍAS, NO LO USÉ, Y QUIERO GESTIONAR EL RETORNO DEL MISMO",
+      "origen": "variante",
+      "base": "i030",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ],
+      "id": "i030-con_error",
+      "texto": "Ordené un producto hace 50 días, no lo usé, y quiero gestoinar el retorno del mismo",
+      "origen": "variante",
+      "base": "i030",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ],
+      "id": "i030-estilo_chat",
+      "texto": "ordene un producto hace 50 dias no lo use y quiero gestionar el retorno del mismo",
+      "origen": "variante",
+      "base": "i030",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ],
+      "id": "i031-sin_tildes",
+      "texto": "La ultima compra que hice (que fue hace 10 dias) no salio como esperaba y ya no la quiero mas, me gustaria generar la cancelacion de la misma",
+      "origen": "variante",
+      "base": "i031",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ],
+      "id": "i031-mayusculas",
+      "texto": "LA ULTIMA COMPRA QUE HICE (QUE FUE HACE 10 DÍAS) NO SALIÓ COMO ESPERABA Y YA NO LA QUIERO MAS, ME GUSTARÍA GENERAR LA CANCELACIÓN DE LA MISMA",
+      "origen": "variante",
+      "base": "i031",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ],
+      "id": "i031-con_error",
+      "texto": "La ultima compra que hice (que fue hace 10 días) no salió como esperaba y ya no la quiero mas, me gustaría generar la cancealción de la misma",
+      "origen": "variante",
+      "base": "i031",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ],
+      "id": "i031-estilo_chat",
+      "texto": "la ultima compra que hice (que fue hace 10 dias) no salio como esperaba y ya no la quiero mas me gustaria generar la cancelacion de la misma",
+      "origen": "variante",
+      "base": "i031",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "D=envios",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "envios"
+      ],
+      "id": "i032-sin_tildes",
+      "texto": "Yo soy de Cordoba capital, cual es el tiempo de envio?",
+      "origen": "variante",
+      "base": "i032",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "D=envios",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "envios"
+      ],
+      "id": "i032-mayusculas",
+      "texto": "YO SOY DE CORDOBA CAPITAL, CUAL ES EL TIEMPO DE ENVÍO?",
+      "origen": "variante",
+      "base": "i032",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "D=envios",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "envios"
+      ],
+      "id": "i032-con_error",
+      "texto": "Yo soy de Corodba capital, cual es el tiempo de envío?",
+      "origen": "variante",
+      "base": "i032",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "D=envios",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "envios"
+      ],
+      "id": "i032-estilo_chat",
+      "texto": "yo soy de cordoba capital cual es el tiempo de envio",
+      "origen": "variante",
+      "base": "i032",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "D=envios",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "envios"
+      ],
+      "id": "i033-mayusculas",
+      "texto": "VOY A HACER UNA COMPRA DESDE SALTA CAPITAL, CUANTO TARDA EN LLEGAR?",
+      "origen": "variante",
+      "base": "i033",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "D=envios",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "envios"
+      ],
+      "id": "i033-con_error",
+      "texto": "Voy a hacer una compra desde Salta captial, cuanto tarda en llegar?",
+      "origen": "variante",
+      "base": "i033",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "D=envios",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "envios"
+      ],
+      "id": "i033-estilo_chat",
+      "texto": "voy a hacer una compra desde salta capital cuanto tarda en llegar",
+      "origen": "variante",
+      "base": "i033",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "D=envios",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "envios"
+      ],
+      "id": "i034-sin_tildes",
+      "texto": "Estoy en Paraguay, cuanto tarda en llegar si compro manana?",
+      "origen": "variante",
+      "base": "i034",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "D=envios",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "envios"
+      ],
+      "id": "i034-mayusculas",
+      "texto": "ESTOY EN PARAGUAY, CUANTO TARDA EN LLEGAR SI COMPRO MAÑANA?",
+      "origen": "variante",
+      "base": "i034",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "D=envios",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "envios"
+      ],
+      "id": "i034-con_error",
+      "texto": "Estoy en Paraugay, cuanto tarda en llegar si compro mañana?",
+      "origen": "variante",
+      "base": "i034",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "D=envios",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "envios"
+      ],
+      "id": "i034-estilo_chat",
+      "texto": "estoy en paraguay cuanto tarda en llegar si compro manana",
+      "origen": "variante",
+      "base": "i034",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "D=reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "reembolsos"
+      ],
+      "id": "i035-sin_tildes",
+      "texto": "Ya devolvi un producto hace 6 dias y todavia no me devolvieron la plata, cuanto mas tengo que esperar?",
+      "origen": "variante",
+      "base": "i035",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "D=reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "reembolsos"
+      ],
+      "id": "i035-mayusculas",
+      "texto": "YA DEVOLVÍ UN PRODUCTO HACE 6 DÍAS Y TODAVÍA NO ME DEVOLVIERON LA PLATA, CUANTO MAS TENGO QUE ESPERAR?",
+      "origen": "variante",
+      "base": "i035",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "D=reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "reembolsos"
+      ],
+      "id": "i035-con_error",
+      "texto": "Ya devolví un producto hace 6 días y todavía no me devoliveron la plata, cuanto mas tengo que esperar?",
+      "origen": "variante",
+      "base": "i035",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "D=reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "reembolsos"
+      ],
+      "id": "i035-estilo_chat",
+      "texto": "ya devolvi un producto hace 6 dias y todavia no me devolvieron la plata cuanto mas tengo que esperar",
+      "origen": "variante",
+      "base": "i035",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "D=reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "reembolsos"
+      ],
+      "id": "i036-sin_tildes",
+      "texto": "Quiero un reembolso por lo que compre, que me costo trecientos cincuenta pesos",
+      "origen": "variante",
+      "base": "i036",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "D=reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "reembolsos"
+      ],
+      "id": "i036-mayusculas",
+      "texto": "QUIERO UN REEMBOLSO POR LO QUE COMPRE, QUE ME COSTÓ TRECIENTOS CINCUENTA PESOS",
+      "origen": "variante",
+      "base": "i036",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "D=reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "reembolsos"
+      ],
+      "id": "i036-con_error",
+      "texto": "Quiero un reembolso por lo que compre, que me costó trecinetos cincuenta pesos",
+      "origen": "variante",
+      "base": "i036",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "D=reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "reembolsos"
+      ],
+      "id": "i036-estilo_chat",
+      "texto": "quiero un reembolso por lo que compre que me costo trecientos cincuenta pesos",
+      "origen": "variante",
+      "base": "i036",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "D=reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "reembolsos"
+      ],
+      "id": "i037-sin_tildes",
+      "texto": "Quiero hacer un reembolso de mi compra que fue de $400 que la hice con tarjeta de credito pero quiero que el rembolso lo hagan a mi cuenta bancaria",
+      "origen": "variante",
+      "base": "i037",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "D=reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "reembolsos"
+      ],
+      "id": "i037-mayusculas",
+      "texto": "QUIERO HACER UN REEMBOLSO DE MI COMPRA QUE FUE DE $400 QUE LA HICE CON TARJETA DE CRÉDITO PERO QUIERO QUE EL REMBOLSO LO HAGAN A MI CUENTA BANCARIA",
+      "origen": "variante",
+      "base": "i037",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "D=reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "reembolsos"
+      ],
+      "id": "i037-con_error",
+      "texto": "Quiero hacer un reemoblso de mi compra que fue de $400 que la hice con tarjeta de crédito pero quiero que el rembolso lo hagan a mi cuenta bancaria",
+      "origen": "variante",
+      "base": "i037",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "D=reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "reembolsos"
+      ],
+      "id": "i037-estilo_chat",
+      "texto": "quiero hacer un reembolso de mi compra que fue de $400 que la hice con tarjeta de credito pero quiero que el rembolso lo hagan a mi cuenta bancaria",
+      "origen": "variante",
+      "base": "i037",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "D=contacto",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "contacto"
+      ],
+      "id": "i038-mayusculas",
+      "texto": "CON QUIEN TENGO QUE HABLAR SI TUVE UNA DISPUTA CON UN EMPLEADO?",
+      "origen": "variante",
+      "base": "i038",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "D=contacto",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "contacto"
+      ],
+      "id": "i038-con_error",
+      "texto": "Con quien tengo que hablar si tuve una disputa con un emplaedo?",
+      "origen": "variante",
+      "base": "i038",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "D=contacto",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "contacto"
+      ],
+      "id": "i038-estilo_chat",
+      "texto": "con quien tengo que hablar si tuve una disputa con un empleado",
+      "origen": "variante",
+      "base": "i038",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "D=contacto~",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "contacto"
+      ],
+      "acepta_derivacion": true,
+      "id": "i039-sin_tildes",
+      "texto": "Ayer hubo quilombo con una persona que trabaja ahi, con quien me tengo que contactar?",
+      "origen": "variante",
+      "base": "i039",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "D=contacto~",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "contacto"
+      ],
+      "acepta_derivacion": true,
+      "id": "i039-mayusculas",
+      "texto": "AYER HUBO QUILOMBO CON UNA PERSONA QUE TRABAJA AHÍ, CON QUIEN ME TENGO QUE CONTACTAR?",
+      "origen": "variante",
+      "base": "i039",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "D=contacto~",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "contacto"
+      ],
+      "acepta_derivacion": true,
+      "id": "i039-con_error",
+      "texto": "Ayer hubo quilombo con una persona que trabaja ahí, con quien me tengo que contcatar?",
+      "origen": "variante",
+      "base": "i039",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "D=contacto~",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "contacto"
+      ],
+      "acepta_derivacion": true,
+      "id": "i039-estilo_chat",
+      "texto": "ayer hubo quilombo con una persona que trabaja ahi con quien me tengo que contactar",
+      "origen": "variante",
+      "base": "i039",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [],
+      "id": "i040-mayusculas",
+      "texto": "QUIERO QUE ME HAGAS UNA CALCULADORA EN JAVASCRIPT?",
+      "origen": "variante",
+      "base": "i040",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [],
+      "id": "i040-con_error",
+      "texto": "Quiero que me hagas una calcualdora en JavaScript?",
+      "origen": "variante",
+      "base": "i040",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [],
+      "id": "i040-estilo_chat",
+      "texto": "quiero que me hagas una calculadora en javascript",
+      "origen": "variante",
+      "base": "i040",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [],
+      "id": "i041-mayusculas",
+      "texto": "CUANTOS METROS HAY DE LA LUNA AL SOL?",
+      "origen": "variante",
+      "base": "i041",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [],
+      "id": "i041-con_error",
+      "texto": "Cuatnos metros hay de la luna al sol?",
+      "origen": "variante",
+      "base": "i041",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [],
+      "id": "i041-estilo_chat",
+      "texto": "cuantos metros hay de la luna al sol",
+      "origen": "variante",
+      "base": "i041",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [],
+      "id": "i042-sin_tildes",
+      "texto": "De que color es el caballo blanco de San Martin?",
+      "origen": "variante",
+      "base": "i042",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [],
+      "id": "i042-mayusculas",
+      "texto": "DE QUE COLOR ES EL CABALLO BLANCO DE SAN MARTÍN?",
+      "origen": "variante",
+      "base": "i042",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [],
+      "id": "i042-con_error",
+      "texto": "De que color es el cablalo blanco de San Martín?",
+      "origen": "variante",
+      "base": "i042",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [],
+      "id": "i042-estilo_chat",
+      "texto": "de que color es el caballo blanco de san martin",
+      "origen": "variante",
+      "base": "i042",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [],
+      "id": "i043-mayusculas",
+      "texto": "CUANTAS E TIENE LA PALABRA \"ESTERNOCLEIDOMASTOIDEO\"",
+      "origen": "variante",
+      "base": "i043",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [],
+      "id": "i043-con_error",
+      "texto": "Cuantas e tiene la palabra \"esternocleiodmastoideo\"",
+      "origen": "variante",
+      "base": "i043",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [],
+      "id": "i043-estilo_chat",
+      "texto": "cuantas e tiene la palabra \"esternocleidomastoideo\"",
+      "origen": "variante",
+      "base": "i043",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [],
+      "id": "i044-mayusculas",
+      "texto": "CUANTOS CONTINENTES EXISTEN?",
+      "origen": "variante",
+      "base": "i044",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [],
+      "id": "i044-con_error",
+      "texto": "Cuantos contienntes existen?",
+      "origen": "variante",
+      "base": "i044",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [],
+      "id": "i044-estilo_chat",
+      "texto": "cuantos continentes existen",
+      "origen": "variante",
+      "base": "i044",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [],
+      "id": "i045-sin_tildes",
+      "texto": "Que dia es manana si ayer fue jueves?",
+      "origen": "variante",
+      "base": "i045",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [],
+      "id": "i045-mayusculas",
+      "texto": "QUE DÍA ES MAÑANA SI AYER FUE JUEVES?",
+      "origen": "variante",
+      "base": "i045",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [],
+      "id": "i045-con_error",
+      "texto": "Que día es mañnaa si ayer fue jueves?",
+      "origen": "variante",
+      "base": "i045",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [],
+      "id": "i045-estilo_chat",
+      "texto": "que dia es manana si ayer fue jueves",
+      "origen": "variante",
+      "base": "i045",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i046-sin_tildes",
+      "texto": "Ayer me agarre a las pinas con uno de ahi, quiero devolver lo que compre y ademas quiero hacer el reclamo",
+      "origen": "variante",
+      "base": "i046",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i046-mayusculas",
+      "texto": "AYER ME AGARRE A LAS PIÑAS CON UNO DE AHÍ, QUIERO DEVOLVER LO QUE COMPRE Y ADEMAS QUIERO HACER EL RECLAMO",
+      "origen": "variante",
+      "base": "i046",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i046-con_error",
+      "texto": "Ayer me agarre a las piñas con uno de ahí, quiero devovler lo que compre y ademas quiero hacer el reclamo",
+      "origen": "variante",
+      "base": "i046",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ],
+      "id": "i046-estilo_chat",
+      "texto": "ayer me agarre a las pinas con uno de ahi quiero devolver lo que compre y ademas quiero hacer el reclamo",
+      "origen": "variante",
+      "base": "i046",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "P=1002,1003",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1002",
+        "ORD-1003"
+      ],
+      "intencion": true,
+      "id": "i047-mayusculas",
+      "texto": "QUIERO SABER EL ESTADO DE LA COMPRA NRO 1002 Y CUANTO FALTA PARA QUE LLEGUE LA N°1003",
+      "origen": "variante",
+      "base": "i047",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "P=1002,1003",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1002",
+        "ORD-1003"
+      ],
+      "intencion": true,
+      "id": "i047-con_error",
+      "texto": "Quireo saber el estado de la compra nro 1002 y cuanto falta para que llegue la n°1003",
+      "origen": "variante",
+      "base": "i047",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "P=1002,1003",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1002",
+        "ORD-1003"
+      ],
+      "intencion": true,
+      "id": "i047-estilo_chat",
+      "texto": "quiero saber el estado de la compra nro 1002 y cuanto falta para que llegue la n°1003",
+      "origen": "variante",
+      "base": "i047",
+      "variante": "estilo_chat"
+    },
+    {
+      "codigo": "D=devoluciones+garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones",
+        "garantia"
+      ],
+      "id": "i048-sin_tildes",
+      "texto": "Hace 10 meses compre un refrigerador y una tostadora y quiero hacer la devolucion de ambos",
+      "origen": "variante",
+      "base": "i048",
+      "variante": "sin_tildes"
+    },
+    {
+      "codigo": "D=devoluciones+garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones",
+        "garantia"
+      ],
+      "id": "i048-mayusculas",
+      "texto": "HACE 10 MESES COMPRE UN REFRIGERADOR Y UNA TOSTADORA Y QUIERO HACER LA DEVOLUCIÓN DE AMBOS",
+      "origen": "variante",
+      "base": "i048",
+      "variante": "mayusculas"
+    },
+    {
+      "codigo": "D=devoluciones+garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones",
+        "garantia"
+      ],
+      "id": "i048-con_error",
+      "texto": "Hace 10 meses compre un refrigreador y una tostadora y quiero hacer la devolución de ambos",
+      "origen": "variante",
+      "base": "i048",
+      "variante": "con_error"
+    },
+    {
+      "codigo": "D=devoluciones+garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones",
+        "garantia"
+      ],
+      "id": "i048-estilo_chat",
+      "texto": "hace 10 meses compre un refrigerador y una tostadora y quiero hacer la devolucion de ambos",
+      "origen": "variante",
+      "base": "i048",
+      "variante": "estilo_chat"
     }
   ]
 }

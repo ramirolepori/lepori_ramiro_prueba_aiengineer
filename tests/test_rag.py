@@ -44,3 +44,9 @@ def test_garantia_mezclada_con_devolucion_trae_ambos(indice):
 ])
 def test_fuera_de_alcance_no_supera_el_umbral(indice, pregunta):
     assert indice.buscar(pregunta) == []
+
+
+def test_una_falta_de_ortografia_en_una_palabra_del_dominio_se_corrige():
+    from tiendahogar.rag import tokenizar
+    assert "reembolso" in tokenizar("quiero un reemoblso") and "garantia" in tokenizar("la garatnia")
+    assert tokenizar("la receta del locro") == ["receta", "locro"]

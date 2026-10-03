@@ -19,6 +19,7 @@ Formato de cada línea (las que empiezan con # y las vacías se ignoran):    CÓ
     D=garantia   pregunta de política: documento esperado (garantia, devoluciones, envios, reembolsos, contacto)
     D=garantia+devoluciones   dos documentos          X   fuera de alcance: ningún documento sirve
 
+Un `~` al final del código (`D=contacto~`) indica que derivar a una persona también es una respuesta válida.
 Toda frase P, NP, D o X se mide además como "no debe derivarse". Una tercera columna opcional (`| 12`) indica de qué
 frase original deriva una variante.
 """
@@ -41,6 +42,8 @@ DOCUMENTOS = {"garantia", "devoluciones", "envios", "reembolsos", "contacto"}
 def interpretar_codigo(codigo: str) -> dict:
     """Traduce un código a lo que se espera de la frase. Lanza ValueError si no lo entiende."""
     c = codigo.strip()
+    if c.endswith("~"):       # "D=contacto~": derivar a una persona también es una respuesta válida (no cuenta como falso positivo)
+        return {**interpretar_codigo(c[:-1]), "acepta_derivacion": True}
     if c.upper() == "OK":
         return {"grupo": "guardrail", "esperado_guardrail": []}
     if re.fullmatch(r"[RTFL](\+[RTFL])*", c.upper()):
@@ -166,7 +169,8 @@ def agregar_variantes(ruta=ARCHIVO, manuales: str = "") -> list[dict]:
 def medir_origen(casos: list[dict], config: Config, fallos: bool = False) -> None:
     from .embeddings import ClienteEmbeddings
     from .rag import RecuperadorHibrido, cargar_indice
-    gr = [{"texto": c["texto"], "esperado": c["esperado_guardrail"], "tipo": c["origen"]} for c in casos]
+    gr = [{"texto": c["texto"], "esperado": c["esperado_guardrail"], "tipo": c["origen"]}
+          for c in casos if not c.get("acepta_derivacion")]
     pe = [{"texto": c["texto"], "ids": c["ids"], "intencion": c["intencion"], "tipo": c["origen"]}
           for c in casos if c["grupo"] == "pedido"]
     ra = [{"texto": c["texto"], "esperado": c["esperado_docs"], "tipo": c["origen"]}

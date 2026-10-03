@@ -8,6 +8,7 @@ La recuperación es BM25 con normalización de tildes, plural simple y una tabla
 
 from __future__ import annotations
 
+import difflib
 import json
 import math
 import re
@@ -63,11 +64,23 @@ def _raiz(t: str) -> str:
     return t
 
 
+_PALABRAS_CONCEPTO = [p for p in _A_CONCEPTO if len(p) >= 6]
+
+
+def _corregir(t: str) -> str:
+    """Una falta de ortografía en una palabra del dominio ("reemoblso") vuelve a la palabra conocida."""
+    if len(t) < 6 or not t.isalpha() or t in _A_CONCEPTO or _raiz(t) in _A_CONCEPTO:
+        return t
+    cerca = difflib.get_close_matches(t, _PALABRAS_CONCEPTO, n=1, cutoff=0.85)
+    return cerca[0] if cerca else t
+
+
 def tokenizar(texto: str) -> list[str]:
     tokens: list[str] = []
     for t in re.findall(r"[a-z0-9]+", normalizar(texto)):
         if t in STOPWORDS or len(t) < 2:
             continue
+        t = _corregir(t)
         r = _raiz(t)
         tokens.append(r)
         concepto = _A_CONCEPTO.get(r) or _A_CONCEPTO.get(t)

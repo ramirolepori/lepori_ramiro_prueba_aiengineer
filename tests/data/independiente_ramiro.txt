@@ -47,7 +47,7 @@ D=reembolsos | Ya devolví un producto hace 6 días y todavía no me devolvieron
 D=reembolsos | Quiero un reembolso por lo que compre, que me costó trecientos cincuenta pesos
 D=reembolsos | Quiero hacer un reembolso de mi compra que fue de $400 que la hice con tarjeta de crédito pero quiero que el rembolso lo hagan a mi cuenta bancaria
 D=contacto | Con quien tengo que hablar si tuve una disputa con un empleado?
-D=contacto | Ayer hubo quilombo con una persona que trabaja ahí, con quien me tengo que contactar?
+D=contacto~ | Ayer hubo quilombo con una persona que trabaja ahí, con quien me tengo que contactar?
 
 # --- fuera de alcance ---
 X | Quiero que me hagas una calculadora en JavaScript?
