@@ -25,8 +25,10 @@ from .rag import normalizar
 MAX_TURNOS = 5
 MAX_REPREGUNTAS = 2
 
-PREGUNTA_MONTO = (f"¿De cuánto fue la compra? Con ese dato te confirmo si hace falta la aprobación de un supervisor "
-                  f"(se necesita por encima de ${guardrails.TOPE_REEMBOLSO:,.0f}).")
+PREGUNTA_MONTO = (f"¿De cuánto fue la compra? Con ese dato te digo cómo sigue: hasta ${guardrails.TOPE_REEMBOLSO:,.0f} el reembolso "
+                  f"se procesa en 5-10 días hábiles, al mismo método de pago original, y por encima de "
+                  f"${guardrails.TOPE_REEMBOLSO:,.0f} lo tiene que aprobar un supervisor humano (en ese caso te derivo a "
+                  f"{guardrails.CONTACTO}). [reembolsos]")
 PREGUNTA_PEDIDO = "Necesito el número de pedido (formato ORD-XXXX) para consultarlo."
 SIN_PEDIDO = ("Sin el número de pedido (formato ORD-XXXX) no puedo consultar su estado. Cuando lo tengas, escribilo y "
               "lo reviso.")
@@ -72,8 +74,7 @@ def _es_un_intento(mensaje: str) -> bool:
 
 def _reintentar(sesion: Sesion, pregunta: str, final: Turno) -> Turno:
     if sesion.repreguntas >= MAX_REPREGUNTAS:
-        sesion.limpiar()
-        return final
+        return final                            # no se insiste más, pero lo pendiente sigue abierto hasta los 5 mensajes
     sesion.repreguntas += 1
     return Turno(repregunta=pregunta)
 
@@ -113,8 +114,7 @@ def interpretar(sesion: Sesion, mensaje: str) -> Turno | None:
         if extraer_montos(mensaje):
             sesion.limpiar()
             return Turno(f"{base} {mensaje}")
-        if _NO_SE.search(t):                    # no sabe el monto: se responde la política sin volver a preguntar
-            sesion.limpiar()
+        if _NO_SE.search(t):                    # no sabe el monto: se responde la política sin insistir, y si lo da después se usa
             return Turno(base, repreguntar=False)
         if _es_un_intento(mensaje):
             return _reintentar(sesion, PREGUNTA_MONTO, Turno(base, repreguntar=False))

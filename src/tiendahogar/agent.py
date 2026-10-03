@@ -191,9 +191,13 @@ class AgenteSoporte:
 
         notas = _notas(pregunta, fuentes, consulta_sin_numero)
         if repreguntar and "reembolsos" in fuentes and _pide_reembolso(pregunta) and not guardrails.extraer_montos(pregunta):
-            notas.append(PREGUNTA_MONTO)       # quiere un reembolso y no dijo el monto: de eso depende la respuesta
+            # Quiere un reembolso y no dijo el monto: de eso depende la respuesta, así que se pregunta en vez de volcar la
+            # política. Si la pregunta toca otros temas, la pregunta se agrega al final de lo que se responde.
             if sesion is not None:
                 sesion.esperar("monto", pregunta)
+            if not pedidos and set(fuentes) <= {"reembolsos", "devoluciones"}:
+                return Respuesta(PREGUNTA_MONTO, "respondido", ["reembolsos"])
+            notas.append(PREGUNTA_MONTO)
         if not resultados and not pedidos:
             if not con_respaldo:
                 return None

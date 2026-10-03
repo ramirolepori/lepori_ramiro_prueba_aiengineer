@@ -57,14 +57,16 @@ def test_sin_lugar_se_pregunta_y_la_respuesta_cierra(agente):
 def test_el_lugar_se_repregunta_como_maximo_dos_veces(agente):
     s, rs = charlar(agente, "Soy de Zapala, cuánto tarda el envío?", "mmm", "no sé", "no sé")
     assert "¿En qué ciudad y país estás?" in rs[1].texto and "¿En qué ciudad y país estás?" in rs[2].texto
-    assert "?" not in rs[3].texto and "2-3 días hábiles" in rs[3].texto and s.pendiente is None
+    assert "?" not in rs[3].texto and "2-3 días hábiles" in rs[3].texto
+    assert "5-7 días hábiles" in agente.responder("Rosario", s).texto           # sigue abierto: si lo da después, se usa
 
 
 # --- monto ---------------------------------------------------------------------------------------------------
 
 def test_reembolso_sin_monto_pregunta_y_un_monto_alto_deriva(agente):
     s, (r1, r2) = charlar(agente, "Quiero un reembolso de la heladera", "fueron 800")
-    assert "¿De cuánto fue la compra?" in r1.texto and r1.estado == "respondido"
+    assert r1.texto.startswith("¿De cuánto fue la compra?") and r1.estado == "respondido"
+    assert "Política de devoluciones" not in r1.texto and "5-10 días hábiles" in r1.texto    # pregunta, no vuelca la política
     assert r2.estado == "escalado" and "soporte@tiendahogar.example" in r2.texto and s.pendiente is None
 
 
@@ -74,9 +76,13 @@ def test_reembolso_sin_monto_y_un_monto_bajo_informa_la_politica(agente):
     assert "5-10 días hábiles" in r2.texto
 
 
-def test_reembolso_sin_monto_y_no_lo_sabe_responde_la_politica_sin_insistir(agente):
-    s, (r1, r2) = charlar(agente, "Quiero un reembolso", "no me acuerdo")
-    assert "¿De cuánto fue la compra?" not in r2.texto and "5-10 días hábiles" in r2.texto and s.pendiente is None
+def test_reembolso_sin_monto_y_no_lo_sabe_responde_la_politica_sin_insistir_y_lo_usa_si_lo_da_despues(agente):
+    s = Sesion()
+    agente.responder("Quiero un reembolso", s)
+    r2 = agente.responder("no me acuerdo", s)
+    assert "¿De cuánto fue la compra?" not in r2.texto and "5-10 días hábiles" in r2.texto and s.pendiente == "monto"
+    r3 = agente.responder("eran 900 pesos", s)
+    assert r3.estado == "escalado" and s.pendiente is None
 
 
 @pytest.mark.parametrize("pregunta", [
@@ -153,4 +159,4 @@ def test_formas_de_dar_el_numero_de_pedido(agente, respuesta):
 
 def test_pedido_que_no_se_da_se_repregunta_y_despues_se_corta(agente):
     s, rs = charlar(agente, "Quiero saber el estado de mi pedido", "no lo tengo", "no sé", "no tengo")
-    assert "formato ORD-XXXX" in rs[1].texto and "Sin el número de pedido" in rs[3].texto and s.pendiente is None
+    assert "formato ORD-XXXX" in rs[1].texto and "Sin el número de pedido" in rs[3].texto and s.pendiente == "pedido"
