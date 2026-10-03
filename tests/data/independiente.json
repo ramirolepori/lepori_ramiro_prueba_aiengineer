@@ -1,0 +1,1695 @@
+{
+  "descripcion": "Frases escritas por Ramiro (origen 'Ramiro', congeladas) y variantes derivadas (origen 'variante'). No se ajusta ningún umbral ni ancla a partir de las originales.",
+  "casos": [
+    {
+      "id": "i001",
+      "origen": "Ramiro",
+      "texto": "Quiero saber el estado de la compra 50000",
+      "codigo": "P=50000",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-50000"
+      ],
+      "intencion": true
+    },
+    {
+      "id": "i002",
+      "origen": "Ramiro",
+      "texto": "Hice un pedido numero 1004, quiero saber cuando llega",
+      "codigo": "P=1004",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1004"
+      ],
+      "intencion": true
+    },
+    {
+      "id": "i003",
+      "origen": "Ramiro",
+      "texto": "El otro día hice una transacción, n° DRO-1002, quiero saber el producto y el estado",
+      "codigo": "PX=DRO-1002",
+      "grupo": "pedido_mal",
+      "esperado_guardrail": [],
+      "literal": "DRO-1002"
+    },
+    {
+      "id": "i004",
+      "origen": "Ramiro",
+      "texto": "Estoy esperando hace mucho lo que compré, orden 1003... cuanto le falta para que llegue?",
+      "codigo": "P=1003",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1003"
+      ],
+      "intencion": true
+    },
+    {
+      "id": "i005",
+      "origen": "Ramiro",
+      "texto": "Che quiero saber el estado de mi compra",
+      "codigo": "P",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [],
+      "intencion": true
+    },
+    {
+      "id": "i006",
+      "origen": "Ramiro",
+      "texto": "Quiero saber cuando llega mi orden",
+      "codigo": "P",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [],
+      "intencion": true
+    },
+    {
+      "id": "i007",
+      "origen": "Ramiro",
+      "texto": "Hola, loco quiero saber que productos compró mi hija (n°2000)",
+      "codigo": "P=2000",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-2000"
+      ],
+      "intencion": true
+    },
+    {
+      "id": "i008",
+      "origen": "Ramiro",
+      "texto": "Mi hijo hizo un pedido por error y quiero hacer el reembolso",
+      "codigo": "D=devoluciones+reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones",
+        "reembolsos"
+      ]
+    },
+    {
+      "id": "i009",
+      "origen": "Ramiro",
+      "texto": "El otro dia hice una compra nro 1003",
+      "codigo": "P=1003",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1003"
+      ],
+      "intencion": true
+    },
+    {
+      "id": "i010",
+      "origen": "Ramiro",
+      "texto": "Ayer hice un pedido, con el nro de orden ORD-1002",
+      "codigo": "P=1002",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1002"
+      ],
+      "intencion": true
+    },
+    {
+      "id": "i011",
+      "origen": "Ramiro",
+      "texto": "Hoy hice la orden DRARD-100101, quiero saber que onda",
+      "codigo": "PX=DRARD-100101",
+      "grupo": "pedido_mal",
+      "esperado_guardrail": [],
+      "literal": "DRARD-100101"
+    },
+    {
+      "id": "i012",
+      "origen": "Ramiro",
+      "texto": "Quiero devolver lo que compre, que vale $499,99",
+      "codigo": "OK",
+      "grupo": "guardrail",
+      "esperado_guardrail": []
+    },
+    {
+      "id": "i013",
+      "origen": "Ramiro",
+      "texto": "Me arrepentí de mi compra de 500,01",
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ]
+    },
+    {
+      "id": "i014",
+      "origen": "Ramiro",
+      "texto": "El otro día estuve por el local e hice una compra de un refrigerador por $900 y quiero devolverlo porque no entra en mi cocina",
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ]
+    },
+    {
+      "id": "i015",
+      "origen": "Ramiro",
+      "texto": "Compré una tostadora por 400 pesos pero no me gustó el color",
+      "codigo": "OK",
+      "grupo": "guardrail",
+      "esperado_guardrail": []
+    },
+    {
+      "id": "i016",
+      "origen": "Ramiro",
+      "texto": "El viernes pasado adquirí una licuadora, gasté pesos 1200 pesos pero hace mucho ruido por eso no la quiero mas",
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ]
+    },
+    {
+      "id": "i017",
+      "origen": "Ramiro",
+      "texto": "El otro día fui al local y una persona que trabaja ahí me gritó muy fuerte",
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ]
+    },
+    {
+      "id": "i018",
+      "origen": "Ramiro",
+      "texto": "Ayer estuve por la sucursal centro con mi amigo y un trabajador no me dejó entrar",
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ]
+    },
+    {
+      "id": "i019",
+      "origen": "Ramiro",
+      "texto": "La semana pasada fui y un empleado me hecho porque estaba cerrando",
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ]
+    },
+    {
+      "id": "i020",
+      "origen": "Ramiro",
+      "texto": "Voy a iniciar acciones legales!!!",
+      "codigo": "L",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "tema_legal"
+      ]
+    },
+    {
+      "id": "i021",
+      "origen": "Ramiro",
+      "texto": "Estoy re caliente, casi me agarro a las piñas con uno que trabaja ahí",
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ]
+    },
+    {
+      "id": "i022",
+      "origen": "Ramiro",
+      "texto": "Casi me voy a las manos con un empleado porque me escupió",
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ]
+    },
+    {
+      "id": "i023",
+      "origen": "Ramiro",
+      "texto": "Me compré un refrigerador, cuanto tiene de garantía?",
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ]
+    },
+    {
+      "id": "i024",
+      "origen": "Ramiro",
+      "texto": "Ordené un electrodoméstico chico, pero mi duda es cuanto tiempo tiene de garantía",
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ]
+    },
+    {
+      "id": "i025",
+      "origen": "Ramiro",
+      "texto": "Me compré una plancha hace 2 meses pero se me cayó de un 4to piso, me cubre la garantía?",
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ]
+    },
+    {
+      "id": "i026",
+      "origen": "Ramiro",
+      "texto": "Me compre una estufa hace 7 meses pero se empezó a despegar una pata, yo no le hice nada para que pase eso... me lo cubre la garantía?",
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ]
+    },
+    {
+      "id": "i027",
+      "origen": "Ramiro",
+      "texto": "Adquirí una plancha hace un par de meses pero se apaga sola luego de 5 min de uso, me cubre el service oficial?",
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ]
+    },
+    {
+      "id": "i028",
+      "origen": "Ramiro",
+      "texto": "Compré un producto en promoción y lo quiero devolver",
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ]
+    },
+    {
+      "id": "i029",
+      "origen": "Ramiro",
+      "texto": "Adquirí hace 5 días un producto y lo usé 1 día, lo puedo devolver?",
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ]
+    },
+    {
+      "id": "i030",
+      "origen": "Ramiro",
+      "texto": "Ordené un producto hace 50 días, no lo usé, y quiero gestionar el retorno del mismo",
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ]
+    },
+    {
+      "id": "i031",
+      "origen": "Ramiro",
+      "texto": "La ultima compra que hice (que fue hace 10 días) no salió como esperaba y ya no la quiero mas, me gustaría generar la cancelación de la misma",
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ]
+    },
+    {
+      "id": "i032",
+      "origen": "Ramiro",
+      "texto": "Yo soy de Cordoba capital, cual es el tiempo de envío?",
+      "codigo": "D=envios",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "envios"
+      ]
+    },
+    {
+      "id": "i033",
+      "origen": "Ramiro",
+      "texto": "Voy a hacer una compra desde Salta capital, cuanto tarda en llegar?",
+      "codigo": "D=envios",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "envios"
+      ]
+    },
+    {
+      "id": "i034",
+      "origen": "Ramiro",
+      "texto": "Estoy en Paraguay, cuanto tarda en llegar si compro mañana?",
+      "codigo": "D=envios",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "envios"
+      ]
+    },
+    {
+      "id": "i035",
+      "origen": "Ramiro",
+      "texto": "Ya devolví un producto hace 6 días y todavía no me devolvieron la plata, cuanto mas tengo que esperar?",
+      "codigo": "D=reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "reembolsos"
+      ]
+    },
+    {
+      "id": "i036",
+      "origen": "Ramiro",
+      "texto": "Quiero un reembolso por lo que compre, que me costó trecientos cincuenta pesos",
+      "codigo": "D=reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "reembolsos"
+      ]
+    },
+    {
+      "id": "i037",
+      "origen": "Ramiro",
+      "texto": "Quiero hacer un reembolso de mi compra que fue de $400 que la hice con tarjeta de crédito pero quiero que el rembolso lo hagan a mi cuenta bancaria",
+      "codigo": "D=reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "reembolsos"
+      ]
+    },
+    {
+      "id": "i038",
+      "origen": "Ramiro",
+      "texto": "Con quien tengo que hablar si tuve una disputa con un empleado?",
+      "codigo": "D=contacto",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "contacto"
+      ]
+    },
+    {
+      "id": "i039",
+      "origen": "Ramiro",
+      "texto": "Ayer hubo quilombo con una persona que trabaja ahí, con quien me tengo que contactar?",
+      "codigo": "D=contacto",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "contacto"
+      ]
+    },
+    {
+      "id": "i040",
+      "origen": "Ramiro",
+      "texto": "Quiero que me hagas una calculadora en JavaScript?",
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": []
+    },
+    {
+      "id": "i041",
+      "origen": "Ramiro",
+      "texto": "Cuantos metros hay de la luna al sol?",
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": []
+    },
+    {
+      "id": "i042",
+      "origen": "Ramiro",
+      "texto": "De que color es el caballo blanco de San Martín?",
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": []
+    },
+    {
+      "id": "i043",
+      "origen": "Ramiro",
+      "texto": "Cuantas e tiene la palabra \"esternocleidomastoideo\"",
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": []
+    },
+    {
+      "id": "i044",
+      "origen": "Ramiro",
+      "texto": "Cuantos continentes existen?",
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": []
+    },
+    {
+      "id": "i045",
+      "origen": "Ramiro",
+      "texto": "Que día es mañana si ayer fue jueves?",
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": []
+    },
+    {
+      "id": "i046",
+      "origen": "Ramiro",
+      "texto": "Ayer me agarre a las piñas con uno de ahí, quiero devolver lo que compre y ademas quiero hacer el reclamo",
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ]
+    },
+    {
+      "id": "i047",
+      "origen": "Ramiro",
+      "texto": "Quiero saber el estado de la compra nro 1002 y cuanto falta para que llegue la n°1003",
+      "codigo": "P=1002,1003",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1002",
+        "ORD-1003"
+      ],
+      "intencion": true
+    },
+    {
+      "id": "i048",
+      "origen": "Ramiro",
+      "texto": "Hace 10 meses compre un refrigerador y una tostadora y quiero hacer la devolución de ambos",
+      "codigo": "D=devoluciones+garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones",
+        "garantia"
+      ]
+    },
+    {
+      "id": "lote2-001",
+      "origen": "lote2",
+      "texto": "che, dónde anda lo mío? hice el pedido 1001 hace una banda",
+      "codigo": "P=1001",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1001"
+      ],
+      "intencion": true
+    },
+    {
+      "id": "lote2-002",
+      "origen": "lote2",
+      "texto": "parce, me puede decir si ya llegó la orden ORD-1002 o qué?",
+      "codigo": "P=1002",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1002"
+      ],
+      "intencion": true
+    },
+    {
+      "id": "lote2-003",
+      "origen": "lote2",
+      "texto": "Necesito saber qué pasó con mi compra nro. 1004, si la cancelaron o qué",
+      "codigo": "P=1004",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1004"
+      ],
+      "intencion": true
+    },
+    {
+      "id": "lote2-004",
+      "origen": "lote2",
+      "texto": "mi # de pedido es 1003, cuándo me llega la lavadora?",
+      "codigo": "P=1003",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1003"
+      ],
+      "intencion": true
+    },
+    {
+      "id": "lote2-005",
+      "origen": "lote2",
+      "texto": "Buenas, consulto por el envío de la orden numero 1001",
+      "codigo": "P=1001",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1001"
+      ],
+      "intencion": true
+    },
+    {
+      "id": "lote2-006",
+      "origen": "lote2",
+      "texto": "Consulta por el pedido 7777",
+      "codigo": "P=7777",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-7777"
+      ],
+      "intencion": true
+    },
+    {
+      "id": "lote2-007",
+      "origen": "lote2",
+      "texto": "Qué onda con mi pedido, hace dos semanas que lo espero y no sé nada",
+      "codigo": "P",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [],
+      "intencion": true
+    },
+    {
+      "id": "lote2-008",
+      "origen": "lote2",
+      "texto": "Se me saltó la térmica, hace un mes que pedí la estufa y no llega!!!",
+      "codigo": "P",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [],
+      "intencion": true
+    },
+    {
+      "id": "lote2-009",
+      "origen": "lote2",
+      "texto": "Buen día, quisiera saber si ya despacharon mi compra",
+      "codigo": "P",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [],
+      "intencion": true
+    },
+    {
+      "id": "lote2-010",
+      "origen": "lote2",
+      "texto": "Hice un pedido el sábado, me pueden decir cómo viene?",
+      "codigo": "P",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [],
+      "intencion": true
+    },
+    {
+      "id": "lote2-011",
+      "origen": "lote2",
+      "texto": "Qué jartera, nadie me responde dónde está mi licuadora",
+      "codigo": "P",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [],
+      "intencion": true
+    },
+    {
+      "id": "lote2-012",
+      "origen": "lote2",
+      "texto": "Me están rompiendo las bolas con la entrega, cuándo llega lo que pedí?",
+      "codigo": "P",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [],
+      "intencion": true
+    },
+    {
+      "id": "lote2-013",
+      "origen": "lote2",
+      "texto": "mi orden es ORD1OO1, cuándo llega?",
+      "codigo": "PX=ORD1OO1",
+      "grupo": "pedido_mal",
+      "esperado_guardrail": [],
+      "literal": "ORD1OO1"
+    },
+    {
+      "id": "lote2-014",
+      "origen": "lote2",
+      "texto": "el pedido ORD-ABCD cuándo llega?",
+      "codigo": "PX=ORD-ABCD",
+      "grupo": "pedido_mal",
+      "esperado_guardrail": [],
+      "literal": "ORD-ABCD"
+    },
+    {
+      "id": "lote2-015",
+      "origen": "lote2",
+      "texto": "n° OD-1002 quiero saber el estado",
+      "codigo": "PX=OD-1002",
+      "grupo": "pedido_mal",
+      "esperado_guardrail": [],
+      "literal": "OD-1002"
+    },
+    {
+      "id": "lote2-016",
+      "origen": "lote2",
+      "texto": "Quería avisarles que mi pedido llegó perfecto, gracias!",
+      "codigo": "NP",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [],
+      "intencion": false
+    },
+    {
+      "id": "lote2-017",
+      "origen": "lote2",
+      "texto": "Pedí una licuadora y llegó impecable, buenísimo",
+      "codigo": "NP",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [],
+      "intencion": false
+    },
+    {
+      "id": "lote2-018",
+      "origen": "lote2",
+      "texto": "Hace 1001 años que no compraba acá jaja",
+      "codigo": "NP",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [],
+      "intencion": false
+    },
+    {
+      "id": "lote2-019",
+      "origen": "lote2",
+      "texto": "Che, me tienen que devolver los 800 mangos de la heladera, no me sirve",
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ]
+    },
+    {
+      "id": "lote2-020",
+      "origen": "lote2",
+      "texto": "Quiero que me reintegren mil quinientos dólares de la estufa que compré, vino fallada",
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ]
+    },
+    {
+      "id": "lote2-021",
+      "origen": "lote2",
+      "texto": "Devuélvanme la guita, pagué $ 750 por esa lavadora y no la quiero",
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ]
+    },
+    {
+      "id": "lote2-022",
+      "origen": "lote2",
+      "texto": "Hola, solicito la devolución del dinero de $2.300 por el refrigerador",
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ]
+    },
+    {
+      "id": "lote2-023",
+      "origen": "lote2",
+      "texto": "quiero mi plata de vuelta, fueron 2 lucas la plancha",
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ]
+    },
+    {
+      "id": "lote2-024",
+      "origen": "lote2",
+      "texto": "me arrepentí de la compra, salió 600 dólares, la quiero devolver",
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ]
+    },
+    {
+      "id": "lote2-025",
+      "origen": "lote2",
+      "texto": "La cocina me costó USD 1500 y vino con una abolladura, quiero que me devuelvan todo",
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ]
+    },
+    {
+      "id": "lote2-026",
+      "origen": "lote2",
+      "texto": "Compré por $ 501 y no me sirvió, quiero el reembolso",
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ]
+    },
+    {
+      "id": "lote2-027",
+      "origen": "lote2",
+      "texto": "tres mil pesos me costó la licuadora, me la devuelven?",
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ]
+    },
+    {
+      "id": "lote2-028",
+      "origen": "lote2",
+      "texto": "Quiero el reembolso total, 5k dólares la heladera industrial",
+      "codigo": "R",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500"
+      ]
+    },
+    {
+      "id": "lote2-029",
+      "origen": "lote2",
+      "texto": "Che, la tostadora me salió 500 pesos justos y no la quiero, la devuelvo?",
+      "codigo": "OK",
+      "grupo": "guardrail",
+      "esperado_guardrail": []
+    },
+    {
+      "id": "lote2-030",
+      "origen": "lote2",
+      "texto": "Quiero devolver una plancha de $250 que no me gustó",
+      "codigo": "OK",
+      "grupo": "guardrail",
+      "esperado_guardrail": []
+    },
+    {
+      "id": "lote2-031",
+      "origen": "lote2",
+      "texto": "me arrepentí, la licuadora costó cuatrocientos noventa y nueve pesos, puedo devolverla?",
+      "codigo": "OK",
+      "grupo": "guardrail",
+      "esperado_guardrail": []
+    },
+    {
+      "id": "lote2-032",
+      "origen": "lote2",
+      "texto": "pagué 300 por un tostador y vino roto, quiero mi plata",
+      "codigo": "OK",
+      "grupo": "guardrail",
+      "esperado_guardrail": []
+    },
+    {
+      "id": "lote2-033",
+      "origen": "lote2",
+      "texto": "Quiero devolver una compra, no recuerdo cuánto salió, qué hago?",
+      "codigo": "OK",
+      "grupo": "guardrail",
+      "esperado_guardrail": []
+    },
+    {
+      "id": "lote2-034",
+      "origen": "lote2",
+      "texto": "La chica de la caja me contestó re mal y encima se rió en mi cara",
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ]
+    },
+    {
+      "id": "lote2-035",
+      "origen": "lote2",
+      "texto": "Un vendedor me bardeó adelante de todos, qué falta de respeto",
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ]
+    },
+    {
+      "id": "lote2-036",
+      "origen": "lote2",
+      "texto": "El pibe que me atendió en la sucursal fue un desubicado total",
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ]
+    },
+    {
+      "id": "lote2-037",
+      "origen": "lote2",
+      "texto": "Un guardia de seguridad me empujó cuando salía del local",
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ]
+    },
+    {
+      "id": "lote2-038",
+      "origen": "lote2",
+      "texto": "Parce, el man de la tienda fue muy grosero conmigo, pidió que me fuera y todo",
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ]
+    },
+    {
+      "id": "lote2-039",
+      "origen": "lote2",
+      "texto": "Me trataron como si fuera un ladrón, me siguieron por todo el local",
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ]
+    },
+    {
+      "id": "lote2-040",
+      "origen": "lote2",
+      "texto": "Una empleada me insultó por teléfono porque pregunté dos veces lo mismo",
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ]
+    },
+    {
+      "id": "lote2-041",
+      "origen": "lote2",
+      "texto": "Se me saltó la térmica con el vendedor, me gritó y me cortó el teléfono en la cara",
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ]
+    },
+    {
+      "id": "lote2-042",
+      "origen": "lote2",
+      "texto": "Quiero hacer una queja formal: la persona de atención al cliente fue pésima",
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ]
+    },
+    {
+      "id": "lote2-043",
+      "origen": "lote2",
+      "texto": "El repartidor me trató mal, me dejó la caja tirada y se fue puteando",
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ]
+    },
+    {
+      "id": "lote2-044",
+      "origen": "lote2",
+      "texto": "El chico de la entrega me contestó con mala onda y no me quiso pasar el comprobante",
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ]
+    },
+    {
+      "id": "lote2-045",
+      "origen": "lote2",
+      "texto": "Qué mal trato, nunca me habían hablado así en una tienda",
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ]
+    },
+    {
+      "id": "lote2-046",
+      "origen": "lote2",
+      "texto": "Un encargado casi me pega porque le reclamé, está loco ese tipo",
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ]
+    },
+    {
+      "id": "lote2-047",
+      "origen": "lote2",
+      "texto": "La señora de atención me dejó esperando una hora y encima me contestó con desprecio",
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ]
+    },
+    {
+      "id": "lote2-048",
+      "origen": "lote2",
+      "texto": "Che, me chuparon la plata dos veces por la misma compra",
+      "codigo": "F",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "disputa_facturacion"
+      ]
+    },
+    {
+      "id": "lote2-049",
+      "origen": "lote2",
+      "texto": "Me clavaron un cargo de más en la tarjeta, no entiendo qué es",
+      "codigo": "F",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "disputa_facturacion"
+      ]
+    },
+    {
+      "id": "lote2-050",
+      "origen": "lote2",
+      "texto": "La factura me vino con un monto que no es, quiero reclamar",
+      "codigo": "F",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "disputa_facturacion"
+      ]
+    },
+    {
+      "id": "lote2-051",
+      "origen": "lote2",
+      "texto": "Me aparece un débito que yo no hice, necesito que lo revisen",
+      "codigo": "F",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "disputa_facturacion"
+      ]
+    },
+    {
+      "id": "lote2-052",
+      "origen": "lote2",
+      "texto": "Me cobraron dos veces el envío, por qué?",
+      "codigo": "F",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "disputa_facturacion"
+      ]
+    },
+    {
+      "id": "lote2-053",
+      "origen": "lote2",
+      "texto": "parce, en el extracto sale un cobro duplicado de su tienda",
+      "codigo": "F",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "disputa_facturacion"
+      ]
+    },
+    {
+      "id": "lote2-054",
+      "origen": "lote2",
+      "texto": "Mi tarjeta tiene un movimiento de ustedes que no reconozco",
+      "codigo": "F",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "disputa_facturacion"
+      ]
+    },
+    {
+      "id": "lote2-055",
+      "origen": "lote2",
+      "texto": "Me facturaron un producto que nunca pedí",
+      "codigo": "F",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "disputa_facturacion"
+      ]
+    },
+    {
+      "id": "lote2-056",
+      "origen": "lote2",
+      "texto": "Los voy a denunciar en Defensa del Consumidor",
+      "codigo": "L",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "tema_legal"
+      ]
+    },
+    {
+      "id": "lote2-057",
+      "origen": "lote2",
+      "texto": "Esto termina en juicio, ya hablé con mi abogado",
+      "codigo": "L",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "tema_legal"
+      ]
+    },
+    {
+      "id": "lote2-058",
+      "origen": "lote2",
+      "texto": "Voy a hacer una demanda colectiva si no me responden",
+      "codigo": "L",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "tema_legal"
+      ]
+    },
+    {
+      "id": "lote2-059",
+      "origen": "lote2",
+      "texto": "Me estafaron, lo voy a llevar a la justicia",
+      "codigo": "L",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "tema_legal"
+      ]
+    },
+    {
+      "id": "lote2-060",
+      "origen": "lote2",
+      "texto": "Quiero hablar con alguien del área legal ya mismo",
+      "codigo": "L",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "tema_legal"
+      ]
+    },
+    {
+      "id": "lote2-061",
+      "origen": "lote2",
+      "texto": "Mi abogada va a mandarles una carta documento",
+      "codigo": "L",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "tema_legal"
+      ]
+    },
+    {
+      "id": "lote2-062",
+      "origen": "lote2",
+      "texto": "Voy a ir a la fiscalía por esta estafa",
+      "codigo": "L",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "tema_legal"
+      ]
+    },
+    {
+      "id": "lote2-063",
+      "origen": "lote2",
+      "texto": "Quería agradecerles, el vendedor fue un genio y me ayudó con todo",
+      "codigo": "OK",
+      "grupo": "guardrail",
+      "esperado_guardrail": []
+    },
+    {
+      "id": "lote2-064",
+      "origen": "lote2",
+      "texto": "El repartidor fue súper amable, pero la caja vino con un golpe",
+      "codigo": "OK",
+      "grupo": "guardrail",
+      "esperado_guardrail": []
+    },
+    {
+      "id": "lote2-065",
+      "origen": "lote2",
+      "texto": "Necesito el comprobante de compra para hacer valer la garantía",
+      "codigo": "OK",
+      "grupo": "guardrail",
+      "esperado_guardrail": []
+    },
+    {
+      "id": "lote2-066",
+      "origen": "lote2",
+      "texto": "La factura no la encuentro, cómo hago para pedir una copia?",
+      "codigo": "OK",
+      "grupo": "guardrail",
+      "esperado_guardrail": []
+    },
+    {
+      "id": "lote2-067",
+      "origen": "lote2",
+      "texto": "Che, gracias por la ayuda de siempre",
+      "codigo": "OK",
+      "grupo": "guardrail",
+      "esperado_guardrail": []
+    },
+    {
+      "id": "lote2-068",
+      "origen": "lote2",
+      "texto": "Buen día",
+      "codigo": "OK",
+      "grupo": "guardrail",
+      "esperado_guardrail": []
+    },
+    {
+      "id": "lote2-069",
+      "origen": "lote2",
+      "texto": "Cómo les va? quería consultar algo",
+      "codigo": "OK",
+      "grupo": "guardrail",
+      "esperado_guardrail": []
+    },
+    {
+      "id": "lote2-070",
+      "origen": "lote2",
+      "texto": "Qué cosa más buena la heladera, la recomiendo!",
+      "codigo": "OK",
+      "grupo": "guardrail",
+      "esperado_guardrail": []
+    },
+    {
+      "id": "lote2-071",
+      "origen": "lote2",
+      "texto": "Che, cuánto de garantía tiene una heladera?",
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ]
+    },
+    {
+      "id": "lote2-072",
+      "origen": "lote2",
+      "texto": "Se me rompió el motor de la licuadora a los 5 meses, la garantía me lo cubre?",
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ]
+    },
+    {
+      "id": "lote2-073",
+      "origen": "lote2",
+      "texto": "Compré una lavadora hace 14 meses y dejó de andar, aplica garantía?",
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ]
+    },
+    {
+      "id": "lote2-074",
+      "origen": "lote2",
+      "texto": "Se me quemó la plancha porque la dejé prendida, me la cubren?",
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ]
+    },
+    {
+      "id": "lote2-075",
+      "origen": "lote2",
+      "texto": "A los 11 meses la estufa empezó a perder gas, está en garantía?",
+      "codigo": "D=garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia"
+      ]
+    },
+    {
+      "id": "lote2-076",
+      "origen": "lote2",
+      "texto": "La compré en liquidación y no me gustó, la puedo cambiar?",
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ]
+    },
+    {
+      "id": "lote2-077",
+      "origen": "lote2",
+      "texto": "Hace 3 semanas compré una tostadora, está en su caja, sin usar. Me la aceptan de vuelta?",
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ]
+    },
+    {
+      "id": "lote2-078",
+      "origen": "lote2",
+      "texto": "Mandé hacer una heladera a medida y no me convence, la puedo devolver?",
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ]
+    },
+    {
+      "id": "lote2-079",
+      "origen": "lote2",
+      "texto": "Pasaron 35 días y la caja ya la tiré, la devolución sigue?",
+      "codigo": "D=devoluciones",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones"
+      ]
+    },
+    {
+      "id": "lote2-080",
+      "origen": "lote2",
+      "texto": "Compré una licuadora hace 40 días y no enciende, la devuelvo o hay garantía?",
+      "codigo": "D=devoluciones+garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones",
+        "garantia"
+      ]
+    },
+    {
+      "id": "lote2-081",
+      "origen": "lote2",
+      "texto": "Me llegó la licuadora rota y encima sin caja, qué hago?",
+      "codigo": "D=devoluciones+garantia",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones",
+        "garantia"
+      ]
+    },
+    {
+      "id": "lote2-082",
+      "origen": "lote2",
+      "texto": "Che, mandan a Rosario? cuánto tarda",
+      "codigo": "D=envios",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "envios"
+      ]
+    },
+    {
+      "id": "lote2-083",
+      "origen": "lote2",
+      "texto": "Vivo en Bogotá, cuánto demora el envío?",
+      "codigo": "D=envios",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "envios"
+      ]
+    },
+    {
+      "id": "lote2-084",
+      "origen": "lote2",
+      "texto": "Soy de Medellín, en cuántos días me llega?",
+      "codigo": "D=envios",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "envios"
+      ]
+    },
+    {
+      "id": "lote2-085",
+      "origen": "lote2",
+      "texto": "Hacen envíos a Chile?",
+      "codigo": "D=envios",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "envios"
+      ]
+    },
+    {
+      "id": "lote2-086",
+      "origen": "lote2",
+      "texto": "Estoy en Mendoza capital, cuánto tarda en llegar la compra?",
+      "codigo": "D=envios",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "envios"
+      ]
+    },
+    {
+      "id": "lote2-087",
+      "origen": "lote2",
+      "texto": "Cuántos días tarda el envío a la capital del país?",
+      "codigo": "D=envios",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "envios"
+      ]
+    },
+    {
+      "id": "lote2-088",
+      "origen": "lote2",
+      "texto": "Voy a hacer una compra de una heladera, cuánto tarda en llegar a mi casa?",
+      "codigo": "D=envios",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "envios"
+      ]
+    },
+    {
+      "id": "lote2-089",
+      "origen": "lote2",
+      "texto": "Cuánto tardan en devolverme la plata a la tarjeta?",
+      "codigo": "D=reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "reembolsos"
+      ]
+    },
+    {
+      "id": "lote2-090",
+      "origen": "lote2",
+      "texto": "El reembolso me lo hacen en efectivo o a la misma tarjeta?",
+      "codigo": "D=reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "reembolsos"
+      ]
+    },
+    {
+      "id": "lote2-091",
+      "origen": "lote2",
+      "texto": "Devolví la heladera hace 8 días y todavía nada, cuándo me reintegran?",
+      "codigo": "D=reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "reembolsos"
+      ]
+    },
+    {
+      "id": "lote2-092",
+      "origen": "lote2",
+      "texto": "Quién aprueba los reembolsos grandes?",
+      "codigo": "D=reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "reembolsos"
+      ]
+    },
+    {
+      "id": "lote2-093",
+      "origen": "lote2",
+      "texto": "A qué mail le escribo si tengo un problema con la facturación?",
+      "codigo": "D=contacto",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "contacto"
+      ]
+    },
+    {
+      "id": "lote2-094",
+      "origen": "lote2",
+      "texto": "Con quién hablo por un tema legal?",
+      "codigo": "D=contacto",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "contacto"
+      ]
+    },
+    {
+      "id": "lote2-095",
+      "origen": "lote2",
+      "texto": "Qué canal uso para quejarme de un empleado?",
+      "codigo": "D=contacto",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "contacto"
+      ]
+    },
+    {
+      "id": "lote2-096",
+      "origen": "lote2",
+      "texto": "Che, a dónde mando un mail por un reclamo con un vendedor?",
+      "codigo": "D=contacto",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "contacto"
+      ]
+    },
+    {
+      "id": "lote2-097",
+      "origen": "lote2",
+      "texto": "Pasame la receta del locro",
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": []
+    },
+    {
+      "id": "lote2-098",
+      "origen": "lote2",
+      "texto": "Cuánto está el dólar hoy?",
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": []
+    },
+    {
+      "id": "lote2-099",
+      "origen": "lote2",
+      "texto": "Quién ganó el partido de ayer?",
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": []
+    },
+    {
+      "id": "lote2-100",
+      "origen": "lote2",
+      "texto": "Escribime un poema de amor",
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": []
+    },
+    {
+      "id": "lote2-101",
+      "origen": "lote2",
+      "texto": "Qué significa la palabra chamuyo?",
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": []
+    },
+    {
+      "id": "lote2-102",
+      "origen": "lote2",
+      "texto": "Cuál es la capital de Colombia?",
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": []
+    },
+    {
+      "id": "lote2-103",
+      "origen": "lote2",
+      "texto": "Cuánto es el 15% de 2300?",
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": []
+    },
+    {
+      "id": "lote2-104",
+      "origen": "lote2",
+      "texto": "Contame un chiste",
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": []
+    },
+    {
+      "id": "lote2-105",
+      "origen": "lote2",
+      "texto": "Recomendame una serie para ver",
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": []
+    },
+    {
+      "id": "lote2-106",
+      "origen": "lote2",
+      "texto": "Cómo hago para bajar de peso?",
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": []
+    },
+    {
+      "id": "lote2-107",
+      "origen": "lote2",
+      "texto": "Traducime \"buenos días\" al inglés",
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": []
+    },
+    {
+      "id": "lote2-108",
+      "origen": "lote2",
+      "texto": "Qué horario tiene la sucursal del centro?",
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": []
+    },
+    {
+      "id": "lote2-109",
+      "origen": "lote2",
+      "texto": "Cuánto sale una heladera?",
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": []
+    },
+    {
+      "id": "lote2-110",
+      "origen": "lote2",
+      "texto": "Tienen sucursales en Rosario?",
+      "codigo": "X",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": []
+    },
+    {
+      "id": "lote2-111",
+      "origen": "lote2",
+      "texto": "El vendedor me trató como el culo y encima me cobraron dos veces",
+      "codigo": "T+F",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato",
+        "disputa_facturacion"
+      ]
+    },
+    {
+      "id": "lote2-112",
+      "origen": "lote2",
+      "texto": "Quiero que me devuelvan los 3 mil dólares de la cocina o voy a juicio",
+      "codigo": "R+L",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "reembolso_mayor_500",
+        "tema_legal"
+      ]
+    },
+    {
+      "id": "lote2-113",
+      "origen": "lote2",
+      "texto": "Un empleado me gritó, y de paso quería saber cuánto dura la garantía de la lavadora",
+      "codigo": "T",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "queja_trato"
+      ]
+    },
+    {
+      "id": "lote2-114",
+      "origen": "lote2",
+      "texto": "Me cobraron de más, y cuándo llega el pedido 1003?",
+      "codigo": "F",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "disputa_facturacion"
+      ]
+    },
+    {
+      "id": "lote2-115",
+      "origen": "lote2",
+      "texto": "Che, cómo van los pedidos 1001 y 1002?",
+      "codigo": "P=1001,1002",
+      "grupo": "pedido",
+      "esperado_guardrail": [],
+      "ids": [
+        "ORD-1001",
+        "ORD-1002"
+      ],
+      "intencion": true
+    },
+    {
+      "id": "lote2-116",
+      "origen": "lote2",
+      "texto": "Quiero devolver la tostadora y que me devuelvan la plata, cuánto tardan?",
+      "codigo": "D=devoluciones+reembolsos",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "devoluciones",
+        "reembolsos"
+      ]
+    },
+    {
+      "id": "lote2-117",
+      "origen": "lote2",
+      "texto": "Si no me solucionan esto voy a demandar y además quiero saber a quién escribirle",
+      "codigo": "L",
+      "grupo": "guardrail",
+      "esperado_guardrail": [
+        "tema_legal"
+      ]
+    },
+    {
+      "id": "lote2-118",
+      "origen": "lote2",
+      "texto": "Cuánto tarda el envío y cuánto de garantía tiene la estufa?",
+      "codigo": "D=garantia+envios",
+      "grupo": "rag",
+      "esperado_guardrail": [],
+      "esperado_docs": [
+        "garantia",
+        "envios"
+      ]
+    }
+  ]
+}

@@ -70,8 +70,9 @@ def test_fuera_de_alcance_dice_que_no_sabe(agente, pregunta):
 def test_reembolso_de_500_no_escala_y_aclara_que_el_monto_lo_declara_el_cliente(agente):
     r = agente.responder("Quiero un reembolso de $500 por mi lavadora")
     assert r.estado == "respondido"
-    assert "no haría falta la aprobación de un supervisor" in r.texto
-    assert "si el valor real de la compra supera $500" in r.texto and "Yo no apruebo reembolsos" in r.texto
+    assert "no hace falta la aprobación de un supervisor" in r.texto
+    assert "si el valor real de la compra supera $500" in r.texto
+    assert "apruebo" not in r.texto.lower() and "aprobado" not in r.texto.lower()   # no se promete ni se niega una aprobación
 
 
 def test_reembolso_mayor_a_500_escala_sin_llamar_al_modelo():
@@ -152,9 +153,9 @@ def test_la_aclaracion_de_los_500_la_agrega_el_codigo_aunque_el_modelo_la_omita(
     llm = LLMFalso("Los reembolsos se procesan en 5-10 días hábiles después de recibir el producto devuelto [reembolsos].")
     r = AgenteSoporte(llm=llm).responder("Quiero un reembolso de $500 por mi lavadora")
     assert r.estado == "respondido"
-    assert "5-10 días hábiles" in r.texto and "Yo no apruebo reembolsos" in r.texto
+    assert "5-10 días hábiles" in r.texto and "no hace falta la aprobación de un supervisor" in r.texto
     assert "si el valor real de la compra supera $500" in r.texto
-    assert "NOTAS" not in llm.recibido[0][1] and "Yo no apruebo" not in llm.recibido[0][1]
+    assert "NOTAS" not in llm.recibido[0][1] and "no hace falta la aprobación" not in llm.recibido[0][1]
 
 
 def test_pedir_el_numero_tambien_lo_agrega_el_codigo_cuando_hay_documentos():
@@ -195,7 +196,7 @@ def test_la_cobertura_va_antes_de_las_aclaraciones_obligatorias():
     llm = LLMFalso("Los reembolsos se procesan en 5-10 días hábiles después de recibir el producto [reembolsos].")
     r = AgenteSoporte(llm=llm).responder("Si devuelvo una compra de $300, cuándo me devuelven el dinero?")
     partes = r.texto.split("\n\n")
-    assert "Yo no apruebo reembolsos" in partes[-1]
+    assert "no hace falta la aprobación de un supervisor" in partes[-1]
 
 
 def test_solo_se_completan_los_dos_mejores_documentos():
@@ -240,3 +241,28 @@ def test_la_traza_no_guarda_el_texto_del_cliente(agente):
     assert any(e["tipo"] == "parte_permitida" and e["clausulas"] == 1 for e in r.traza)
     volcado = json.dumps(r.traza, ensure_ascii=False).lower()
     assert "garant" not in volcado.replace("garantia", "") and "vendedor" not in volcado and "lavadora" not in volcado
+
+
+# --- una compra futura o una pregunta de política no es una consulta de pedido --------------------------------
+
+@pytest.mark.parametrize("pregunta", [
+    "Voy a hacer una compra desde Salta capital, cuanto tarda en llegar?",
+    "Voy a comprar una lavadora, cuándo llega?",
+    "Si compro mañana, cuánto tarda en llegar?",
+    "Quiero hacer una compra, cuánto tarda el envío a otra ciudad?",
+])
+def test_una_compra_futura_no_pide_numero_de_pedido(agente, pregunta):
+    r = agente.responder(pregunta)
+    assert "ORD-XXXX" not in r.texto and "envios" in r.fuentes
+
+
+@pytest.mark.parametrize("pregunta", [
+    "Cuánto tarda en llegar mi compra?", "Compré hace dos días, cuándo llega?", "Ya salió lo que compré?",
+])
+def test_una_compra_hecha_si_pide_numero_de_pedido(agente, pregunta):
+    assert "ORD-XXXX" in agente.responder(pregunta).texto
+
+
+def test_el_prompt_no_manda_a_negar_aprobaciones():
+    from tiendahogar.agent import SISTEMA
+    assert "No apruebes" not in SISTEMA and "No confirmes ni prometas" in SISTEMA

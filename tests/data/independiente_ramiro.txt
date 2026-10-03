@@ -1,0 +1,63 @@
+# Frases escritas por Ramiro, sin mirar las anclas ni el código. Se congelan: no se ajusta nada a partir de ellas.
+# Formato: CÓDIGO | frase   (ver python -m tiendahogar.independiente)
+# Las etiquetas las puso Claude a partir de los títulos de Ramiro; las dudosas llevan un comentario.
+
+# --- pedidos ---
+P=50000 | Quiero saber el estado de la compra 50000
+P=1004 | Hice un pedido numero 1004, quiero saber cuando llega
+PX=DRO-1002 | El otro día hice una transacción, n° DRO-1002, quiero saber el producto y el estado
+P=1003 | Estoy esperando hace mucho lo que compré, orden 1003... cuanto le falta para que llegue?
+P | Che quiero saber el estado de mi compra
+P | Quiero saber cuando llega mi orden
+P=2000 | Hola, loco quiero saber que productos compró mi hija (n°2000)
+D=devoluciones+reembolsos | Mi hijo hizo un pedido por error y quiero hacer el reembolso
+P=1003 | El otro dia hice una compra nro 1003
+P=1002 | Ayer hice un pedido, con el nro de orden ORD-1002
+PX=DRARD-100101 | Hoy hice la orden DRARD-100101, quiero saber que onda
+
+# --- reembolsos (mayores o menores a $500) ---
+OK | Quiero devolver lo que compre, que vale $499,99
+R | Me arrepentí de mi compra de 500,01
+R | El otro día estuve por el local e hice una compra de un refrigerador por $900 y quiero devolverlo porque no entra en mi cocina
+OK | Compré una tostadora por 400 pesos pero no me gustó el color
+R | El viernes pasado adquirí una licuadora, gasté pesos 1200 pesos pero hace mucho ruido por eso no la quiero mas
+
+# --- quejas por trato de empleado ---
+T | El otro día fui al local y una persona que trabaja ahí me gritó muy fuerte
+T | Ayer estuve por la sucursal centro con mi amigo y un trabajador no me dejó entrar
+T | La semana pasada fui y un empleado me hecho porque estaba cerrando
+L | Voy a iniciar acciones legales!!!
+T | Estoy re caliente, casi me agarro a las piñas con uno que trabaja ahí
+T | Casi me voy a las manos con un empleado porque me escupió
+
+# --- preguntas sobre un documento específico ---
+D=garantia | Me compré un refrigerador, cuanto tiene de garantía?
+D=garantia | Ordené un electrodoméstico chico, pero mi duda es cuanto tiempo tiene de garantía
+D=garantia | Me compré una plancha hace 2 meses pero se me cayó de un 4to piso, me cubre la garantía?
+D=garantia | Me compre una estufa hace 7 meses pero se empezó a despegar una pata, yo no le hice nada para que pase eso... me lo cubre la garantía?
+D=garantia | Adquirí una plancha hace un par de meses pero se apaga sola luego de 5 min de uso, me cubre el service oficial?
+D=devoluciones | Compré un producto en promoción y lo quiero devolver
+D=devoluciones | Adquirí hace 5 días un producto y lo usé 1 día, lo puedo devolver?
+D=devoluciones | Ordené un producto hace 50 días, no lo usé, y quiero gestionar el retorno del mismo
+D=devoluciones | La ultima compra que hice (que fue hace 10 días) no salió como esperaba y ya no la quiero mas, me gustaría generar la cancelación de la misma
+D=envios | Yo soy de Cordoba capital, cual es el tiempo de envío?
+D=envios | Voy a hacer una compra desde Salta capital, cuanto tarda en llegar?
+D=envios | Estoy en Paraguay, cuanto tarda en llegar si compro mañana?
+D=reembolsos | Ya devolví un producto hace 6 días y todavía no me devolvieron la plata, cuanto mas tengo que esperar?
+D=reembolsos | Quiero un reembolso por lo que compre, que me costó trecientos cincuenta pesos
+D=reembolsos | Quiero hacer un reembolso de mi compra que fue de $400 que la hice con tarjeta de crédito pero quiero que el rembolso lo hagan a mi cuenta bancaria
+D=contacto | Con quien tengo que hablar si tuve una disputa con un empleado?
+D=contacto | Ayer hubo quilombo con una persona que trabaja ahí, con quien me tengo que contactar?
+
+# --- fuera de alcance ---
+X | Quiero que me hagas una calculadora en JavaScript?
+X | Cuantos metros hay de la luna al sol?
+X | De que color es el caballo blanco de San Martín?
+X | Cuantas e tiene la palabra "esternocleidomastoideo"
+X | Cuantos continentes existen?
+X | Que día es mañana si ayer fue jueves?
+
+# --- combinadas ---
+T | Ayer me agarre a las piñas con uno de ahí, quiero devolver lo que compre y ademas quiero hacer el reclamo
+P=1002,1003 | Quiero saber el estado de la compra nro 1002 y cuanto falta para que llegue la n°1003
+D=devoluciones+garantia | Hace 10 meses compre un refrigerador y una tostadora y quiero hacer la devolución de ambos

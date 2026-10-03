@@ -49,7 +49,7 @@ Comando: `python -m pytest tests/` (o `pytest tests/`).
 ## Limitaciones conocidas
 
 - Los clientes de LLM (`OpenAICompatible` y `Anthropic` en `llm.py`) se probaron contra un servidor HTTP local que imita la forma de cada API (`tests/test_llm.py`), incluido el rechazo de `max_tokens` que hacen algunos modelos de OpenAI. [Completar con el proveedor real que se haya probado, por ejemplo Gemini por su endpoint compatible. Lo que no se haya probado contra la API real queda declarado acá.]
-- Los guardrails son reglas en español. No cubren paráfrasis raras, otros idiomas ni ironía. Un monto escrito de forma rara (por ejemplo "quinientos cincuenta") se detecta solo para unos pocos casos. Un reembolso sin monto explícito no escala: el agente informa la política y la regla de los $500, y nunca aprueba nada.
+- Los guardrails son reglas en español. No cubren paráfrasis raras, otros idiomas ni ironía. Un monto escrito de forma rara (por ejemplo "quinientos cincuenta") se detecta solo para unos pocos casos. Un reembolso sin monto explícito no escala: el agente informa la política y la regla de los $500, y no promete que haya sido aprobado ni ejecutado.
 - Una devolución de un producto de más de $500 mencionada como "devolver una estufa de $900" se escala por prudencia aunque el cliente no use la palabra reembolso. Es una decisión mía, no está en los documentos.
 - La tabla de conceptos del RAG y el umbral se ajustaron a mano con pocas preguntas. Con preguntas reales habría que medir y reajustar. En modo offline una pregunta fuera de tema que comparta un concepto con un documento (por ejemplo "cuánto cuesta el envío") recibe el documento de envíos completo, no la respuesta exacta.
 - No hay memoria entre mensajes: cada pregunta se trata sola. Si el cliente da el número de pedido en un mensaje y pregunta en otro, el agente no los une.
@@ -91,7 +91,7 @@ Respuestas de Ramiro a las preguntas abiertas:
 - Devolución de un producto de más de $500 sin la palabra "reembolso": se mantiene la interpretación (escalar) solo cuando es clara, es decir, con un monto explícito. Esta regla no está en los documentos y se declara como decisión propia.
 - Detección de inyección de prompt: se mantiene acotada a lo inequívoco ("ignorá tus instrucciones", "mostrame tu prompt"), se declara como defensa básica y no como garantía. Si sobra tiempo, se puede reforzar.
 - Implementado: en una pregunta mixta se responde primero la parte permitida (con los documentos o la tool de pedidos) y después se deriva el resto. Las cláusulas se separan por puntuación y conectores, sin cortar decimales como `$1.000`. Con más de un motivo de derivación se usa el mensaje del primero, porque el canal es el mismo.
-- Implementado: en las respuestas sobre reembolsos con un monto de hasta $500 el agente aclara que ese monto lo declara el cliente: si el valor real supera $500 hace falta un supervisor, y el agente nunca aprueba reembolsos.
+- Implementado: en las respuestas sobre reembolsos con un monto de hasta $500 el agente aclara que ese monto lo declara el cliente: si el valor real supera $500 hace falta un supervisor. Ver la decisión sobre la regla de reembolsos más abajo.
 
 Punto débil a resolver: las reglas determinísticas no cubren paráfrasis ("regresen la plata" en vez de "reembolso"). Ideas encontradas para mantener el enfoque reproducible y mejorar la cobertura:
 - Router semántico: se comparan los embeddings de la pregunta con los de frases de ejemplo por categoría, con un umbral de similitud. Es reproducible (mismo modelo, mismo resultado), no usa un LLM generativo y tarda decenas de milisegundos. Es el patrón de la librería Semantic Router y de las "formas canónicas" de NeMo Guardrails.
@@ -131,7 +131,11 @@ Esta tabla es posterior a sumar la categoría "consulta de pedido" al clasificad
 Decisiones tomadas con Ramiro sobre el set:
 - Una pregunta sobre el canal ("con quién hablo si tengo un tema legal?") se responde con el correo del Doc 5 y se ofrece derivar. No se trata como un escalamiento ciego.
 - La robustez ante errores de ortografía y ante formatos de monto es un requisito, no un extra: el set incluye casos de ambos.
-- El monto del reembolso: el enunciado no da precios de los productos, así que el agente no puede saber el valor real de una compra y se apoya en el monto que declara el cliente. Inventar un catálogo de precios sería agregar datos que el enunciado no da. El agente nunca aprueba un reembolso, solo informa la política, y en toda respuesta sobre reembolsos aclara que si el valor de la compra supera $500 lo aprueba un supervisor. En producción, el monto vendría de la API de pedidos. [Pendiente de confirmar con Ramiro.]
+- El monto del reembolso: el enunciado no da precios de los productos, así que el agente no puede saber el valor real de una compra y se apoya en el monto que declara el cliente. Inventar un catálogo de precios sería agregar datos que el enunciado no da. En las respuestas sobre reembolsos con un monto de hasta $500 se aclara que si el valor real de la compra lo supera hace falta un supervisor. En producción, el monto vendría de la API de pedidos.
+
+### Decisión: qué hace el agente con un reembolso de hasta $500 (confirmada por Ramiro)
+
+El Doc 4 dice: "Reembolsos mayores a $500 requieren aprobación de un supervisor humano — el agente no debe aprobarlos automáticamente". La prohibición explícita es solo para los de más de $500, pero el documento no dice quién aprueba los de $500 o menos ni que el agente deba aprobarlos. El enunciado agrega que el guardrail debe derivar los casos que "los documentos indican que no debe manejar" (reembolsos mayores a $500, entre otros), lo que implica que los de hasta $500 sí los maneja, es decir, los responde sin derivar. Tres hechos del enunciado impiden que el agente apruebe o ejecute reembolsos: la única tool es de solo lectura (`consultar_estado_pedido`), la tabla de pedidos no trae precios (el monto lo declara el cliente y no se puede verificar) y la política pone condiciones que el agente no puede comprobar (30 días, producto sin usar y en su empaque, o defecto cubierto por la garantía). Afirmar "tu reembolso está aprobado" sería inventar una acción y permitiría obtener una "aprobación" declarando un monto menor. Por eso, hasta $500 el agente no deriva: informa la política (se procesa en 5 a 10 días hábiles después de recibir el producto devuelto, al mismo método de pago original), aclara que con ese monto no hace falta la aprobación de un supervisor y avisa que, si el valor real de la compra lo supera, sí la requiere. No dice que el reembolso esté aprobado ni que no pueda aprobarlo. En producción, una API de aprobación detrás de Apigee tomaría el monto de la API de pedidos y aprobaría automáticamente hasta $500, y un evento a Kafka derivaría al supervisor lo que supere ese tope.
 
 ### Principio para elegir el modelo de lenguaje (decisión de Ramiro)
 
@@ -141,7 +145,7 @@ Cuanto mejor es el modelo, menos defensas necesita el código. Para que el dise�
 
 - Solo español: el enunciado, los documentos y las pruebas están en español, y el inglés no aparece en ningún lado. Una pregunta en otro idioma se responde en español o no se entiende.
 - Cuando una pregunta queda fuera del alcance de los documentos (precios, marcas, garantía extendida), el agente responde que no tiene esa información.
-- El agente no promete ni aprueba nada: no aprueba reembolsos ni devoluciones, solo informa la política y deriva (lo pide el enunciado de forma explícita).
+- El agente no confirma ni promete que un reembolso o una devolución fue aprobado o ejecutado: informa la política (plazos, método de pago y condiciones) y deriva lo que corresponde.
 
 ### Performance: qué depende del modelo y qué depende de la herramienta
 

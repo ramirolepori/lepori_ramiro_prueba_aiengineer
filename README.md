@@ -7,7 +7,7 @@ El flujo lo decide el código y el LLM solo redacta con lo recuperado, así que 
 ## Qué hace el agente con cada pregunta
 
 1. Si intenta cambiar las reglas del agente (inyección de prompt evidente), la rechaza.
-2. Si es un reembolso mayor a $500, una queja de trato, una disputa de facturación o un tema legal, deriva a soporte@tiendahogar.example. Lo detecta con reglas y, además, por significado (paráfrasis y faltas de ortografía). El agente nunca aprueba un reembolso.
+2. Si es un reembolso mayor a $500, una queja de trato, una disputa de facturación o un tema legal, deriva a soporte@tiendahogar.example. Lo detecta con reglas y, además, por significado (paráfrasis y faltas de ortografía). Hasta $500 no deriva: informa la política (plazo y método de pago) y aclara que no hace falta un supervisor. No confirma ni promete que un reembolso esté aprobado o ejecutado, porque el agente no tiene una herramienta para hacerlo.
 3. Si la pregunta mezcla algo para derivar con algo permitido, responde primero lo permitido y después deriva.
 4. Si menciona un número de pedido, consulta la tool. Entiende `ORD-1001`, `ord1001`, `pedido 1001`, `orden de compra 1001`, "mi pedido es el 1001" y listas, y muestra qué número entendió. Un número inexistente devuelve "No encontrado" sin inventar datos. Si pregunta por un pedido sin dar el número ("ya salió lo que compré?"), lo pide: no busca por nombre de producto.
 5. Busca en los documentos por significado y por palabras (embeddings más BM25, fusionados). Si ninguno es relevante, responde que no tiene esa información.

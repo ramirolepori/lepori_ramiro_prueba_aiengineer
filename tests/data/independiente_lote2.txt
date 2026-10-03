@@ -1,0 +1,140 @@
+# Lote 2: frases armadas por Claude usando como semilla el estilo, el tono y la forma de las frases de Ramiro, más
+# jerga rioplatense y colombiana (lunfardo: quilombo, bardear, romper las bolas, se me saltó la térmica, mangos, lucas;
+# colombiano: parce, el man, jartera, plata). NO es independiente: lo escribió quien escribió el código. Sirve como
+# material de desarrollo para endurecer el agente. La prueba independiente definitiva es el lote que arma Ramiro.
+
+# --- pedidos ---
+P=1001 | che, dónde anda lo mío? hice el pedido 1001 hace una banda
+P=1002 | parce, me puede decir si ya llegó la orden ORD-1002 o qué?
+P=1004 | Necesito saber qué pasó con mi compra nro. 1004, si la cancelaron o qué
+P=1003 | mi # de pedido es 1003, cuándo me llega la lavadora?
+P=1001 | Buenas, consulto por el envío de la orden numero 1001
+P=7777 | Consulta por el pedido 7777
+P | Qué onda con mi pedido, hace dos semanas que lo espero y no sé nada
+P | Se me saltó la térmica, hace un mes que pedí la estufa y no llega!!!
+P | Buen día, quisiera saber si ya despacharon mi compra
+P | Hice un pedido el sábado, me pueden decir cómo viene?
+P | Qué jartera, nadie me responde dónde está mi licuadora
+P | Me están rompiendo las bolas con la entrega, cuándo llega lo que pedí?
+PX=ORD1OO1 | mi orden es ORD1OO1, cuándo llega?
+PX=ORD-ABCD | el pedido ORD-ABCD cuándo llega?
+PX=OD-1002 | n° OD-1002 quiero saber el estado
+NP | Quería avisarles que mi pedido llegó perfecto, gracias!
+NP | Pedí una licuadora y llegó impecable, buenísimo
+NP | Hace 1001 años que no compraba acá jaja
+
+# --- reembolsos (mayores y menores a $500) ---
+R | Che, me tienen que devolver los 800 mangos de la heladera, no me sirve
+R | Quiero que me reintegren mil quinientos dólares de la estufa que compré, vino fallada
+R | Devuélvanme la guita, pagué $ 750 por esa lavadora y no la quiero
+R | Hola, solicito la devolución del dinero de $2.300 por el refrigerador
+R | quiero mi plata de vuelta, fueron 2 lucas la plancha
+R | me arrepentí de la compra, salió 600 dólares, la quiero devolver
+R | La cocina me costó USD 1500 y vino con una abolladura, quiero que me devuelvan todo
+R | Compré por $ 501 y no me sirvió, quiero el reembolso
+R | tres mil pesos me costó la licuadora, me la devuelven?
+R | Quiero el reembolso total, 5k dólares la heladera industrial
+OK | Che, la tostadora me salió 500 pesos justos y no la quiero, la devuelvo?
+OK | Quiero devolver una plancha de $250 que no me gustó
+OK | me arrepentí, la licuadora costó cuatrocientos noventa y nueve pesos, puedo devolverla?
+OK | pagué 300 por un tostador y vino roto, quiero mi plata
+OK | Quiero devolver una compra, no recuerdo cuánto salió, qué hago?
+
+# --- quejas por trato de empleado ---
+T | La chica de la caja me contestó re mal y encima se rió en mi cara
+T | Un vendedor me bardeó adelante de todos, qué falta de respeto
+T | El pibe que me atendió en la sucursal fue un desubicado total
+T | Un guardia de seguridad me empujó cuando salía del local
+T | Parce, el man de la tienda fue muy grosero conmigo, pidió que me fuera y todo
+T | Me trataron como si fuera un ladrón, me siguieron por todo el local
+T | Una empleada me insultó por teléfono porque pregunté dos veces lo mismo
+T | Se me saltó la térmica con el vendedor, me gritó y me cortó el teléfono en la cara
+T | Quiero hacer una queja formal: la persona de atención al cliente fue pésima
+T | El repartidor me trató mal, me dejó la caja tirada y se fue puteando
+T | El chico de la entrega me contestó con mala onda y no me quiso pasar el comprobante
+T | Qué mal trato, nunca me habían hablado así en una tienda
+T | Un encargado casi me pega porque le reclamé, está loco ese tipo
+T | La señora de atención me dejó esperando una hora y encima me contestó con desprecio
+
+# --- disputas de facturación ---
+F | Che, me chuparon la plata dos veces por la misma compra
+F | Me clavaron un cargo de más en la tarjeta, no entiendo qué es
+F | La factura me vino con un monto que no es, quiero reclamar
+F | Me aparece un débito que yo no hice, necesito que lo revisen
+F | Me cobraron dos veces el envío, por qué?
+F | parce, en el extracto sale un cobro duplicado de su tienda
+F | Mi tarjeta tiene un movimiento de ustedes que no reconozco
+F | Me facturaron un producto que nunca pedí
+
+# --- temas legales ---
+L | Los voy a denunciar en Defensa del Consumidor
+L | Esto termina en juicio, ya hablé con mi abogado
+L | Voy a hacer una demanda colectiva si no me responden
+L | Me estafaron, lo voy a llevar a la justicia
+L | Quiero hablar con alguien del área legal ya mismo
+L | Mi abogada va a mandarles una carta documento
+L | Voy a ir a la fiscalía por esta estafa
+
+# --- no deben derivarse (incluye casi iguales) ---
+OK | Quería agradecerles, el vendedor fue un genio y me ayudó con todo
+OK | El repartidor fue súper amable, pero la caja vino con un golpe
+OK | Necesito el comprobante de compra para hacer valer la garantía
+OK | La factura no la encuentro, cómo hago para pedir una copia?
+OK | Che, gracias por la ayuda de siempre
+OK | Buen día
+OK | Cómo les va? quería consultar algo
+OK | Qué cosa más buena la heladera, la recomiendo!
+
+# --- preguntas sobre un documento ---
+D=garantia | Che, cuánto de garantía tiene una heladera?
+D=garantia | Se me rompió el motor de la licuadora a los 5 meses, la garantía me lo cubre?
+D=garantia | Compré una lavadora hace 14 meses y dejó de andar, aplica garantía?
+D=garantia | Se me quemó la plancha porque la dejé prendida, me la cubren?
+D=garantia | A los 11 meses la estufa empezó a perder gas, está en garantía?
+D=devoluciones | La compré en liquidación y no me gustó, la puedo cambiar?
+D=devoluciones | Hace 3 semanas compré una tostadora, está en su caja, sin usar. Me la aceptan de vuelta?
+D=devoluciones | Mandé hacer una heladera a medida y no me convence, la puedo devolver?
+D=devoluciones | Pasaron 35 días y la caja ya la tiré, la devolución sigue?
+D=devoluciones+garantia | Compré una licuadora hace 40 días y no enciende, la devuelvo o hay garantía?
+D=devoluciones+garantia | Me llegó la licuadora rota y encima sin caja, qué hago?
+D=envios | Che, mandan a Rosario? cuánto tarda
+D=envios | Vivo en Bogotá, cuánto demora el envío?
+D=envios | Soy de Medellín, en cuántos días me llega?
+D=envios | Hacen envíos a Chile?
+D=envios | Estoy en Mendoza capital, cuánto tarda en llegar la compra?
+D=envios | Cuántos días tarda el envío a la capital del país?
+D=envios | Voy a hacer una compra de una heladera, cuánto tarda en llegar a mi casa?
+D=reembolsos | Cuánto tardan en devolverme la plata a la tarjeta?
+D=reembolsos | El reembolso me lo hacen en efectivo o a la misma tarjeta?
+D=reembolsos | Devolví la heladera hace 8 días y todavía nada, cuándo me reintegran?
+D=reembolsos | Quién aprueba los reembolsos grandes?
+D=contacto | A qué mail le escribo si tengo un problema con la facturación?
+D=contacto | Con quién hablo por un tema legal?
+D=contacto | Qué canal uso para quejarme de un empleado?
+D=contacto | Che, a dónde mando un mail por un reclamo con un vendedor?
+
+# --- fuera de alcance ---
+X | Pasame la receta del locro
+X | Cuánto está el dólar hoy?
+X | Quién ganó el partido de ayer?
+X | Escribime un poema de amor
+X | Qué significa la palabra chamuyo?
+X | Cuál es la capital de Colombia?
+X | Cuánto es el 15% de 2300?
+X | Contame un chiste
+X | Recomendame una serie para ver
+X | Cómo hago para bajar de peso?
+X | Traducime "buenos días" al inglés
+X | Qué horario tiene la sucursal del centro?
+X | Cuánto sale una heladera?
+X | Tienen sucursales en Rosario?
+
+# --- combinadas ---
+T+F | El vendedor me trató como el culo y encima me cobraron dos veces
+R+L | Quiero que me devuelvan los 3 mil dólares de la cocina o voy a juicio
+T | Un empleado me gritó, y de paso quería saber cuánto dura la garantía de la lavadora
+F | Me cobraron de más, y cuándo llega el pedido 1003?
+P=1001,1002 | Che, cómo van los pedidos 1001 y 1002?
+D=devoluciones+reembolsos | Quiero devolver la tostadora y que me devuelvan la plata, cuánto tardan?
+L | Si no me solucionan esto voy a demandar y además quiero saber a quién escribirle
+D=garantia+envios | Cuánto tarda el envío y cuánto de garantía tiene la estufa?

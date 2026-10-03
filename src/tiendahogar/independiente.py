@@ -14,6 +14,7 @@ Formato de cada línea (las que empiezan con # y las vacías se ignoran):    CÓ
     F            disputa de facturación                          L   tema legal
     T+F          varias a la vez                                 OK  no debe derivarse
     P            pregunta por un pedido sin dar el número        P=1001 o P=ORD-1001,1004   da el número
+    PX=DRO-1002  da un identificador con formato raro: se espera "No encontré ..." nombrándolo, sin pedir el número
     NP           menciona números o "pedido" pero no consulta un estado
     D=garantia   pregunta de política: documento esperado (garantia, devoluciones, envios, reembolsos, contacto)
     D=garantia+devoluciones   dos documentos          X   fuera de alcance: ningún documento sirve
@@ -54,6 +55,9 @@ def interpretar_codigo(codigo: str) -> dict:
         if not ids:
             raise ValueError(f"código de pedido sin números: {codigo!r}")
         return {"grupo": "pedido", "esperado_guardrail": [], "ids": ids, "intencion": True}
+    m = re.fullmatch(r"PX=(.+)", c, re.IGNORECASE)
+    if m:     # el cliente da un identificador de pedido con formato raro (DRO-1002): se espera un "no encontrado" que lo nombre
+        return {"grupo": "pedido_mal", "esperado_guardrail": [], "literal": m.group(1).strip()}
     if c.upper() == "X":
         return {"grupo": "rag", "esperado_guardrail": [], "esperado_docs": []}
     m = re.fullmatch(r"d=([a-z+]+)", c.lower())
@@ -128,17 +132,20 @@ def guardar(casos: list[dict], ruta=ARCHIVO) -> None:
         "casos": casos}, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def importar(texto: str, ruta=ARCHIVO) -> list[dict]:
-    """Reemplaza las frases originales por las del texto (y descarta las variantes, que hay que regenerar)."""
-    casos = []
-    for i, r in enumerate(leer_frases(texto), 1):
-        casos.append({"id": f"i{i:03d}", "origen": "Ramiro", **r})
-    guardar(casos, ruta)
-    return casos
+def importar(texto: str, ruta=ARCHIVO, origen: str = "Ramiro", agregar: bool = False) -> list[dict]:
+    """Importa un lote de frases. Sin `agregar` reemplaza todo (y descarta las variantes, que hay que regenerar);
+    con `agregar` suma el lote nuevo a lo que ya hay, reemplazando solo el lote del mismo origen."""
+    previos = [c for c in cargar(ruta) if c["origen"] not in {origen, "variante"}] if agregar else []
+    prefijo = "i" if origen == "Ramiro" else f"{origen}-"
+    nuevos = [{"id": f"{prefijo}{i:03d}", "origen": origen, **r} for i, r in enumerate(leer_frases(texto), 1)]
+    guardar(previos + nuevos, ruta)
+    return nuevos
 
 
 def agregar_variantes(ruta=ARCHIVO, manuales: str = "") -> list[dict]:
-    casos = [c for c in cargar(ruta) if c["origen"] == "Ramiro"]
+    todos = cargar(ruta)
+    casos = [c for c in todos if c["origen"] == "Ramiro"]
+    otros = [c for c in todos if c["origen"] not in {"Ramiro", "variante"}]
     originales = {c["id"]: c for c in casos}
     nuevos: list[dict] = []
     for c in casos:
@@ -150,7 +157,7 @@ def agregar_variantes(ruta=ARCHIVO, manuales: str = "") -> list[dict]:
         base = originales.get(f"i{int(r['base']):03d}") if str(r.get("base", "")).isdigit() else None
         nuevos.append({**r, "id": f"{base['id'] if base else 'manual'}-m{len(nuevos)}", "origen": "variante",
                        "base": base["id"] if base else None, "variante": "parafrasis"})
-    guardar(casos + nuevos, ruta)
+    guardar(casos + otros + nuevos, ruta)
     return nuevos
 
 
@@ -172,6 +179,22 @@ def medir_origen(casos: list[dict], config: Config, fallos: bool = False) -> Non
         if fallos:
             for c, pred in r["fallos"]:
                 print(f"       esperado={c['esperado']} obtenido={pred} :: {c['texto'][:90]}")
+    mal = [c for c in casos if c["grupo"] == "pedido_mal"]
+    if mal:
+        from .agent import AgenteSoporte
+        agente = AgenteSoporte()
+        ok = 0
+        detalle = []
+        for c in mal:
+            t = agente.responder(c["texto"]).texto
+            bien = "no encontr" in t.lower() and c["literal"].lower() in t.lower()
+            ok += bien
+            if not bien:
+                detalle.append((c, t))
+        print(f"  identificador de pedido con formato raro ({len(mal)} frases): respuesta correcta {ok}/{len(mal)}")
+        if fallos:
+            for c, t in detalle:
+                print(f"       esperado: 'No encontré' + {c['literal']!r} :: {c['texto'][:70]} -> {t[:90]!r}")
     if pe:
         print(f"  pedidos ({len(pe)} frases)")
         for nombre, clf in clasificadores.items():
@@ -199,8 +222,9 @@ def medir_origen(casos: list[dict], config: Config, fallos: bool = False) -> Non
 def main(argv: list[str]) -> int:
     orden = argv[0] if argv else "medir"
     if orden == "importar":
-        casos = importar(open(argv[1], encoding="utf-8").read())
-        print(f"{len(casos)} frases importadas en {ARCHIVO}")
+        origen = argv[argv.index("--origen") + 1] if "--origen" in argv else "Ramiro"
+        casos = importar(open(argv[1], encoding="utf-8").read(), origen=origen, agregar="--agregar" in argv)
+        print(f"{len(casos)} frases importadas ({origen}) en {ARCHIVO}")
         return 0
     if orden == "variantes":
         manuales = open(argv[1], encoding="utf-8").read() if len(argv) > 1 else ""
@@ -211,10 +235,13 @@ def main(argv: list[str]) -> int:
         print(f"No hay frases en {ARCHIVO}. Usar `importar` primero.")
         return 1
     config = Config()
-    for origen in ("Ramiro", "variante"):
+    origenes = ["Ramiro"] + sorted({c["origen"] for c in casos} - {"Ramiro", "variante"}) + ["variante"]
+    elegido = argv[argv.index("--origen") + 1] if "--origen" in argv else None
+    nombres = {"Ramiro": "frases originales de Ramiro", "variante": "variantes derivadas"}
+    for origen in origenes:
         subset = [c for c in casos if c["origen"] == origen]
-        if subset:
-            print(f"\n== {'frases originales de Ramiro' if origen == 'Ramiro' else 'variantes derivadas'} ({len(subset)}) ==")
+        if subset and elegido in (None, origen):
+            print(f"\n== {nombres.get(origen, 'lote ' + origen)} ({len(subset)}) ==")
             medir_origen(subset, config, "--fallos" in argv)
     return 0
 
