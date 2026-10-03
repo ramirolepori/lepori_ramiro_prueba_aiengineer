@@ -24,6 +24,8 @@ python3 -m venv .venv
 .venv/bin/python -m pytest tests/
 ```
 
+Lo primero que hay que leer es [tests/test_criticos.py](tests/test_criticos.py): los comportamientos que pide el enunciado (RAG con cita, tool de pedidos y derivación a una persona), en pocos tests y sin modelo. El resto cubre variantes, ataques y la memoria de la conversación.
+
 Con `pytest` ya instalado alcanza con `pytest tests/`. Los tests no usan red ni el `.env` (corren en modo offline, unos 20 segundos). Hay dos tests opt-in que necesitan Ollama con `embeddinggemma`: `TIENDAHOGAR_TEST_OLLAMA=1 pytest tests/test_semantica.py`.
 
 ## Correr el agente

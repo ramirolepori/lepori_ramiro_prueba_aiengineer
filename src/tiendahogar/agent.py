@@ -168,7 +168,7 @@ class AgenteSoporte:
                respaldo=self.clasificador.ultimo_respaldo)
             # varios casos a la vez se derivan al mismo canal: alcanza con el mensaje del primero
             derivacion = escalamientos[0].mensaje
-            parcial = self._responder_parte_permitida(pregunta, ev)
+            parcial = self._responder_parte_permitida(pregunta, ev, [e.categoria for e in escalamientos])
             if parcial is not None:
                 texto, fuentes, pedidos = parcial
                 return Respuesta(texto + "\n\n" + derivacion, "escalado", fuentes,
@@ -192,7 +192,7 @@ class AgenteSoporte:
         if _es_agradecimiento(pregunta):
             ev("agradecimiento")
             return Respuesta(MENSAJE_AGRADECIMIENTO, "respondido")
-        if repreguntar and _sin_comprobante(pregunta):
+        if repreguntar and _dice_sin_comprobante(pregunta):
             ev("sin_comprobante")
             return self._sin_comprobante(pregunta, sesion)
 
@@ -226,22 +226,26 @@ class AgenteSoporte:
             sesion.esperar("reclamo", pregunta)
         return Respuesta("\n\n".join(partes), "respondido", fuentes)
 
-    def _responder_parte_permitida(self, pregunta: str, ev: Callable[..., None]
+    def _responder_parte_permitida(self, pregunta: str, ev: Callable[..., None], derivadas: list[str] | None = None
                                    ) -> tuple[str, list[str], list[dict[str, Any]]] | None:
         """En una pregunta mixta responde las cláusulas que no hay que derivar (por ejemplo la garantía o el
         estado de un pedido). Devuelve None si no hay nada que responder con los documentos o la tool."""
         clausulas = segmentar(pregunta)[1:]
         with etapa("guardrail"):
             permitidas = [c for c in clausulas if not guardrails.evaluar(c, self.clasificador)]
+        if "reembolso_mayor_500" in (derivadas or []):
+            # ya se deriva el reembolso: repetir la política de reembolsos de otra cláusula que también lo pide confunde
+            permitidas = [c for c in permitidas if not (_pide_reembolso(c) or (
+                "reembols" in guardrails.normalizar(c) and guardrails.extraer_montos(c)))]
         if not permitidas:
             return None
         ev("parte_permitida", clausulas=len(permitidas))      # solo la cantidad: la traza no guarda texto del cliente
-        r = self._responder(". ".join(permitidas), ev, con_respaldo=False, excluir={"contacto"})
+        r = self._responder(". ".join(permitidas), ev, con_respaldo=False, excluir={"contacto"}, derivando=True)
         return None if r is None else (r.texto, r.fuentes, r.pedidos)
 
     def _responder(self, pregunta: str, ev: Callable[..., None], con_respaldo: bool,
                    excluir: set[str] | None = None, sesion: Sesion | None = None, lugar_dado=None,
-                   repreguntar: bool = True) -> Respuesta | None:
+                   repreguntar: bool = True, derivando: bool = False) -> Respuesta | None:
         """RAG y tool de pedidos sobre `pregunta` y redacción. Sin `con_respaldo`, devuelve None cuando no hay
         nada relevante en lugar de un mensaje de 'no sé' (para la parte permitida de una pregunta mixta)."""
         pedidos = []
@@ -275,7 +279,7 @@ class AgenteSoporte:
             resultados = [r for r in resultados if r.fragmento.documento != "envios"]
         fuentes = [r.fragmento.documento for r in resultados]
 
-        notas = _notas(pregunta, fuentes, consulta_sin_numero)
+        notas = _notas(pregunta, fuentes, consulta_sin_numero, derivando)
         accion = bool(_ACCION_QUE_NO_PUEDE.search(guardrails.normalizar(pregunta)))
         if accion:
             notas.append(MENSAJE_SIN_ACCIONES)          # pide algo que el agente no hace: se aclara, no se finge
@@ -461,10 +465,8 @@ _SU_COMPRA = re.compile(r"\b(?:mi|mis|compre|compramos|hice|pedi)\b|"
                         r"\b(?:quiero|quisiera|necesito|puedo|podria|se puede) (?:devolver|cambiar|reparar|arreglar)\b|"
                         r"\b(?:la|lo|las|los) (?:puedo|podria|se puede) (?:devolver|cambiar)\b|\bse me\b|"
                         r"\bme (?:la|lo|las|los) (?:cubre|cubren|aceptan|cambian|reparan|devuelven)\b")
-_NO_SE_DEVUELVE = re.compile(r"liquidacion|personalizad|oferta final|a medida|a pedido|"
-                             r"(?:hech[oa]s?|hicieron|fabricaron|fabricad[oa]|disenaron|armaron) (?:solo |especialmente |exclusivamente )?"
-                             r"(?:para mi|a pedido)|"
-                             r"\bporque\b|mal uso|se me cayo|golpe|\bmoj[eo]\b")    # o dice la causa: puede decidir otra regla
+# un producto que no se devuelve en ningún caso, o que el cliente dice por qué falló (puede decidir otra regla)
+_NO_SE_DEVUELVE = re.compile(_NO_DEVOLVIBLE.pattern + r"|\bporque\b|mal uso|se me cayo|golpe|\bmoj[eo]\b")
 
 
 def _pregunta_por_su_compra(pregunta: str, fuentes: list[str]) -> bool:
@@ -544,7 +546,7 @@ def _es_agradecimiento(pregunta: str) -> bool:
     return bool(_AGRADECE.search(p) and not _NO_ES_SOLO_AGRADECIMIENTO.search(p))
 
 
-def _sin_comprobante(pregunta: str) -> bool:
+def _dice_sin_comprobante(pregunta: str) -> bool:
     return bool(_SIN_COMPROBANTE.search(guardrails.normalizar(pregunta)))
 
 
@@ -561,11 +563,11 @@ def _pedir_numero(pregunta: str) -> str:
             f"No lo busco por el nombre del producto porque podrías tener más de un pedido.")
 
 
-def _notas(pregunta: str, fuentes: list[str], consulta_sin_numero: bool = False) -> list[str]:
+def _notas(pregunta: str, fuentes: list[str], consulta_sin_numero: bool = False, derivando: bool = False) -> list[str]:
     """Aclaraciones determinísticas que se le pasan al redactor (o se agregan en modo offline)."""
     notas: list[str] = []
     montos = guardrails.extraer_montos(pregunta)
-    if "reembolsos" in fuentes and montos and max(montos) <= guardrails.TOPE_REEMBOLSO:
+    if "reembolsos" in fuentes and montos and max(montos) <= guardrails.TOPE_REEMBOLSO and not derivando:
         # El documento solo exige un supervisor por encima de $500. No hay catálogo de precios: el monto es el que
         # declara el cliente, así que se avisa qué pasa si el valor real lo supera.
         notas.append(f"Con el monto que indicás (${max(montos):,.0f}) no hace falta la aprobación de un supervisor "

@@ -100,6 +100,8 @@ def _leer_numero_en_palabras(toks: list[str], i: int) -> tuple[float, int] | Non
 def extraer_montos(texto: str) -> list[float]:
     t = _sin_tildes(texto)
     t = re.sub(r"\bord-\d+\b", " ", t)
+    # "5-10 días", "5 a 10 días hábiles": un rango de tiempo, no dos montos
+    t = re.sub(r"\b\d+\s*(?:-|a|al|o|y|hasta)\s*\d+\s+(?=(?:dias?|semanas?|meses|mes|horas?|anos?|minutos?)\b)", " ", t)
     # "1 200" y "$ 1 200 000" son miles separados por espacios
     t = re.sub(r"(?<![\d.,])(\d{1,3})((?: \d{3})+)(?![\d])", lambda m: m.group(1) + m.group(2).replace(" ", ""), t)
     toks = _RE_TOKEN.findall(t)
