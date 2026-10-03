@@ -84,3 +84,38 @@ def test_detecta_inyeccion(texto):
 
 def test_pregunta_normal_no_es_inyeccion():
     assert not detectar_inyeccion("Cuánto dura la garantía de una lavadora?")
+
+
+# --- lenguaje coloquial (lotes independientes): se resuelve con reglas, sin depender de los embeddings ---------
+
+@pytest.mark.parametrize("texto,categoria", [
+    ("Un guardia de seguridad me empujó cuando salía del local", "queja_trato"),
+    ("La semana pasada un empleado me echó porque estaba cerrando", "queja_trato"),
+    ("Un vendedor me bardeó adelante de todos", "queja_trato"),
+    ("Casi me voy a las manos con un empleado porque me escupió", "queja_trato"),
+    ("Un encargado casi me pega porque le reclamé", "queja_trato"),
+    ("El chico de la entrega me contestó con mala onda", "queja_trato"),
+    ("Me trataron como si fuera un ladrón", "queja_trato"),
+    ("Ayer estuve en la sucursal y no me dejaron entrar", "queja_trato"),
+    ("Che, me chuparon la plata dos veces por la misma compra", "disputa_facturacion"),
+    ("Me aparece un débito que yo no hice", "disputa_facturacion"),
+    ("Mi tarjeta tiene un movimiento de ustedes que no reconozco", "disputa_facturacion"),
+    ("Me facturaron un producto que nunca pedí", "disputa_facturacion"),
+    ("Me arrepentí de mi compra de 500,01", "reembolso_mayor_500"),
+    ("quiero mi plata de vuelta, fueron 2 lucas la plancha", "reembolso_mayor_500"),
+    ("devuélvanme los 800 mangos de la heladera", "reembolso_mayor_500"),
+])
+def test_lenguaje_coloquial_se_deriva_por_reglas(texto, categoria):
+    assert categoria in [e.categoria for e in evaluar(texto)]
+
+
+@pytest.mark.parametrize("texto", [
+    "Qué canal uso para quejarme de un empleado?",
+    "Che, a dónde mando un mail por un reclamo con un vendedor?",
+    "Con quién tengo que hablar si tuve una disputa con un empleado?",
+    "El repartidor fue súper amable, pero la caja vino con un golpe",
+    "Cuánto es el 15% de 2300?",
+    "Me arrepentí de la compra de 450 pesos, la puedo devolver?",
+])
+def test_lenguaje_coloquial_no_deriva_lo_que_no_corresponde(texto):
+    assert evaluar(texto) == []

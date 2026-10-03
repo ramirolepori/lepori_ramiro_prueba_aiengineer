@@ -30,7 +30,7 @@ _CENTENAS = {
     "seiscientos": 600, "setecientos": 700, "ochocientos": 800, "novecientos": 900,
 }
 _PALABRAS_NUMERO = {**_UNIDADES, **_CENTENAS}
-_MONEDAS = {"dolar", "dolares", "usd", "us", "peso", "pesos", "euro", "euros", "eur", "sol", "soles", "usd$"}
+_MONEDAS = {"dolar", "dolares", "usd", "us", "peso", "pesos", "euro", "euros", "eur", "sol", "soles", "usd$", "mango", "mangos", "pesitos"}
 _NO_DINERO = {"dia", "dias", "mes", "meses", "hora", "horas", "semana", "semanas", "ano", "anos", "minuto",
               "minutos", "unidad", "unidades", "producto", "productos", "articulo", "articulos", "vez", "veces",
               "kg", "litro", "litros", "cuota", "cuotas", "persona", "personas", "%"}
@@ -83,7 +83,7 @@ def _leer_numero_en_palabras(toks: list[str], i: int) -> tuple[float, int] | Non
         if pal is not None:
             actual += _PALABRAS_NUMERO[pal]
             leyo = True
-        elif t == "mil":
+        elif t in {"mil", "luca", "lucas"}:
             total += max(actual, 1) * 1000
             actual, leyo = 0, True
         elif t in {"millon", "millones"}:
@@ -115,7 +115,7 @@ def extraer_montos(texto: str) -> list[float]:
             if valor is not None:
                 if j < len(toks) and toks[j] == "k":
                     valor, j = valor * 1000, j + 1
-                elif j < len(toks) and toks[j] == "mil":
+                elif j < len(toks) and toks[j] in {"mil", "luca", "lucas"}:
                     valor, j = valor * 1000, j + 1
                 elif j < len(toks) and toks[j] in {"millon", "millones"}:
                     valor, j = valor * 1_000_000, j + 1
@@ -125,7 +125,7 @@ def extraer_montos(texto: str) -> list[float]:
                 if con_moneda or (siguiente not in _NO_DINERO and not es_id):
                     montos.append(valor)
             i = j
-        elif tok == "mil" or _como_palabra_numero(tok) is not None:
+        elif tok in {"mil", "luca", "lucas"} or _como_palabra_numero(tok) is not None:
             leido = _leer_numero_en_palabras(toks, i)
             if leido is None:
                 i += 1

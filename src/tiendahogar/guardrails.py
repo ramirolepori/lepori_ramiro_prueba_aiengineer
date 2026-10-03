@@ -26,13 +26,22 @@ _LEGAL = re.compile(
     r"fraude|estafa\w*|ilegal\w*|arbitraje|mediacion|incumplimiento|derechos? del consumidor|"
     r"defensa del consumidor|acciones? (?:legal|judicial)\w*)"
 )
+_AGRESION = (r"me (?:grito|gritaron|empujo|empujaron|escupio|escupieron|echo|hecho|echaron|bardeo|bardearon|insulto|insultaron|"
+             r"humillo|humillaron|amenazo|amenazaron|golpeo|golpearon|siguio|siguieron|persiguio|persiguieron|ignoro|ignoraron|"
+             r"menospreci\w+|corto (?:el telefono|la llamada)|cortaron (?:el telefono|la llamada))")
 _TRATO = re.compile(
     r"(maltrat\w+|grosero|grosera|groseria\w*|descortes\w*|destrat\w+|insult\w+|falta de respeto|"
     r"irrespetuos\w+|(?:mala|pesima|horrible) (?:atencion|actitud)|mal trato|trato (?:horrible|pesimo|malo|inadecuado)|"
     r"(?:me )?(?:trat\w+|atendi\w+|respondi\w+|hablo\w*|contesto\w*) (?:muy |super |re )?(?:mal|pesimo|horrible|feo|"
     r"de mala manera)|"
     r"(?:queja|quejar\w*|reclamo|denunciar?)\b.{0,50}\b(?:empleado|empleada|vendedor\w*|agente|asesor\w*|"
-    r"repartidor\w*|personal|trato|atencion|cajer\w+|chofer))"
+    r"repartidor\w*|personal|trato|atencion|cajer\w+|chofer)|"
+    rf"\b{_AGRESION}\b|"
+    r"casi me (?:pega|pego|golpea|golpeo)|me agarr\w+ a las pinas|(?:me voy|me fui|fui) a las manos|"
+    r"no me (?:dejo|dejaron|permitio|permitieron|quiso|quisieron) (?:entrar|pasar|atender|escuchar|ayudar)|"
+    r"desubicad\w+|maleducad\w+|mal educad\w+|prepotent\w+|"
+    r"(?:con|de) (?:desprecio|mala onda|malas formas|malos modos|mala cara|desgano)|"
+    r"me trat(?:o|aron) como)"
 )
 _FACTURACION = re.compile(
     r"((?:disput\w+|reclam\w+|impugn\w+|contest\w+|no reconozco)\b.{0,50}\b(?:factura\w*|cobro\w*|cargo\w*)|"
@@ -40,18 +49,30 @@ _FACTURACION = re.compile(
     r"no autorizad\w+|de mas|demas|por error)|"
     r"(?:me )?(?:cobr\w+|facturar\w*|cargar\w*|debit\w+)\b.{0,40}\b(?:de mas|demas|dos veces|doble|2 veces|por error|"
     r"mal)|"
+    r"(?:cobraron|cobro|debitaron|descontaron|cargaron|facturaron|chuparon|clavaron|sacaron|pasaron)\b.{0,60}\b"
+    r"(?:dos veces|2 veces|doble|de mas|demas|otra vez|duplicad\w+|por error|nunca (?:pedi|compre|encargue|autorice)|"
+    r"no (?:pedi|compre|autorice|encargue|hice))|"
+    r"\b(?:debito|movimiento|cargo|cobro|consumo|pago|descuento)\b.{0,50}\b(?:que (?:yo )?no (?:hice|reconozco|autorice|"
+    r"fui yo|pedi|compre)|no (?:reconozco|autorice)|desconozco|no es mio)|"
+    r"no reconozco (?:el |ese |este |un |ningun )?(?:debito|movimiento|cargo|cobro|consumo|pago)|"
+    r"\bdesconozco\b.{0,30}\b(?:debito|movimiento|cargo|cobro|consumo|pago)|"
+    r"\bfactura\w*\b.{0,60}\b(?:monto|importe|total|valor|precio)\b.{0,40}\b(?:no es|incorrect\w+|equivocad\w+|distinto|"
+    r"no corresponde|no coincide|mal)|"
     r"contracargo|doble cobro|cobro doble|cobro duplicado)"
 )
 _INTENCION_REEMBOLSO = re.compile(
-    r"(reembols\w+|reintegr\w+|refund|devol\w+|devuelv\w+|regres\w+|dinero|plata)"
+    r"(reembols\w+|reintegr\w+|refund|devol\w+|devuelv\w+|regres\w+|dinero|plata|guita|arrepent\w+|"
+    r"cancel\w+ (?:la |mi |el )?(?:compra|pedido|orden)|no (?:la|lo|los|las) quiero|no me (?:sirv\w+|gust\w+|convenc\w+))"
 )
 _CONSULTA_CANAL = re.compile(
-    r"^(?:con quien|a quien|a donde|donde|como|por donde|que (?:correo|mail|canal|medio))\b.*\b"
-    r"(?:hablo|escribo|contacto|comunico|reclamo|derivo|consulto|presento|mando|envio)\b"
+    r"^(?:(?:che|hola|buenas|buen dia|buenos dias|buenas tardes|disculpa|disculpen|perdon|ey|loco|parce)[\s,.!]+)*"
+    r"(?:con quien|a quien|a donde|donde|como|por donde|que (?:correo|mail|canal|medio))\b.*\b"
+    r"(?:hablo|hablar|escribo|escribir|contacto|contactar|contactarme|comunico|comunicar\w*|reclamo|reclamar|derivo|derivar|"
+    r"consulto|consultar|presento|presentar|mando|mandar|envio|enviar|uso|usar)\b"
 )
 _RECLAMO_PERSONAL = re.compile(
-    r"\b(?:voy a|quiero (?:demandar|denunciar|reclamar)|me (?:cobraron|trataron|atendieron|facturaron|debitaron)|"
-    r"pienso|vamos a|los voy)\b"
+    rf"\b(?:voy a|quiero (?:demandar|denunciar|reclamar)|me (?:cobraron|trataron|atendieron|facturaron|debitaron)|"
+    rf"pienso|vamos a|los voy|{_AGRESION})\b"
 )
 
 
@@ -99,6 +120,24 @@ def _intencion_de_reembolso(texto_norm: str) -> bool:
                for tok in re.findall(r"[a-z]{5,}", texto_norm))
 
 
+# La similitud por significado confunde frases que solo comparten tono ("Cuánto es el 15% de 2300?" con un reembolso, "se me
+# quemó la plancha" con una queja). Una categoría detectada solo por significado exige además alguna palabra del tema.
+_TEMA = {
+    "tema_legal": re.compile(r"abogad|demand|legal|juicio|denunc|defensa|justicia|fiscal|estaf|fraude|tribunal|\bley|derecho|judicial|"
+                             r"consumidor|carta documento|indemniz|policia|comisaria|mediacion|arbitraje|perjuicio|danos|\bsue\b|lawyer|attorney|lawsuit|court|illegal|clausula|abusiv|contrato|firme|lejal"),
+    "queja_trato": re.compile(r"emplead|vendedor|atencion|atendi|atendio|cajer|repartidor|encargad|guardia|seguridad|personal|trabaj|"
+                              r"chico|chica|pibe|piba|senor|senora|gerente|supervisor|asesor|agente|operador|mozo|persona|"
+                              r"tipo\b|tipa\b|chabon|\bman\b|trato|trat[oa]|maltrat|groser|insult|respeto|\bmal\b|mala|complain|employee|staff|rude|treated|colg|telefono|llamada"),
+    "disputa_facturacion": re.compile(r"cobr|factur|cargo|cargar|cargaron|debit|tarjeta|extracto|\bpag[ao]|pagu|descont|monto|importe|"
+                                      r"doble|dos veces|2 veces|duplic|resumen|movimiento|transferencia|chup|clav|sacaron|cuenta|"
+                                      r"comprobante|recibo|saldo|cuota|plata|dinero|guita|charged|billed|twice|invoice"),
+}
+# Una frase que elogia al empleado no es una queja (la parecida "el repartidor fue amable pero la caja vino golpeada" sí
+# está en el tema por la palabra repartidor). Si además hubiera un insulto o una agresión, ya lo detecta la regla.
+_ELOGIO = re.compile(r"amable|genio|excelente|bueniss|atent[oa]|me ayudo|buena atencion|muy buen[oa]|felicit|agradec|gracias")
+_MONEDA = re.compile(r"\$|usd|u\$s|pesos|dolar|euro|mango|luca|guita|plata|dinero|\d\s?k\b")
+
+
 def _reembolso_alto(texto_norm: str, texto: str) -> float | None:
     if not _intencion_de_reembolso(texto_norm):
         return None
@@ -132,8 +171,12 @@ def evaluar(pregunta: str, clasificador: ClasificadorSemantico | None = None) ->
         for cat in clasificador.detectar(pregunta):
             if cat in res:
                 continue
+            if cat in _TEMA and not _TEMA[cat].search(t):
+                continue
+            if cat == "queja_trato" and _ELOGIO.search(t):
+                continue
             if cat == "reembolso_mayor_500":
-                if mayor_monto > TOPE_REEMBOLSO:
+                if mayor_monto > TOPE_REEMBOLSO and (_MONEDA.search(t) or _intencion_de_reembolso(t)):
                     res[cat] = Escalamiento(cat, *_mensaje(cat, mayor_monto), origen="semantica")
             else:
                 res[cat] = Escalamiento(cat, *_mensaje(cat), origen="semantica")

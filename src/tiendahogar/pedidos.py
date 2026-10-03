@@ -31,7 +31,7 @@ def consultar_estado_pedido(order_id: str) -> dict[str, Any]:
 # Guiones de todo tipo (-, \u2010, \u2011, \u2012, \u2013, \u2014, \u2015, \u2212) y guion bajo
 _GUIONES = "\\-\u2010\u2011\u2012\u2013\u2014\u2015\u2212_"
 _SEP_ORD = rf"[\s{_GUIONES}.:#]*"
-_NO_DINERO = r"(?!\s*(?:dolares|dolar|usd|pesos|euros|dias|dia|meses|horas|semanas|\$|%))"
+_NO_DINERO = r"(?!\s*(?:dolares|dolar|usd|pesos|euros|dias|dia|meses|horas|semanas|anos|ano|veces|unidades|productos|\$|%))"
 
 # "ORD-1001", "ord1001", "ORD 1001", "Ord. 1001", "ORD–1001" (con cualquier tipo de guion)
 _RE_ORD = re.compile(rf"(?<![a-z])ord{_SEP_ORD}(\d{{3,8}})\b{_NO_DINERO}")
@@ -39,12 +39,23 @@ _RE_ORD = re.compile(rf"(?<![a-z])ord{_SEP_ORD}(\d{{3,8}})\b{_NO_DINERO}")
 # "pedido 1001", "mi pedido es el 1001", "pedido nro 1001", "pedido n° 1001", "pedido #1001", "orden de compra 1001",
 # "número de pedido: 1001" y listas ("pedidos 1001 y 1004")
 _RE_CONTEXTO = re.compile(
-    r"\b(?:pedidos?|ordenes|orden)\b[\s:]*"
+    r"\b(?:pedidos?|ordenes|orden|compras?|encargos?|transaccion(?:es)?|operacion(?:es)?)\b[\s:]*"
     r"(?:(?:de (?:pedido|compra|orden)|n[\u00ba\u00b0]|nro\.?|numero|num\.?)[\s:.]*)?"
     r"(?:(?:es|era|seria|son) )?(?:el |la |los )?[\s#:]*(?:ord" + _SEP_ORD + r")?"
     rf"(\d{{3,8}})\b{_NO_DINERO}"
     rf"((?:\s*(?:,|y|e)\s*(?:ord{_SEP_ORD})?\d{{3,8}}\b{_NO_DINERO})*)"
 )
+
+
+# "n°2000", "nro 1003", "# 1003" sin decir "pedido": en una consulta de soporte es un número de pedido
+_RE_NUMERO_SUELTO = re.compile(rf"(?<![a-z0-9])(?:n[º°]\.?|nro\.?|numero|num\.?|#)\s*[:#]?\s*(\d{{3,6}})\b{_NO_DINERO}")
+
+# Un identificador que parece de pedido pero no tiene el formato ORD-XXXX: "DRO-1002", "ORD1OO1", "ORD-ABCD", "OD-1002"
+_RE_RARO = re.compile(
+    r"(?<![a-z0-9@])(?:pedidos?|ordenes|orden|compras?|encargos?|transaccion(?:es)?|operacion(?:es)?|ticket|codigo|"
+    r"referencia|n[º°]|nro\.?|numero|num\.?|#)"
+    r"[\s:.#]*(?:de (?:pedido|compra|orden)[\s:.]*)?(?:(?:es|era|seria)\s+)?(?:el |la )?[\s#:]*"
+    r"([a-z0-9]+(?:[-_][a-z0-9]+)+|[a-z]{2,8}\d[a-z0-9]*)(?![a-z0-9@.])")
 
 
 def _sin_tildes(texto: str) -> str:
@@ -67,10 +78,30 @@ def extraer_referencias(texto: str) -> list[tuple[str, str]]:
         hallados.append((m.start(1), m.group(1), m.group(1)))
         for extra in re.finditer(r"\d{3,8}", m.group(2) or ""):
             hallados.append((m.start(2) + extra.start(), extra.group(0), extra.group(0)))
+    for m in _RE_NUMERO_SUELTO.finditer(t):
+        hallados.append((m.start(1), m.group(1), m.group(1)))
     vistos: dict[str, str] = {}
     for _, digitos, literal in sorted(hallados):
         vistos.setdefault(f"ORD-{digitos}", literal)
     return list(vistos.items())
+
+
+def extraer_identificadores_raros(texto: str) -> list[str]:
+    """Identificadores con aspecto de número de pedido pero sin el formato ORD-XXXX (tal cual los escribió el cliente).
+    No se corrigen en silencio: el agente dice que no lo encontró y cuál es el formato."""
+    t = _sin_tildes(texto)
+    raros: list[str] = []
+    for m in _RE_RARO.finditer(t):
+        tok = m.group(1)
+        if re.fullmatch(r"ord[\s\-_.:#]*\d{3,8}", tok) or tok[0].isdigit():
+            continue                                            # ya es un ORD-XXXX válido, o empieza con un número
+        partes = re.split(r"[-_]", tok)
+        if not (re.search(r"\d", tok) or partes[0].startswith("ord")) or all(x.isdigit() for x in partes):
+            continue                                            # una palabra con guion, no un identificador
+        literal = texto[m.start(1):m.end(1)]
+        if literal not in raros:
+            raros.append(literal)
+    return raros
 
 
 def extraer_order_ids(texto: str) -> list[str]:

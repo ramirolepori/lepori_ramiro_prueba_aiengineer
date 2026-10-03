@@ -1,0 +1,55 @@
+{
+  "_nota": "Gazetteer mínimo para decidir qué plazo de envío corresponde (Doc 3). Cada entrada es 'Nombre|alias|alias'. 'capital' = Ciudad de Buenos Aires (decisión documentada en SUBMISSION.md). 'argentina_con_pista' y 'caba_barrios' solo cuentan si hay una preposición delante (en, a, de, desde...), porque son palabras comunes (pilar, flores, once).",
+  "caba": [
+    "la Ciudad de Buenos Aires (CABA)|ciudad de buenos aires|ciudad autonoma de buenos aires|caba|c.a.b.a|capital federal|cap fed|la capi|capi federal"
+  ],
+  "caba_barrios": [
+    "Palermo", "Belgrano", "Caballito", "Recoleta", "Flores", "Almagro", "Villa Crespo", "Nuñez|nunez", "Saavedra",
+    "Devoto|villa devoto", "Boedo", "San Telmo", "La Boca", "Retiro", "Mataderos", "Liniers", "Villa Urquiza",
+    "Colegiales", "Chacarita", "Barracas", "Balvanera", "Once", "Puerto Madero", "Villa Lugano", "Villa Soldati",
+    "Parque Patricios", "Monserrat|montserrat", "San Nicolas", "Constitucion", "Floresta", "Villa del Parque",
+    "Villa Pueyrredon", "Agronomia", "Paternal", "Parque Chacabuco", "Versalles", "Villa Luro", "Velez Sarsfield",
+    "Coghlan", "Villa Ortuzar", "Villa Real", "Monte Castro", "Villa Santa Rita", "Villa General Mitre", "San Cristobal"
+  ],
+  "buenos_aires_ambiguo": [
+    "Buenos Aires|bs as|bs. as.|bsas|baires|buenos aires|amba|area metropolitana"
+  ],
+  "argentina": [
+    "la provincia de Buenos Aires|provincia de buenos aires|pba|prov de buenos aires",
+    "el Gran Buenos Aires|gran buenos aires|gba|conurbano|conurbano bonaerense",
+    "Córdoba|cordoba|cordova", "Mendoza", "Rosario", "Salta", "Tucumán|tucuman|san miguel de tucuman", "San Juan",
+    "San Luis", "Santa Fe", "Neuquén|neuquen", "Bariloche|san carlos de bariloche", "Ushuaia", "Río Gallegos|rio gallegos",
+    "Río Cuarto|rio cuarto", "Posadas", "Paraná|parana", "Formosa", "Catamarca|san fernando del valle de catamarca",
+    "La Rioja", "Rawson", "Viedma", "Santa Rosa", "San Rafael", "Bahía Blanca|bahia blanca", "Tandil",
+    "Mar del Plata", "La Plata", "Quilmes", "Lanús|lanus", "Lomas de Zamora", "Morón|moron", "San Isidro",
+    "La Matanza", "San Justo", "Ramos Mejía|ramos mejia", "Avellaneda", "Banfield", "Temperley", "Adrogué|adrogue",
+    "Berazategui", "Florencio Varela", "Ezeiza", "Pergamino", "Junín|junin", "Zárate|zarate", "Escobar", "Olavarría|olavarria",
+    "Necochea", "Río Negro|rio negro", "Chubut", "Santa Cruz", "Tierra del Fuego", "Misiones", "Chaco", "Entre Ríos|entre rios",
+    "Jujuy|san salvador de jujuy", "Santiago del Estero", "Corrientes provincia", "La Pampa", "Comodoro Rivadavia",
+    "Trelew", "Puerto Madryn", "Villa María|villa maria", "Villa Carlos Paz|carlos paz", "Gualeguaychú|gualeguaychu",
+    "Concordia", "Rafaela", "Venado Tuerto", "San Nicolás de los Arroyos", "Luján de Cuyo|lujan de cuyo", "San Martín|san martin",
+    "Vicente López|vicente lopez", "Tres de Febrero", "Hurlingham", "Ituzaingó|ituzaingo", "San Fernando", "Lomas",
+    "Mar Chiquita", "Villa Gesell", "Pinamar", "Cariló|carilo", "San Clemente del Tuyú|san clemente", "Azul", "Trenque Lauquen",
+    "Cipolletti", "Villa La Angostura", "San Martín de los Andes|san martin de los andes", "El Calafate", "Esquel", "Río Grande|rio grande",
+    "Goya", "Oberá|obera", "Eldorado", "Reconquista", "Tartagal", "Orán|oran", "Cafayate", "Tilcara", "Humahuaca"
+  ],
+  "argentina_con_pista": [
+    "Pilar", "Tigre", "Campana", "Resistencia", "Corrientes", "Mercedes", "Luján|lujan", "Moreno", "Merlo", "Esteban Echeverría|esteban echeverria",
+    "Quilmes Oeste", "Burzaco", "Claypole", "Wilde", "Sarandí|sarandi", "Don Torcuato", "Ciudadela", "Haedo", "Caseros", "Castelar",
+    "Martínez|martinez", "Olivos", "Acassuso", "Boulogne", "Béccar|beccar", "Munro", "Villa Ballester|ballester", "José C. Paz|jose c paz",
+    "Malvinas Argentinas", "San Miguel", "Del Viso", "Garín|garin", "Maquinista Savio", "Ingeniero Maschwitz|maschwitz"
+  ],
+  "exterior": [
+    "Chile", "Uruguay", "Brasil|brazil", "Paraguay", "Bolivia", "Perú|peru", "Colombia", "México|mexico", "Venezuela", "Ecuador",
+    "España|espana", "Estados Unidos|eeuu|ee.uu|usa|u.s.a|yankilandia", "Italia", "Francia", "Alemania", "Inglaterra|reino unido|uk",
+    "Canadá|canada", "Panamá|panama", "Costa Rica", "Cuba", "Portugal", "Guatemala", "Honduras", "El Salvador", "Nicaragua",
+    "República Dominicana|republica dominicana|dominicana", "Puerto Rico", "Suiza", "Holanda|paises bajos", "Bélgica|belgica",
+    "Australia", "China", "Japón|japon", "Israel", "Turquía|turquia", "Rusia", "Irlanda", "Suecia", "Noruega", "Polonia",
+    "Bogotá|bogota", "Medellín|medellin", "Cali", "Barranquilla", "Cartagena de Indias|cartagena", "Santiago de Chile",
+    "Valparaíso|valparaiso", "Viña del Mar|vina del mar", "Montevideo", "Punta del Este", "Colonia del Sacramento", "Asunción|asuncion",
+    "Ciudad del Este", "Lima", "Cusco|cuzco", "Quito", "Guayaquil", "Caracas", "Ciudad de México|ciudad de mexico|cdmx", "Guadalajara",
+    "Monterrey", "Madrid", "Barcelona", "Valencia", "Sevilla", "Miami", "Nueva York|new york", "Los Ángeles|los angeles", "San Pablo|sao paulo",
+    "Río de Janeiro|rio de janeiro", "Florianópolis|florianopolis", "Londres", "París|paris", "Roma", "Berlín|berlin", "Lisboa",
+    "Ciudad de Panamá|ciudad de panama", "San José de Costa Rica", "La Habana", "Santo Domingo", "Santa Cruz de la Sierra"
+  ]
+}

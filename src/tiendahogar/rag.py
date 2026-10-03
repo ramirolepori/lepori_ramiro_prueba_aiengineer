@@ -19,6 +19,7 @@ from pathlib import Path
 from .config import Config
 from .embeddings import ClienteEmbeddings, punto
 from .llm import ErrorLLM
+from .semantica import segmentar
 
 DOCS_POR_DEFECTO = Path(__file__).resolve().parent / "data" / "docs"
 
@@ -33,12 +34,16 @@ STOPWORDS = {
 # palabra normalizada -> término canónico que se agrega a la consulta y a los fragmentos
 CONCEPTOS = {
     "garantia": ["garantia", "defecto", "defectuoso", "defectuosa", "fabrica", "falla", "fallo", "roto",
-                 "rota", "descompuso", "descompuesto", "reparar", "reparacion", "arreglar", "cubre"],
+                 "rota", "descompuso", "descompuesto", "reparar", "reparacion", "arreglar", "cubre", "quemo", "quemado",
+                 "quemada", "averia", "averio", "desperfecto", "estropeo", "enciende", "prende", "funciona", "anda"],
     "devolucion": ["devolver", "devolucion", "devuelvo", "devuelve", "devuelto", "regresar", "retornar",
                    "cambiar", "cambio"],
     "envio": ["envio", "enviar", "envian", "envia", "entrega", "entregar", "llega", "llegar", "despacho",
               "demora", "demorar"],
-    "reembolso": ["reembolso", "reembolsar", "reembolsan", "reintegro", "dinero", "plata", "reembolsa"],
+    "reembolso": ["reembolso", "reembolsar", "reembolsan", "reintegro", "dinero", "plata", "reembolsa", "reintegran",
+                  "reintegrar", "reintegren", "reintegrame", "guita"],
+    "contacto": ["contacto", "contactar", "contactarme", "mail", "correo", "email", "soporte", "escribo", "escribir",
+                 "quejarme", "queja", "reclamo", "quilombo"],
     "liquidacion": ["liquidacion", "oferta", "personalizado", "personalizada", "descuento", "rebaja"],
 }
 _A_CONCEPTO = {palabra: c for c, palabras in CONCEPTOS.items() for palabra in palabras}
@@ -224,24 +229,31 @@ class RecuperadorHibrido:
 
     def buscar(self, consulta: str, k: int = 3) -> list[Resultado]:
         self.ultimo_respaldo = False
+        # Una consulta con dos temas ("cuánto tarda el envío y cuánto de garantía tiene") diluye su embedding y el
+        # tema más fuerte tapa al otro: se recupera para la consulta entera y para cada cláusula, y se juntan.
         try:
-            sims, fuera = self.similitudes(consulta)
+            calculos = [(u, *self.similitudes(u)) for u in segmentar(consulta)]
         except ErrorLLM:
             self.ultimo_respaldo = True
             return self.indice.buscar(consulta, k)
         por_id = {f.id: f for f in self.indice.fragmentos}
-        relevantes = {i for i, s in sims.items() if s - fuera >= self.margen}
-        if self.usar_bm25:
-            relevantes |= {r.fragmento.id for r in self.indice.buscar(consulta, k)}
-        if not relevantes:
-            return []
-        pos_emb = {i: n for n, i in enumerate(sorted(sims, key=sims.get, reverse=True))}
-        pos_bm = {r.fragmento.id: n for n, r in enumerate(self.indice.puntuar(consulta))}
-        fusion = {i: 1 / (_K_RRF + pos_emb[i]) + (1 / (_K_RRF + pos_bm[i]) if i in pos_bm else 0.0)
-                  for i in relevantes}
-        mejor = max(sims[i] for i in relevantes)
-        elegidos = [i for i in sorted(relevantes, key=fusion.get, reverse=True) if sims[i] >= mejor - self.rel][:k]
-        return [Resultado(por_id[i], fusion[i], sims[i] - fuera) for i in elegidos]
+        elegidos: dict[str, tuple[float, float]] = {}        # id -> (fusión, margen sobre lo fuera de alcance)
+        for unidad, sims, fuera in calculos:
+            relevantes = {i for i, s in sims.items() if s - fuera >= self.margen}
+            if self.usar_bm25:
+                relevantes |= {r.fragmento.id for r in self.indice.buscar(unidad, k)}
+            if not relevantes:
+                continue
+            pos_emb = {i: n for n, i in enumerate(sorted(sims, key=sims.get, reverse=True))}
+            pos_bm = {r.fragmento.id: n for n, r in enumerate(self.indice.puntuar(unidad))}
+            fusion = {i: 1 / (_K_RRF + pos_emb[i]) + (1 / (_K_RRF + pos_bm[i]) if i in pos_bm else 0.0)
+                      for i in relevantes}
+            mejor = max(sims[i] for i in relevantes)
+            for i in relevantes:
+                if sims[i] >= mejor - self.rel and fusion[i] > elegidos.get(i, (0.0, 0.0))[0]:
+                    elegidos[i] = (fusion[i], sims[i] - fuera)
+        orden = sorted(elegidos, key=lambda i: elegidos[i][0], reverse=True)[:k]
+        return [Resultado(por_id[i], *elegidos[i]) for i in orden]
 
 
 def crear_recuperador(config: Config | None = None, cliente: ClienteEmbeddings | None = None

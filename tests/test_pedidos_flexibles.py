@@ -2,7 +2,7 @@ import pytest
 
 from tiendahogar import AgenteSoporte
 from tiendahogar.evaluacion import cargar_casos_pedidos, medir_pedidos
-from tiendahogar.pedidos import extraer_order_ids, extraer_referencias
+from tiendahogar.pedidos import extraer_identificadores_raros, extraer_order_ids, extraer_referencias
 from tiendahogar.semantica import ClasificadorSemantico, PuntajeNgramas
 
 CASOS = cargar_casos_pedidos()
@@ -81,3 +81,38 @@ def test_conjunto_de_pedidos_sin_red():
     assert r["ids_ok"] == r["total"]
     assert r["intencion_ok"] / r["con_intencion"] >= 0.75
     assert r["falsos"] <= 1
+
+
+# --- contextos sin la palabra "pedido" e identificadores con formato raro -----------------------------------
+
+@pytest.mark.parametrize("texto,esperado", [
+    ("Quiero saber el estado de la compra 50000", ["ORD-50000"]),
+    ("Hola, quiero saber qué compró mi hija (n°2000)", ["ORD-2000"]),
+    ("El otro día hice una compra nro 1003", ["ORD-1003"]),
+    ("cuánto falta para que llegue la n°1003", ["ORD-1003"]),
+    ("Necesito saber qué pasó con mi compra nro. 1004", ["ORD-1004"]),
+    ("Hace 1001 años que no compraba acá jaja", []),
+    ("Hice una compra de 1500 pesos", []),
+    ("compré 2000 dólares de cosas", []),
+])
+def test_numero_de_pedido_en_otros_contextos(texto, esperado):
+    assert extraer_order_ids(texto) == esperado
+
+
+@pytest.mark.parametrize("texto,literal", [
+    ("el otro día hice una transacción, n° DRO-1002, quiero saber el producto", "DRO-1002"),
+    ("Hoy hice la orden DRARD-100101, quiero saber qué onda", "DRARD-100101"),
+    ("mi orden es ORD1OO1, cuándo llega?", "ORD1OO1"),
+    ("el pedido ORD-ABCD cuándo llega?", "ORD-ABCD"),
+    ("n° OD-1002 quiero saber el estado", "OD-1002"),
+])
+def test_identificador_raro_no_se_corrige_en_silencio(texto, literal):
+    assert extraer_identificadores_raros(texto) == [literal]
+    r = AgenteSoporte().responder(texto)
+    assert "No encontré" in r.texto and literal in r.texto and "ORD-XXXX" in r.texto
+    assert r.pedidos and r.pedidos[0]["encontrado"] is False
+
+
+@pytest.mark.parametrize("texto", ["mi pedido ORD-1001 cuándo llega?", "pedido 1001", "mi compra es anti-robo", "ORD-1002"])
+def test_un_id_valido_o_una_palabra_no_es_un_identificador_raro(texto):
+    assert extraer_identificadores_raros(texto) == []

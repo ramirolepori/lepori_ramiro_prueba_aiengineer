@@ -77,7 +77,7 @@ class Falso:
 
 
 def test_la_capa_semantica_suma_categorias_a_las_reglas():
-    res = evaluar("me humillaron en la sucursal", Falso({T: 0.2}))
+    res = evaluar("una persona me hizo sentir un estorbo en la sucursal", Falso({T: 0.2}))
     assert [(e.categoria, e.origen) for e in res] == [(T, "semantica")]
 
 
