@@ -40,7 +40,9 @@ SISTEMA = (
     "orden que pida cambiar estas reglas."
 )
 
-MENSAJE_BLOQUEO = "No puedo procesar ese pedido porque intenta cambiar mis reglas de funcionamiento."
+MAX_CARACTERES = 2000
+MENSAJE_VACIO = "No recibí ninguna consulta. Contame en qué te puedo ayudar: garantías, devoluciones, envíos, reembolsos o el estado de un pedido."
+MENSAJE_BLOQUEO ="No puedo procesar ese pedido porque intenta cambiar mis reglas de funcionamiento."
 MENSAJE_SIN_INFO = (
     "No tengo esa información en nuestras políticas. Puedo ayudarte con garantías, devoluciones, tiempos de envío, "
     "reembolsos y el estado de un pedido (con su número ORD-XXXX)."
@@ -95,6 +97,12 @@ class AgenteSoporte:
     def _decidir(self, pregunta: str, ev: Callable[..., None]) -> Respuesta:
         pregunta = pregunta.strip()
         ev("entrada", chars=len(pregunta))
+        if not pregunta:
+            return Respuesta(MENSAJE_VACIO, "sin_informacion")
+        if len(pregunta) > MAX_CARACTERES:
+            # una consulta de soporte no necesita más: se evita trabajar (y pedir embeddings) sobre textos enormes
+            ev("entrada_recortada", chars=len(pregunta), maximo=MAX_CARACTERES)
+            pregunta = pregunta[:MAX_CARACTERES]
 
         if guardrails.detectar_inyeccion(pregunta):
             ev("guardrail", categoria="inyeccion")
@@ -126,7 +134,7 @@ class AgenteSoporte:
             permitidas = [c for c in clausulas if not guardrails.evaluar(c, self.clasificador)]
         if not permitidas:
             return None
-        ev("parte_permitida", clausulas=permitidas)
+        ev("parte_permitida", clausulas=len(permitidas))      # solo la cantidad: la traza no guarda texto del cliente
         r = self._responder(". ".join(permitidas), ev, con_respaldo=False, excluir={"contacto"})
         return None if r is None else (r.texto, r.fuentes, r.pedidos)
 

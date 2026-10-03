@@ -37,17 +37,33 @@ def _preferir_ipv4(url: str) -> str:
     return urllib.parse.urlunsplit(partes._replace(netloc="127.0.0.1" + puerto))
 
 
+# Servicios que acaban de fallar: durante unos segundos no se vuelve a intentar. Sin esto, con un servidor caído cada
+# llamada (guardrail, recuperación y redacción) esperaba sus propios reintentos y una sola pregunta tardaba más de 30 s.
+_CAIDOS: dict[str, float] = {}
+ESPERA_TRAS_CAIDA_S = 30.0
+
+
+def _rechazada(error: Exception) -> bool:
+    """¿El servidor rechazó la conexión (no hay nadie escuchando)? No depende del idioma del sistema."""
+    return isinstance(error, ConnectionRefusedError) or isinstance(getattr(error, "reason", None), ConnectionRefusedError)
+
+
 def _post(url: str, cabeceras: dict[str, str], cuerpo: dict, timeout: float, reintentos: int = 2) -> dict:
     datos = json.dumps(cuerpo).encode("utf-8")
     ultimo: Exception | None = None
     original = url
+    servicio = urllib.parse.urlsplit(original).netloc
+    if _CAIDOS.get(servicio, 0.0) > time.monotonic():
+        raise ErrorLLM(f"el servicio {servicio} no responde (se vuelve a intentar en unos segundos)")
     url = _preferir_ipv4(original)
     for intento in range(reintentos + 1):
         req = urllib.request.Request(url, data=datos, method="POST",
                                      headers={"Content-Type": "application/json", **cabeceras})
         try:
             with urllib.request.urlopen(req, timeout=timeout) as r:
-                return json.loads(r.read().decode("utf-8"))
+                resultado = json.loads(r.read().decode("utf-8"))
+            _CAIDOS.pop(servicio, None)
+            return resultado
         except urllib.error.HTTPError as e:
             ultimo = e
             if e.code not in {408, 429, 500, 502, 503, 504}:
@@ -58,11 +74,16 @@ def _post(url: str, cabeceras: dict[str, str], cuerpo: dict, timeout: float, rei
                 raise ErrorLLM(f"el proveedor respondió HTTP {e.code}: {detalle}") from e
         except (OSError, http.client.HTTPException, ValueError) as e:  # red, corte de conexión, timeout, JSON roto
             ultimo = e
-            if url != original and "refused" in str(e).lower():
-                url = original         # el servidor local no escucha en IPv4: se vuelve a la dirección escrita
+            if _rechazada(e):
+                if url != original:
+                    url = original     # el servidor local no escucha en IPv4: se vuelve a la dirección escrita
+                    original = url
+                    continue
+                break                  # nadie escucha en esa dirección: reintentar no sirve de nada
         if intento < reintentos:
             time.sleep(2 ** intento)
-    raise ErrorLLM(f"no se pudo llamar al proveedor tras {reintentos + 1} intentos: {ultimo}")
+    _CAIDOS[servicio] = time.monotonic() + ESPERA_TRAS_CAIDA_S
+    raise ErrorLLM(f"no se pudo llamar al proveedor: {ultimo}")
 
 
 class OpenAICompatible:

@@ -149,3 +149,46 @@ def test_proveedor_desconocido_o_sin_modelo():
     with pytest.raises(ErrorLLM, match="LLM_MODEL"):
         crear_llm(Config(proveedor="openai", modelo=""))
     assert crear_llm(Config(proveedor="none")) is None
+
+
+# --- servidor caído: no se reintenta en vano y no se vuelve a intentar enseguida --------------------------------
+
+def _puerto_cerrado():
+    import socket
+    s = socket.socket()
+    s.bind(("127.0.0.1", 0))
+    puerto = s.getsockname()[1]
+    s.close()
+    return puerto
+
+
+def test_conexion_rechazada_falla_enseguida_sin_reintentos(monkeypatch):
+    esperas = []
+    monkeypatch.setattr("tiendahogar.llm.time.sleep", lambda s: esperas.append(s))
+    cfg = config(f"http://127.0.0.1:{_puerto_cerrado()}/v1")
+    with pytest.raises(ErrorLLM, match="no se pudo llamar"):
+        OpenAICompatible(cfg).generar("s", "p")
+    assert esperas == []          # nadie escucha: reintentar con espera no sirve de nada
+
+
+def test_un_servicio_caido_no_se_vuelve_a_intentar_durante_unos_segundos():
+    from tiendahogar import llm
+    cfg = config(f"http://127.0.0.1:{_puerto_cerrado()}/v1")
+    with pytest.raises(ErrorLLM, match="no se pudo llamar"):
+        OpenAICompatible(cfg).generar("s", "p")
+    with pytest.raises(ErrorLLM, match="no responde"):
+        OpenAICompatible(cfg).generar("s", "p")                   # corta sin tocar la red
+    llm._CAIDOS.clear()
+    with pytest.raises(ErrorLLM, match="no se pudo llamar"):
+        OpenAICompatible(cfg).generar("s", "p")                   # pasado el plazo, vuelve a probar
+
+
+def test_un_servicio_que_se_recupera_vuelve_a_usarse():
+    from tiendahogar import llm
+    s = Servidor(lambda c: (200, OK_OPENAI))
+    try:
+        llm._CAIDOS[s.url.split("//")[1]] = 0.0               # figuraba como caído, pero el plazo ya venció
+        assert OpenAICompatible(config(s.url)).generar("s", "p") == RESPUESTA
+        assert s.url.split("//")[1] not in llm._CAIDOS
+    finally:
+        s.cerrar()

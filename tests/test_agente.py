@@ -217,3 +217,26 @@ def test_la_cifra_debe_estar_completa_para_contar():
     assert _usa_las_cifras("tarda 5-10 días hábiles", "se procesan en 5-10 días hábiles")
     assert not _usa_las_cifras("tarda 5 días", "se procesan en 5-10 días hábiles")
     assert not _usa_las_cifras("son 120 meses", "tienen garantía de 12 meses")
+
+
+# --- entradas límite ------------------------------------------------------------------------------------------
+
+@pytest.mark.parametrize("pregunta", ["", "   ", "\n\n"])
+def test_una_consulta_vacia_pide_la_consulta(agente, pregunta):
+    r = agente.responder(pregunta)
+    assert r.estado == "sin_informacion" and "No recibí ninguna consulta" in r.texto
+
+
+def test_una_consulta_enorme_se_recorta_y_se_responde(agente):
+    r = agente.responder("garantía " * 25000)
+    assert r.estado == "respondido" and "garantia" in r.fuentes
+    assert any(e["tipo"] == "entrada_recortada" and e["chars"] > 2000 for e in r.traza)
+    assert r.tiempos["total_ms"] < 2000
+
+
+def test_la_traza_no_guarda_el_texto_del_cliente(agente):
+    pregunta = "El vendedor me trató mal y además quiero saber cuánto dura la garantía de la lavadora"
+    r = agente.responder(pregunta)
+    assert any(e["tipo"] == "parte_permitida" and e["clausulas"] == 1 for e in r.traza)
+    volcado = json.dumps(r.traza, ensure_ascii=False).lower()
+    assert "garant" not in volcado.replace("garantia", "") and "vendedor" not in volcado and "lavadora" not in volcado
