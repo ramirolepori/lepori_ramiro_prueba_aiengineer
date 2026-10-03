@@ -92,8 +92,12 @@ $env:LLM_PROVIDER = "openai"; $env:LLM_MODEL = "<modelo>"; $env:LLM_API_KEY = "<
 Ejemplo con modelos locales en Ollama (`ollama pull qwen2.5:7b` y `ollama pull embeddinggemma`):
 
 ```powershell
-$env:LLM_PROVIDER = "openai"; $env:LLM_BASE_URL = "http://localhost:11434/v1"; $env:LLM_MODEL = "qwen2.5:7b"; $env:EMBEDDING_MODEL = "embeddinggemma"
+$env:LLM_PROVIDER = "openai"; $env:LLM_BASE_URL = "http://127.0.0.1:11434/v1"; $env:LLM_MODEL = "qwen2.5:7b"; $env:EMBEDDING_MODEL = "embeddinggemma"
 ```
+
+Conviene escribir `127.0.0.1` y no `localhost`: en Windows `localhost` prueba primero IPv6 y cada llamada pierde unos 2 segundos (con `127.0.0.1` son unos 45 ms). El cliente ya reemplaza `localhost` por `127.0.0.1` solo, pero la aclaración evita sorpresas con otros clientes.
+
+`EMBEDDINGS_CACHE` es la carpeta donde se guardan los embeddings de los textos fijos (documentos y frases de ejemplo del guardrail) para que el arranque no los pida de nuevo; por defecto `.cache/` y `none` la desactiva. Nunca se guardan preguntas de clientes.
 
 Si el proveedor falla (red, clave, tiempo), el agente lo registra en la traza y sigue en modo offline: el guardrail pasa a n-gramas y la respuesta cita el documento.
 
@@ -109,6 +113,16 @@ python -m tiendahogar.evaluacion --barrido    # además, barre el margen del gua
 
 Cada medición usa un conjunto de `tests/data/` dividido en desarrollo (para ajustar márgenes) y prueba (sin tocar al ajustar). Sin `EMBEDDING_MODEL` solo se miden las variantes sin red. Los resultados y sus salvedades están en `SUBMISSION.md`.
 
+## Medir el rendimiento
+
+```
+python -m tiendahogar.rendimiento              # con lo configurado en .env (modelo de lenguaje y embeddings)
+python -m tiendahogar.rendimiento --sin-llm    # sin modelo de lenguaje: mide la herramienta con embeddings
+python -m tiendahogar.rendimiento --offline    # sin ningún modelo: reglas, n-gramas y BM25
+```
+
+Separa el tiempo de cada respuesta en tres baldes: el modelo de lenguaje, el modelo de embeddings (los dos dependen del modelo y del hardware) y el código propio, que es lo que se puede optimizar desde acá. Cada respuesta del agente trae esos números en `Respuesta.tiempos` y en la traza. Los resultados están en `SUBMISSION.md`.
+
 ## Estructura
 
 ```
@@ -121,7 +135,9 @@ src/tiendahogar/
   embeddings.py   cliente de embeddings (/v1/embeddings) y similitud coseno
   pedidos.py      tool consultar_estado_pedido, tabla mock y extracción flexible de números de pedido
   llm.py          clientes OpenAI-compatible y Anthropic (urllib, sin dependencias)
-  evaluacion.py   medición del guardrail
+  evaluacion.py   medición del guardrail, de los pedidos y del RAG
+  rendimiento.py  latencia por etapa (modelo de lenguaje, embeddings, código propio)
+  tiempos.py      cronómetro por etapa
   config.py       variables de entorno
   data/docs/      los 5 documentos del enunciado, sin editar
   data/anclas.json  frases de ejemplo por categoría del guardrail y de la consulta de pedidos

@@ -4,3 +4,4 @@ import os
 
 os.environ["LLM_PROVIDER"] = "none"
 os.environ["EMBEDDING_MODEL"] = ""
+os.environ["EMBEDDINGS_CACHE"] = "none"

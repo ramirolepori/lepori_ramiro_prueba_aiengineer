@@ -143,9 +143,29 @@ Cuanto mejor es el modelo, menos defensas necesita el código. Para que el dise�
 - Cuando una pregunta queda fuera del alcance de los documentos (precios, marcas, garantía extendida), el agente responde que no tiene esa información.
 - El agente no promete ni aprueba nada: no aprueba reembolsos ni devoluciones, solo informa la política y deriva (lo pide el enunciado de forma explícita).
 
-### Performance: qué depende del modelo y qué depende de la herramienta (a revisar)
+### Performance: qué depende del modelo y qué depende de la herramienta
 
-Criterio acordado con Ramiro: separar la latencia que depende del modelo de lenguaje (generar la respuesta, que cambia con el modelo y el hardware y no depende de nuestro código) de la que depende de nuestra herramienta (guardrail, embeddings, recuperación, tool de pedidos, validación), donde sí hay que optimizar. Pendiente: registrar en la traza el tiempo de cada etapa por separado, medir la latencia de la herramienta sin el modelo, reducir llamadas repetidas (por ejemplo evaluar varias veces las mismas cláusulas, o pedir embeddings de textos ya vistos) y medir el arranque en frío (embeber las anclas y los documentos la primera vez).
+Criterio acordado con Ramiro: separar la latencia que depende de los modelos (el de lenguaje que redacta y el de embeddings, que cambian con el modelo y el hardware) de la que depende de la herramienta (guardrail, recuperación, tool de pedidos, validación), donde sí hay que optimizar. Cada respuesta del agente trae `tiempos` con tres baldes (modelo de lenguaje, modelo de embeddings y código propio) y el tiempo de cada etapa, y quedan en la traza. `python -m tiendahogar.rendimiento` mide 16 preguntas representativas (consultas de política, pedidos, derivaciones, mixtas y fuera de alcance) en tres modos. Hardware de las pruebas: una PC con Windows, 15,8 GB de RAM y sin GPU, con Ollama.
+
+Estado inicial, herramienta con embeddings y sin modelo de lenguaje: 2129 ms de mediana por pregunta nueva, de los cuales 2102 ms eran el servicio de embeddings y 33 ms el código propio; el arranque en frío tardaba 12,5 s (3 llamadas).
+
+Lo que se encontró y se hizo:
+- El tiempo constante de 2,1 s por llamada no era del modelo: Ollama reportaba 35 ms de cómputo para un texto. Era la resolución de `localhost` en Windows, que prueba primero IPv6 mientras el servidor escucha en IPv4. Con `127.0.0.1` la llamada tarda 44 ms (47 veces menos). El cliente HTTP ahora reemplaza `localhost` por `127.0.0.1` y vuelve a la dirección original si el servidor no responde ahí.
+- Código propio: de 33 ms a 5 ms de mediana. Los vectores se guardan normalizados y la similitud es un producto punto en vez de recalcular las normas cada vez, y los puntajes de cada oración se recuerdan para que el guardrail y la intención de pedido no los calculen dos veces.
+- Llamadas evitadas: si las reglas ya derivan una pregunta de una sola cláusula (por ejemplo "Quiero un reembolso de $900") no se consulta el modelo de embeddings, y una pregunta con número de pedido no evalúa la intención. Una pregunta normal hace una sola llamada de embeddings: el guardrail y el recuperador comparten el cliente y el texto se pide una vez.
+- Arranque en frío: los embeddings de los textos fijos (documentos, preguntas fuera de alcance y frases de ejemplo del guardrail) se piden en una sola llamada y se guardan en disco (`.cache/`, 1,5 MB, ignorado por git; nunca se guardan preguntas de clientes). El primer arranque bajó de 12,5 s a 3,9 s y los siguientes tardan 122 ms.
+
+Resultados actuales (mediana por pregunta nueva, en milisegundos):
+
+| Modo | Total | Modelo de lenguaje | Modelo de embeddings | Código propio |
+| --- | --- | --- | --- | --- |
+| Sin ningún modelo (reglas, n-gramas y BM25) | 2,5 | 0 | 0 | 2,5 |
+| Herramienta con embeddings, sin modelo de lenguaje | 70 | 0 | 65 | 5 |
+| Completo, con `qwen2.5:7b` local en CPU | 6973 | 6863 | 81 | 9,6 |
+
+Con el modelo de lenguaje, el modelo explica el 98 % del tiempo (la mediana de la herramienta completa, sin contar al modelo de lenguaje, es de unos 90 ms). Los percentiles altos del modelo de lenguaje son de carga y de generación: la primera pregunta tardó 47 s porque Ollama carga el modelo en memoria (se puede evitar manteniéndolo cargado con `OLLAMA_KEEP_ALIVE`) y las respuestas largas llegan a 15 a 45 s en CPU. Esa parte no depende de nuestro código, salvo el largo de la respuesta que se le pide al modelo.
+
+Pendiente de revisar: limitar el largo de la respuesta (menos tokens generados, menos tiempo) midiendo que no empeore la calidad en las preguntas que mezclan políticas, y medir el comportamiento con varias consultas a la vez.
 
 ### Lista de mejoras si queda tiempo
 

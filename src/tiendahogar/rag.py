@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .config import Config
-from .embeddings import ClienteEmbeddings, coseno
+from .embeddings import ClienteEmbeddings, punto
 from .llm import ErrorLLM
 
 DOCS_POR_DEFECTO = Path(__file__).resolve().parent / "data" / "docs"
@@ -202,9 +202,10 @@ class RecuperadorHibrido:
         if self._vec_docs is None:
             partes = {f.id: self._partes(f.texto) for f in self.indice.fragmentos}
             planas = [t for ts in partes.values() for t in ts]
-            vec = dict(zip(planas, self.cliente.embeber(planas + self.fuera)[:len(planas)]))
+            todos = self.cliente.embeber_fijos(planas + self.fuera)     # textos fijos: una sola llamada y caché en disco
+            vec = dict(zip(planas, todos[:len(planas)]))
             self._vec_docs = {i: [vec[t] for t in ts] for i, ts in partes.items()}
-            self._vec_fuera = self.cliente.embeber(self.fuera)
+            self._vec_fuera = todos[len(planas):]
 
     def _partes(self, texto: str) -> list[str]:
         """El documento entero y, con `por_oracion`, cada una de sus oraciones (sin el título)."""
@@ -218,8 +219,8 @@ class RecuperadorHibrido:
         """Similitud de la consulta con cada documento y la mayor con una pregunta fuera de alcance."""
         self._preparar()
         q = self.cliente.embeber([consulta])[0]
-        sims = {i: max(coseno(q, v) for v in vs) for i, vs in self._vec_docs.items()}
-        return sims, max(coseno(q, v) for v in self._vec_fuera)
+        sims = {i: max(punto(q, v) for v in vs) for i, vs in self._vec_docs.items()}
+        return sims, max(punto(q, v) for v in self._vec_fuera)
 
     def buscar(self, consulta: str, k: int = 3) -> list[Resultado]:
         self.ultimo_respaldo = False

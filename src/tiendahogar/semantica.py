@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Protocol
 
 from .config import Config
-from .embeddings import ClienteEmbeddings, coseno
+from .embeddings import ClienteEmbeddings, punto
 from .llm import ErrorLLM
 
 CATEGORIAS = ("reembolso_mayor_500", "queja_trato", "disputa_facturacion", "tema_legal")
@@ -68,14 +68,18 @@ class PuntajeEmbeddings:
         self._cliente = cliente or ClienteEmbeddings(config)
         self._anclas = anclas or cargar_anclas()
         self._vec_anclas: dict[str, list[list[float]]] | None = None
+        self._memo: dict[str, dict[str, float]] = {}      # el guardrail y la intención puntúan las mismas oraciones
 
     def puntuar(self, textos: list[str]) -> list[dict[str, float]]:
         if self._vec_anclas is None:
             planas = [t for v in self._anclas.values() for t in v]
-            vec = dict(zip(planas, self._cliente.embeber(planas)))
+            vec = dict(zip(planas, self._cliente.embeber_fijos(planas)))
             self._vec_anclas = {k: [vec[t] for t in v] for k, v in self._anclas.items()}
-        return [{k: max(coseno(v, a) for a in anclas) for k, anclas in self._vec_anclas.items()}
-                for v in self._cliente.embeber(textos)]
+        nuevos = [t for t in dict.fromkeys(textos) if t not in self._memo]
+        if nuevos:
+            for t, v in zip(nuevos, self._cliente.embeber(nuevos)):
+                self._memo[t] = {k: max(punto(v, a) for a in anclas) for k, anclas in self._vec_anclas.items()}
+        return [self._memo[t] for t in textos]
 
 
 def _sin_tildes(t: str) -> str:
@@ -103,6 +107,7 @@ class PuntajeNgramas:
         self._n = sum(len(v) for v in docs.values())
         self._idf = {g: math.log((1 + self._n) / (1 + n)) + 1 for g, n in df.items()}
         self._vec = {k: [self._vectorizar(d) for d in v] for k, v in docs.items()}
+        self._memo: dict[str, dict[str, float]] = {}
 
     def _vectorizar(self, c: Counter[str]) -> dict[str, float]:
         v = {g: (1 + math.log(f)) * self._idf.get(g, math.log(1 + self._n) + 1) for g, f in c.items()}
@@ -118,8 +123,10 @@ class PuntajeNgramas:
     def puntuar(self, textos: list[str]) -> list[dict[str, float]]:
         out = []
         for t in textos:
-            v = self._vectorizar(_ngramas(t))
-            out.append({k: max(self._coseno(v, a) for a in vs) for k, vs in self._vec.items()})
+            if t not in self._memo:
+                v = self._vectorizar(_ngramas(t))
+                self._memo[t] = {k: max(self._coseno(v, a) for a in vs) for k, vs in self._vec.items()}
+            out.append(self._memo[t])
         return out
 
 

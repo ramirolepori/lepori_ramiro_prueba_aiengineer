@@ -12,6 +12,7 @@ import http.client
 import json
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from typing import Protocol
 
@@ -26,9 +27,21 @@ class LLM(Protocol):
     def generar(self, sistema: str, usuario: str) -> str: ...
 
 
+def _preferir_ipv4(url: str) -> str:
+    """En Windows, `localhost` se resuelve primero a IPv6 (::1) y los servidores locales como Ollama escuchan en
+    IPv4: cada llamada pierde unos 2 segundos esperando a que falle el intento. Con 127.0.0.1 son milisegundos."""
+    partes = urllib.parse.urlsplit(url)
+    if partes.hostname != "localhost":
+        return url
+    puerto = f":{partes.port}" if partes.port else ""
+    return urllib.parse.urlunsplit(partes._replace(netloc="127.0.0.1" + puerto))
+
+
 def _post(url: str, cabeceras: dict[str, str], cuerpo: dict, timeout: float, reintentos: int = 2) -> dict:
     datos = json.dumps(cuerpo).encode("utf-8")
     ultimo: Exception | None = None
+    original = url
+    url = _preferir_ipv4(original)
     for intento in range(reintentos + 1):
         req = urllib.request.Request(url, data=datos, method="POST",
                                      headers={"Content-Type": "application/json", **cabeceras})
@@ -45,6 +58,8 @@ def _post(url: str, cabeceras: dict[str, str], cuerpo: dict, timeout: float, rei
                 raise ErrorLLM(f"el proveedor respondió HTTP {e.code}: {detalle}") from e
         except (OSError, http.client.HTTPException, ValueError) as e:  # red, corte de conexión, timeout, JSON roto
             ultimo = e
+            if url != original and "refused" in str(e).lower():
+                url = original         # el servidor local no escucha en IPv4: se vuelve a la dirección escrita
         if intento < reintentos:
             time.sleep(2 ** intento)
     raise ErrorLLM(f"no se pudo llamar al proveedor tras {reintentos + 1} intentos: {ultimo}")

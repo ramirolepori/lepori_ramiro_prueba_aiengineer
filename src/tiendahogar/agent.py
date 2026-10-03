@@ -25,6 +25,7 @@ from .config import Config
 from .embeddings import ClienteEmbeddings
 from .rag import IndiceBM25, RecuperadorHibrido, Resultado as ResultadoRAG, crear_recuperador
 from .semantica import INTENCIONES, ClasificadorSemantico, crear_clasificador, segmentar
+from .tiempos import Cronometro, activar, etapa
 
 SISTEMA = (
     "Sos el asistente de soporte de TiendaHogar, una tienda de electrodomésticos. Respondé en español, breve y "
@@ -53,6 +54,7 @@ class Respuesta:
     escalamientos: list[str] = field(default_factory=list)
     pedidos: list[dict[str, Any]] = field(default_factory=list)
     traza: list[dict[str, Any]] = field(default_factory=list)
+    tiempos: dict[str, float] = field(default_factory=dict)   # ms por etapa y por balde (ver tiempos.py)
 
 
 class AgenteSoporte:
@@ -64,6 +66,7 @@ class AgenteSoporte:
         self.indice = indice or crear_recuperador(config, cliente)
         self.llm = llm
         self.trazas_dir = trazas_dir
+        self.cliente_embeddings = cliente
         # reglas + capa semántica (embeddings si hay EMBEDDING_MODEL, si no n-gramas de caracteres)
         self.clasificador = clasificador or crear_clasificador(config, cliente)
 
@@ -75,8 +78,14 @@ class AgenteSoporte:
             traza.append({"traza": traza_id, "t_ms": round((time.perf_counter() - t0) * 1000, 1),
                           "tipo": tipo, **datos})
 
-        r = self._decidir(pregunta, ev)
-        ev("fin", estado=r.estado, fuentes=r.fuentes)
+        cron, cliente = Cronometro(), self.cliente_embeddings
+        emb0 = (cliente.segundos, cliente.llamadas) if cliente else (0.0, 0)
+        with activar(cron):
+            r = self._decidir(pregunta, ev)
+        total_ms = (time.perf_counter() - t0) * 1000
+        emb_ms = ((cliente.segundos - emb0[0]) * 1000) if cliente else 0.0
+        r.tiempos = cron.resumen(total_ms, emb_ms, (cliente.llamadas - emb0[1]) if cliente else 0)
+        ev("fin", estado=r.estado, fuentes=r.fuentes, tiempos=r.tiempos)
         r.traza = traza
         if self.trazas_dir:
             self._guardar(traza)
@@ -90,7 +99,8 @@ class AgenteSoporte:
             ev("guardrail", categoria="inyeccion")
             return Respuesta(MENSAJE_BLOQUEO, "bloqueado")
 
-        escalamientos = guardrails.evaluar(pregunta, self.clasificador)
+        with etapa("guardrail"):
+            escalamientos = guardrails.evaluar(pregunta, self.clasificador)
         if escalamientos:
             ev("guardrail", categorias=[e.categoria for e in escalamientos],
                origenes=[e.origen for e in escalamientos], capa=self.clasificador.nombre,
@@ -111,7 +121,8 @@ class AgenteSoporte:
         """En una pregunta mixta responde las cláusulas que no hay que derivar (por ejemplo la garantía o el
         estado de un pedido). Devuelve None si no hay nada que responder con los documentos o la tool."""
         clausulas = segmentar(pregunta)[1:]
-        permitidas = [c for c in clausulas if not guardrails.evaluar(c, self.clasificador)]
+        with etapa("guardrail"):
+            permitidas = [c for c in clausulas if not guardrails.evaluar(c, self.clasificador)]
         if not permitidas:
             return None
         ev("parte_permitida", clausulas=permitidas)
@@ -123,17 +134,20 @@ class AgenteSoporte:
         """RAG y tool de pedidos sobre `pregunta` y redacción. Sin `con_respaldo`, devuelve None cuando no hay
         nada relevante en lugar de un mensaje de 'no sé' (para la parte permitida de una pregunta mixta)."""
         pedidos = []
-        for id_pedido, literal in extraer_referencias(pregunta):
-            p = consultar_estado_pedido(id_pedido)
-            if re.sub(r"\s+", "", literal.upper()) != id_pedido:
-                p["entendido_como"] = literal      # el cliente no escribió el formato ORD-XXXX: se le muestra qué se entendió
-            pedidos.append(p)
-            ev("tool", nombre="consultar_estado_pedido", order_id=p["order_id"], encontrado=p["encontrado"])
-        consulta_sin_numero = not pedidos and self._consulta_de_pedido(pregunta)
+        with etapa("pedidos"):
+            for id_pedido, literal in extraer_referencias(pregunta):
+                p = consultar_estado_pedido(id_pedido)
+                if re.sub(r"\s+", "", literal.upper()) != id_pedido:
+                    p["entendido_como"] = literal      # no escribió ORD-XXXX: se le muestra qué se entendió
+                pedidos.append(p)
+                ev("tool", nombre="consultar_estado_pedido", order_id=p["order_id"], encontrado=p["encontrado"])
+        with etapa("intencion"):
+            consulta_sin_numero = not pedidos and self._consulta_de_pedido(pregunta)
         if consulta_sin_numero:
             ev("intencion", categoria="consulta_pedido_sin_numero")
 
-        resultados = [r for r in self.indice.buscar(pregunta) if r.fragmento.documento not in (excluir or set())]
+        with etapa("recuperacion"):
+            resultados = [r for r in self.indice.buscar(pregunta) if r.fragmento.documento not in (excluir or set())]
         ev("rag", fuentes=[r.fragmento.documento for r in resultados],
            puntajes=[round(r.puntaje, 2) for r in resultados], coberturas=[round(r.cobertura, 2) for r in resultados])
         fuentes = [r.fragmento.documento for r in resultados]
@@ -151,9 +165,11 @@ class AgenteSoporte:
         if self.llm is not None and resultados:
             try:
                 prompt = _prompt(pregunta, resultados, pedidos, notas)
-                texto = self.llm.generar(SISTEMA, prompt)
-                texto = _limpiar_citas(texto, fuentes)
-                problema = _problema_de_salida(texto, prompt)
+                with etapa("generacion"):
+                    texto = self.llm.generar(SISTEMA, prompt)
+                with etapa("validacion"):
+                    texto = _limpiar_citas(texto, fuentes)
+                    problema = _problema_de_salida(texto, prompt)
                 if problema:
                     ev("llm", ok=False, error=problema)
                     texto = None

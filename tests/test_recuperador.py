@@ -20,6 +20,9 @@ class ClienteFalso:
     def __init__(self, falla=False):
         self.falla, self.pedidos = falla, 0
 
+    def embeber_fijos(self, textos):
+        return self.embeber(textos)
+
     def embeber(self, textos):
         self.pedidos += 1
         if self.falla:

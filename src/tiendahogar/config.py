@@ -29,11 +29,20 @@ def _entorno(nombre: str, defecto: str) -> str:
     return os.getenv(nombre) or defecto
 
 
+def _dir_cache() -> Path | None:
+    """EMBEDDINGS_CACHE: carpeta de la caché de embeddings de textos fijos. `none` la desactiva."""
+    valor = os.getenv("EMBEDDINGS_CACHE")
+    if valor is None:
+        return RAIZ / ".cache"
+    return None if valor.strip().lower() in {"", "none", "off", "no"} else Path(valor)
+
+
 @dataclass
 class Config:
     proveedor: str = field(default_factory=lambda: _entorno("LLM_PROVIDER", "none").lower())
     modelo: str = field(default_factory=lambda: _entorno("LLM_MODEL", ""))
     api_key: str = field(default_factory=lambda: _entorno("LLM_API_KEY", ""))
+    cache_dir: Path | None = field(default_factory=_dir_cache)
     embedding_model: str = field(default_factory=lambda: _entorno("EMBEDDING_MODEL", ""))
     base_url: str = field(default_factory=lambda: _entorno("LLM_BASE_URL", "https://api.openai.com/v1"))
     timeout_s: float = field(default_factory=lambda: float(_entorno("LLM_TIMEOUT_S", "60")))

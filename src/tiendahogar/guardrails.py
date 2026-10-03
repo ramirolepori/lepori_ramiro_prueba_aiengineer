@@ -14,7 +14,7 @@ from dataclasses import dataclass
 
 from .montos import extraer_montos
 from .rag import normalizar
-from .semantica import ClasificadorSemantico
+from .semantica import ClasificadorSemantico, segmentar
 
 CONTACTO = "soporte@tiendahogar.example"
 TOPE_REEMBOLSO = 500.0
@@ -123,6 +123,10 @@ def evaluar(pregunta: str, clasificador: ClasificadorSemantico | None = None) ->
     if monto is not None:
         res["reembolso_mayor_500"] = Escalamiento("reembolso_mayor_500", *_mensaje("reembolso_mayor_500", monto))
 
+    # Si las reglas ya decidieron y la pregunta es una sola cláusula, no hay parte permitida que separar ni
+    # otra categoría que cambie la derivación: se evita la llamada al modelo de embeddings.
+    if res and len(segmentar(pregunta)) == 1:
+        clasificador = None
     if clasificador is not None:
         mayor_monto = max(extraer_montos(pregunta), default=0.0)
         for cat in clasificador.detectar(pregunta):
