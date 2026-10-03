@@ -15,7 +15,7 @@ import re
 import threading
 import time
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Callable
 
@@ -27,7 +27,8 @@ from .config import Config
 from .embeddings import ClienteEmbeddings
 from .lugares import confirmacion, resolver_lugares, respuesta_envio, respuesta_envio_sin_lugar
 from .rag import IndiceBM25, RecuperadorHibrido, Resultado as ResultadoRAG, crear_recuperador, tokenizar, _PIDE_CANAL
-from .sesion import PREGUNTA_ANTIGUEDAD, PREGUNTA_MONTO, PREGUNTA_RECLAMO, TIEMPO, Sesion, interpretar
+from .sesion import (MAX_TURNOS, PREGUNTA_ANTIGUEDAD, PREGUNTA_MONTO, PREGUNTA_RECLAMO, TIEMPO, Sesion, dice_si_o_no, interpretar,
+                     pregunta_pendiente, recordar_pregunta, retomar)
 from .semantica import INTENCIONES, ClasificadorSemantico, crear_clasificador, segmentar
 from .tiempos import Cronometro, activar, etapa
 
@@ -95,8 +96,14 @@ class AgenteSoporte:
                           "tipo": tipo, **datos})
 
         cron = Cronometro()
+        previo = replace(sesion) if sesion is not None and sesion.pendiente else None
         with activar(cron):
             r = self._decidir(pregunta, ev, sesion)
+        if sesion is not None:
+            # dijo otra cosa que no tiene que ver con la tienda: se le contesta eso y se vuelve a pedir lo que faltaba
+            if previo is not None and not sesion.pendiente and r.estado == "sin_informacion" and retomar(sesion, previo):
+                r.texto = r.texto + chr(10) * 2 + pregunta_pendiente(sesion)
+            recordar_pregunta(sesion, r.texto)
         total_ms = (time.perf_counter() - t0) * 1000
         r.tiempos = cron.resumen(total_ms, cron.embeddings_s * 1000, cron.embeddings_n)
         ev("fin", estado=r.estado, fuentes=r.fuentes, tiempos=r.tiempos)
@@ -121,6 +128,18 @@ class AgenteSoporte:
 
         # Con sesión: si el mensaje responde a lo que se le preguntó, se arma la consulta completa y sigue el flujo normal
         lugar_dado, repreguntar = None, True
+        if sesion is not None and sesion.pendiente:
+            if _es_despedida(pregunta):
+                sesion.limpiar()           # se despide: ya no espera nada
+            elif (_es_saludo(pregunta) or _es_agradecimiento(pregunta)) and not dice_si_o_no(pregunta):
+                # lo natural es contestar el saludo y volver a pedir lo que faltaba
+                sesion.turnos += 1
+                if sesion.turnos <= MAX_TURNOS:
+                    ev("cortesia_con_pendiente", pendiente=sesion.pendiente)
+                    if _es_saludo(pregunta):
+                        return Respuesta(_saludar(pregunta, pregunta_pendiente(sesion)), "respondido")
+                    return Respuesta(f"¡De nada! {pregunta_pendiente(sesion)}", "respondido")
+                sesion.limpiar()
         if sesion is not None and sesion.pendiente and guardrails.evaluar(pregunta, self.clasificador):
             sesion.limpiar()           # un mensaje para derivar (legal, trato...) no es la respuesta al dato pendiente
         if sesion is not None:
@@ -152,7 +171,8 @@ class AgenteSoporte:
 
         if _es_saludo(pregunta):
             ev("saludo")
-            return Respuesta(MENSAJE_SALUDO, "respondido")
+            nombre = _nombre_dicho(pregunta)
+            return Respuesta(MENSAJE_SALUDO.replace("¡Hola!", f"¡Hola, {nombre}!", 1) if nombre else MENSAJE_SALUDO, "respondido")
         if _es_despedida(pregunta):
             ev("despedida")
             return Respuesta(MENSAJE_DESPEDIDA, "respondido")
@@ -368,7 +388,7 @@ class AgenteSoporte:
         # envío?" a secas es una pregunta de política, no el estado de un pedido.
         if _COMPRA_PROPIA.search(p) and _OBJETO_DE_COMPRA.search(p) and INTENCIONES[0] in self.clasificador.detectar(pregunta, INTENCIONES):
             return True
-        return bool(re.search(r"\b(mi|mis)\s+(pedido|orden|compra|encargo|envio)s?\b|lo que (compre|pedi|encargue)", p)
+        return bool(re.search(r"\b(mi|mis)\s+(pedido|orden|compra|adquisicion|encargo|envio)s?\b|lo que (compre|pedi|encargue)", p)
                     and re.search(r"estado|donde|rastre|llega|seguimiento|cuando|demora|info|detalle", p))
 
     def _guardar(self, traza: list[dict[str, Any]]) -> None:
@@ -394,7 +414,7 @@ _PREGUNTA_DE_POLITICA = re.compile(r"cuanto|cuando|como|quien|plazo|tarda|demora
 _PRODUCTOS = ("refrigeradora", "heladera", "nevera", "lavadora", "estufa", "licuadora", "plancha", "tostadora")
 
 
-_OBJETO_DE_COMPRA = re.compile(r"\b(?:pedidos?|compras?|compre|ordenes|orden|encargos?|envios?|paquetes?|entregas?|productos?|"
+_OBJETO_DE_COMPRA = re.compile(r"\b(?:pedidos?|compras?|adquisicion(?:es)?|compre|ordenes|orden|encargos?|envios?|paquetes?|entregas?|productos?|"
                                r"electrodomesticos?|heladeras?|refrigeradoras?|lavadoras?|estufas?|licuadoras?|planchas?|tostadoras?)\b")
 _TAREA_AJENA = re.compile(r"\b(?:escrib|cont[ae]|cuent|decime|dime|dame|armame|haceme|traduc|traduz|resum|explic|cant[ae]|dibuj|invent|"
                           r"recomend|ayudame|program|calcul|resolv|imagin|pretend|actu[ae]|jug[aá]|simul)\w*|"
@@ -462,9 +482,35 @@ def _es_saludo(pregunta: str) -> bool:
     p = _solo_palabras(pregunta)
     if p.startswith("pero "):
         p = p[5:]
+    p = re.sub(r"\b(?:me llamo|mi nombre es|soy)\s+[a-z]+(?: [a-z]+)?$", "", p).strip()   # "hola, me llamo Ramiro"
     palabras = p.split()
     repetida = bool(palabras) and max(palabras.count(w) for w in palabras) > 2     # "hola hola hola ..." es ruido
     return bool(palabras) and len(palabras) <= 6 and not repetida and _SALUDO.fullmatch(p) is not None
+
+
+_PRESENTACION = re.compile(r"(?:me llamo|mi nombre es|soy)\s+([A-Za-zÁÉÍÓÚÜÑáéíóúüñ]{2,20})(?:\s+([A-Za-zÁÉÍÓÚÜÑáéíóúüñ]{2,20}))?\s*[.!]*$",
+                           re.IGNORECASE)
+# palabras que no son un nombre (roles, artículos, la propia tienda): con ellas se saluda sin nombre
+_NO_ES_NOMBRE = {"un", "una", "el", "la", "los", "las", "de", "del", "tu", "su", "mi", "cliente", "usuario", "admin", "administrador",
+                 "gerente", "supervisor", "jefe", "dueno", "dueño", "desarrollador", "programador", "tienda", "tiendahogar", "sistema",
+                 "bot", "robot", "ia", "dan", "aim", "chatgpt", "claude", "asistente", "agente", "yo", "nadie", "alguien", "persona"}
+
+
+def _nombre_dicho(pregunta: str) -> str | None:
+    """El nombre con que se presenta quien saluda ("hola, me llamo ramiro"), solo si parece un nombre: una o dos palabras de
+    letras que no sean un rol ni una palabra común. Si no, None y se saluda sin nombre."""
+    m = _PRESENTACION.search(pregunta.strip())
+    if not m:
+        return None
+    palabras = [g for g in m.groups() if g]
+    if any(guardrails.normalizar(w) in _NO_ES_NOMBRE for w in palabras):
+        return None
+    return " ".join(w.capitalize() for w in palabras)
+
+
+def _saludar(pregunta: str, resto: str) -> str:
+    nombre = _nombre_dicho(pregunta)
+    return f"¡Hola, {nombre}!" + (f" {resto}" if resto else "") if nombre else f"¡Hola!" + (f" {resto}" if resto else "")
 
 
 def _es_despedida(pregunta: str) -> bool:

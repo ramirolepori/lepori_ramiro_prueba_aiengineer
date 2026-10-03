@@ -207,3 +207,20 @@ def test_no_se_pregunta_la_antiguedad_si_no_hace_falta(agente, pregunta):
 
 def test_la_antiguedad_no_se_pregunta_si_hay_un_pedido(agente):
     assert "¿Hace cuánto lo compraste?" not in agente.responder("Quiero devolver mi pedido ORD-1002").texto
+
+
+def test_un_saludo_con_algo_pendiente_se_contesta_y_se_repregunta(agente):
+    s, (r1, r2) = charlar(agente, "Quiero saber el estado de mi compra", "Hola me llamo ramiro")
+    assert r2.texto.startswith("¡Hola, Ramiro!") and "número de pedido" in r2.texto and s.pendiente == "pedido"
+    r3 = agente.responder("ORD-1003", s)
+    assert "Lavadora" in r3.texto and s.pendiente is None
+
+
+def test_una_despedida_con_algo_pendiente_cierra_lo_pendiente(agente):
+    s, (r1, r2) = charlar(agente, "Quiero saber el estado de mi compra", "chau")
+    assert "Chau" in r2.texto and s.pendiente is None
+
+
+def test_algo_ajeno_con_algo_pendiente_se_contesta_y_se_repregunta(agente):
+    s, (r1, r2) = charlar(agente, "Quiero saber el estado de mi compra", "Quién es el presidente de Argentina?")
+    assert "No tengo esa información" in r2.texto and "número de pedido" in r2.texto and s.pendiente == "pedido"

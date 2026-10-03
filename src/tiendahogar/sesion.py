@@ -59,6 +59,7 @@ class Sesion:
     no: Lugar | None = None             # con un "no": este (si es None, se pregunta el lugar de nuevo)
     repreguntas: int = 0
     turnos: int = 0                     # mensajes desde que quedó pendiente
+    ultima: str = ""                    # la pregunta tal como se le hizo al cliente, para volver a hacerla
 
     def esperar(self, pendiente: str, base: str, si: Lugar | None = None, no: Lugar | None = None) -> None:
         if self.pendiente != pendiente or self.base != base:
@@ -66,7 +67,7 @@ class Sesion:
         self.pendiente, self.base, self.si, self.no, self.turnos = pendiente, base, si, no, 0
 
     def limpiar(self) -> None:
-        self.pendiente, self.base, self.si, self.no = None, "", None, None
+        self.pendiente, self.base, self.si, self.no, self.ultima = None, "", None, None, ""
         self.repreguntas = self.turnos = 0
 
 
@@ -78,6 +79,37 @@ class Turno:
     repregunta: str | None = None
     repreguntar: bool = True            # False: no vuelvas a preguntar este dato (se superó el máximo)
     derivar: str | None = None          # categoría del guardrail a la que derivar (el cliente confirmó que quiere reclamar)
+
+
+_PREGUNTAS = {"lugar": PREGUNTA_LUGAR, "lugar_confirmar": PREGUNTA_LUGAR, "monto": PREGUNTA_MONTO,
+              "antiguedad": PREGUNTA_ANTIGUEDAD, "pedido": PREGUNTA_PEDIDO, "reclamo": PREGUNTA_RECLAMO}
+
+
+def recordar_pregunta(sesion: Sesion, texto: str) -> None:
+    """Si con esta respuesta quedó algo pendiente, guarda la pregunta que se le hizo al cliente (desde el último "¿", o la
+    fija del dato si la respuesta no la trae) para poder repetirla si el cliente contesta otra cosa."""
+    if sesion.pendiente and sesion.turnos == 0:
+        i = texto.rfind("¿")
+        sesion.ultima = texto[i:] if i >= 0 else _PREGUNTAS.get(sesion.pendiente, "")
+
+
+def dice_si_o_no(mensaje: str) -> bool:
+    t = normalizar(mensaje).strip(" ¿?¡!.,")
+    return bool(_SI.match(t) or _NO.match(t))
+
+
+def pregunta_pendiente(sesion: Sesion) -> str:
+    return sesion.ultima or _PREGUNTAS.get(sesion.pendiente or "", "")
+
+
+def retomar(sesion: Sesion, previo: Sesion) -> bool:
+    """El cliente dijo otra cosa que no respondía lo pendiente y ya se le contestó: se vuelve a dejar abierto lo que
+    estaba esperando (con un turno más gastado). False si ya pasaron los `MAX_TURNOS`."""
+    if previo.turnos + 1 > MAX_TURNOS:
+        return False
+    sesion.pendiente, sesion.base, sesion.si, sesion.no = previo.pendiente, previo.base, previo.si, previo.no
+    sesion.repreguntas, sesion.ultima, sesion.turnos = previo.repreguntas, previo.ultima, previo.turnos + 1
+    return True
 
 
 def _es_un_intento(mensaje: str) -> bool:
