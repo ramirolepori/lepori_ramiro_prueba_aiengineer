@@ -14,7 +14,7 @@ el dato pendiente se olvida a los `MAX_TURNOS` mensajes y se repregunta como má
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from . import guardrails
 from .lugares import PREGUNTA_LUGAR, Lugar, resolver_lugares
@@ -60,7 +60,7 @@ class Sesion:
     repreguntas: int = 0
     turnos: int = 0                     # mensajes desde que quedó pendiente
     ultima: str = ""                    # la pregunta tal como se le hizo al cliente, para volver a hacerla
-    nombre: str = ""                    # cómo se presentó (ya validado); no se olvida con lo pendiente
+    datos: dict = field(default_factory=dict)   # lo que el cliente dijo (nombre, pedido, lugar, monto); ver recuerdos.py
 
     def esperar(self, pendiente: str, base: str, si: Lugar | None = None, no: Lugar | None = None) -> None:
         if self.pendiente != pendiente or self.base != base:

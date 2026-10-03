@@ -26,6 +26,7 @@ from .pedidos import consultar_estado_pedido, extraer_identificadores_raros, ext
 from .config import Config
 from .embeddings import ClienteEmbeddings
 from .lugares import confirmacion, resolver_lugares, respuesta_envio, respuesta_envio_sin_lugar
+from .recuerdos import anotar, clave_del_recuerdo, responder_recuerdo
 from .rag import IndiceBM25, RecuperadorHibrido, Resultado as ResultadoRAG, crear_recuperador, tokenizar, _PIDE_CANAL
 from .sesion import (MAX_TURNOS, PREGUNTA_ANTIGUEDAD, PREGUNTA_MONTO, PREGUNTA_RECLAMO, TIEMPO, Sesion, dice_si_o_no, interpretar,
                      pregunta_pendiente, recordar_pregunta, retomar)
@@ -106,6 +107,8 @@ class AgenteSoporte:
                     and retomar(sesion, previo)):
                 r.texto = r.texto + chr(10) * 2 + pregunta_pendiente(sesion)
             recordar_pregunta(sesion, r.texto)
+            if r.estado != "bloqueado" and not r.conversacional:
+                anotar(sesion.datos, pregunta)
         total_ms = (time.perf_counter() - t0) * 1000
         r.tiempos = cron.resumen(total_ms, cron.embeddings_s * 1000, cron.embeddings_n)
         ev("fin", estado=r.estado, fuentes=r.fuentes, tiempos=r.tiempos)
@@ -172,16 +175,16 @@ class AgenteSoporte:
                                  [e.categoria for e in escalamientos], pedidos)
             return Respuesta(derivacion, "escalado", escalamientos=[e.categoria for e in escalamientos])
 
-        if _PREGUNTA_SU_NOMBRE.search(guardrails.normalizar(pregunta)):
-            ev("su_nombre", sabido=bool(sesion is not None and sesion.nombre))
-            if sesion is not None and sesion.nombre:
-                return Respuesta(f"Te llamás {sesion.nombre}.", "respondido", conversacional=True)
-            return Respuesta("Todavía no me dijiste tu nombre. Si querés, decime cómo te llamás.", "respondido", conversacional=True)
+        clave = clave_del_recuerdo(pregunta)
+        if clave:
+            ev("recuerdo", dato=clave, sabido=bool(sesion is not None and sesion.datos.get(clave)))
+            return Respuesta(responder_recuerdo(sesion.datos if sesion is not None else None, clave), "respondido",
+                             conversacional=True)
         if _es_saludo(pregunta):
             ev("saludo")
             nombre = _nombre_dicho(pregunta)
             if sesion is not None and nombre:
-                sesion.nombre = nombre
+                sesion.datos["nombre"] = nombre
             return Respuesta(MENSAJE_SALUDO.replace("¡Hola!", f"¡Hola, {nombre}!", 1) if nombre else MENSAJE_SALUDO, "respondido")
         if _es_despedida(pregunta):
             ev("despedida")
@@ -518,14 +521,10 @@ def _nombre_dicho(pregunta: str) -> str | None:
     return " ".join(w.capitalize() for w in palabras)
 
 
-_PREGUNTA_SU_NOMBRE = re.compile(r"como me llamo|cual es mi nombre|como es mi nombre|sabes (?:mi nombre|como me llamo)|"
-                                 r"te acordas de mi nombre|recordas mi nombre|(?:decime|dime) mi nombre")
-
-
 def _recordar_nombre(pregunta: str, sesion: Sesion | None) -> None:
     nombre = _nombre_dicho(pregunta)
     if sesion is not None and nombre:
-        sesion.nombre = nombre
+        sesion.datos["nombre"] = nombre
 
 
 def _saludar(pregunta: str, resto: str) -> str:

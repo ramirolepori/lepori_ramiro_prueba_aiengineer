@@ -12,7 +12,7 @@ Un agente que se ajusta mirando las mismas frases con las que se mide da cifras 
 - Lotes independientes: frases escritas por una persona que no escribió el código ni las anclas (`python -m tiendahogar.independiente`). Cada línea lleva un código de lo esperado (por ejemplo `R` reembolso de más de $500, `T` queja de trato, `F` facturación, `L` legal, `OK` no derivar, `P=1001` pregunta por un pedido con su número, `PX=DRO-1002` identificador con formato raro, `D=garantia+devoluciones` documentos esperados, `X` fuera de alcance). Un `~` al final indica que derivar también es válido (preguntas por el canal de contacto).
 - Orígenes que se reportan por separado: las frases de Ramiro, un lote 2 escrito por Claude con el estilo y la jerga de las de Ramiro (lunfardo y colombianismos) y variantes automáticas (sin tildes, mayúsculas, errores de tipeo). Las frases del lote 2 no son independientes (las escribió quien escribió el código) y sirven como material de desarrollo.
 - Regla: la primera medición de un lote es la limpia. Después de corregir fallos a partir de un lote, sus cifras pasan a ser optimistas y la prueba vuelve a ser un lote nuevo. Las correcciones se hacen con reglas generales y no copiando frases.
-- Además, los 815 tests de `pytest` fijan los comportamientos (ver la sección de pruebas de `SUBMISSION.md`).
+- Además, los 820 tests de `pytest` fijan los comportamientos (ver la sección de pruebas de `SUBMISSION.md`).
 
 ## Alternativas descartadas
 
