@@ -160,3 +160,50 @@ def test_formas_de_dar_el_numero_de_pedido(agente, respuesta):
 def test_pedido_que_no_se_da_se_repregunta_y_despues_se_corta(agente):
     s, rs = charlar(agente, "Quiero saber el estado de mi pedido", "no lo tengo", "no sé", "no tengo")
     assert "formato ORD-XXXX" in rs[1].texto and "Sin el número de pedido" in rs[3].texto and s.pendiente == "pedido"
+
+
+# --- antigüedad de la compra (garantía y devolución) ---------------------------------------------------------
+
+def test_devolucion_sin_decir_cuando_se_compro_se_pregunta(agente):
+    s, (r1, r2) = charlar(agente, "Quiero devolver mi licuadora", "hace 3 semanas")
+    assert r1.texto.startswith("¿Hace cuánto lo compraste?") and "30 días" in r1.texto and "12 meses" in r1.texto
+    assert s.pendiente is None and "hace 3 semanas" not in r2.texto           # la pregunta se consume
+    assert r2.estado == "respondido" and "30 días" in r2.texto and "¿Hace cuánto" not in r2.texto
+
+
+def test_garantia_sin_decir_cuando_se_compro_se_pregunta(agente):
+    s, (r1, r2) = charlar(agente, "Se me rompió la licuadora, me la cubre la garantía?", "hace 2 meses")
+    assert r1.texto.startswith("¿Hace cuánto lo compraste?")
+    assert "6 meses" in r2.texto and "¿Hace cuánto" not in r2.texto
+
+
+@pytest.mark.parametrize("respuesta", ["3 semanas", "hace 45 días", "ayer", "un año", "el mes pasado"])
+def test_formas_de_decir_cuanto_hace(agente, respuesta):
+    s, (r1, r2) = charlar(agente, "Quiero devolver mi licuadora", respuesta)
+    assert "¿Hace cuánto" not in r2.texto and s.pendiente is None
+
+
+def test_antiguedad_no_recordada_responde_la_politica_y_sigue_abierto(agente):
+    s = Sesion()
+    agente.responder("Quiero devolver mi licuadora", s)
+    r2 = agente.responder("no me acuerdo", s)
+    assert "¿Hace cuánto" not in r2.texto and "30 días" in r2.texto and s.pendiente == "antiguedad"
+    assert "¿Hace cuánto" not in agente.responder("hace 10 días", s).texto
+
+
+@pytest.mark.parametrize("pregunta", [
+    "Cuánto dura la garantía de una licuadora?",                                   # política general
+    "Puedo devolver un producto en liquidación?",                                  # no se devuelve en ningún caso
+    "Compré una lavadora hace 14 meses y dejó de andar, aplica garantía?",         # ya dice cuándo
+    "Mi lavadora tiene 45 días y falla, la puedo devolver?",                       # ya dice cuándo
+    "Voy a comprar una heladera, la puedo devolver si no me gusta?",               # compra futura
+    "Quiero un reembolso por lo que compré, me costó 350 pesos",                   # es de reembolsos
+    "Cómo hago para devolver mi lavadora?",                                        # pregunta cómo, no si corresponde
+    "Se me quemó la plancha porque la dejé prendida, me la cubren?",              # dice la causa (mal uso)
+])
+def test_no_se_pregunta_la_antiguedad_si_no_hace_falta(agente, pregunta):
+    assert "¿Hace cuánto lo compraste?" not in agente.responder(pregunta).texto
+
+
+def test_la_antiguedad_no_se_pregunta_si_hay_un_pedido(agente):
+    assert "¿Hace cuánto lo compraste?" not in agente.responder("Quiero devolver mi pedido ORD-1002").texto

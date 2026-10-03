@@ -25,7 +25,7 @@ from .config import Config
 from .embeddings import ClienteEmbeddings
 from .lugares import confirmacion, resolver_lugares, respuesta_envio, respuesta_envio_sin_lugar
 from .rag import IndiceBM25, RecuperadorHibrido, Resultado as ResultadoRAG, crear_recuperador
-from .sesion import PREGUNTA_MONTO, Sesion, interpretar
+from .sesion import PREGUNTA_ANTIGUEDAD, PREGUNTA_MONTO, TIEMPO, Sesion, interpretar
 from .semantica import INTENCIONES, ClasificadorSemantico, crear_clasificador, segmentar
 from .tiempos import Cronometro, activar, etapa
 
@@ -198,6 +198,11 @@ class AgenteSoporte:
             if not pedidos and set(fuentes) <= {"reembolsos", "devoluciones"}:
                 return Respuesta(PREGUNTA_MONTO, "respondido", ["reembolsos"])
             notas.append(PREGUNTA_MONTO)
+        elif repreguntar and not pedidos and not consulta_sin_numero and _pregunta_por_su_compra(pregunta, fuentes):
+            # Quiere devolver o usar la garantía de algo y no dice cuándo lo compró: de eso depende la respuesta
+            if sesion is not None:
+                sesion.esperar("antiguedad", pregunta)
+            return Respuesta(PREGUNTA_ANTIGUEDAD, "respondido", fuentes)
         if not resultados and not pedidos:
             if not con_respaldo:
                 return None
@@ -265,6 +270,8 @@ class AgenteSoporte:
         p = guardrails.normalizar(pregunta)
         if _COMPRA_FUTURA.search(p):          # "voy a comprar...", "si compro mañana...": todavía no hay pedido
             return False
+        if _TEMA_DE_POLITICA.search(p) and not _TEMA_DE_ESTADO.search(p):
+            return False                      # habla de devolver, de la garantía o de una falla, no del estado de un envío
         # Por significado, y solo si habla de algo propio ("mi pedido", "compré", "hice un pedido"): "cuánto tarda el
         # envío?" a secas es una pregunta de política, no el estado de un pedido.
         if _COMPRA_PROPIA.search(p) and INTENCIONES[0] in self.clasificador.detectar(pregunta, INTENCIONES):
@@ -292,6 +299,26 @@ _PEDIDO_PERSONAL = re.compile(r"\b(?:quiero|quisiera|necesito|pido|solicito|exij
 _PREGUNTA_DE_POLITICA = re.compile(r"cuanto|cuando|como|quien|plazo|tarda|demora|politica|condicion|requisito|aprueba|"
                                    r"aprobacion|donde|que pasa|metodo")
 _PRODUCTOS = ("refrigeradora", "heladera", "nevera", "lavadora", "estufa", "licuadora", "plancha", "tostadora")
+
+
+_TEMA_DE_POLITICA = re.compile(r"devol|garantia|reembols|cambiar|rompi|descompus|defect|\bfall")
+_TEMA_DE_ESTADO = re.compile(r"estado|donde (?:esta|anda|viene)|rastre|seguimiento|llega|demora|cuando (?:llega|viene|sale)|despach")
+_SU_COMPRA = re.compile(r"\b(?:mi|mis|compre|compramos|hice|pedi)\b|"
+                        r"\b(?:quiero|quisiera|necesito|puedo|podria|se puede) (?:devolver|cambiar|reparar|arreglar)\b|"
+                        r"\b(?:la|lo|las|los) (?:puedo|podria|se puede) (?:devolver|cambiar)\b|\bse me\b|"
+                        r"\bme (?:la|lo|las|los) (?:cubre|cubren|aceptan|cambian|reparan|devuelven)\b")
+_NO_SE_DEVUELVE = re.compile(r"liquidacion|personalizad|oferta final|a medida|"
+                             r"\bporque\b|mal uso|se me cayo|golpe|\bmoj[eo]\b")    # o dice la causa: puede decidir otra regla
+
+
+def _pregunta_por_su_compra(pregunta: str, fuentes: list[str]) -> bool:
+    """¿Pregunta por la devolución o la garantía de algo suyo sin decir cuándo lo compró? Solo entonces conviene
+    preguntar la antigüedad: una pregunta de política ("cuánto dura la garantía?"), una compra futura, un producto en
+    liquidación o personalizado (no se devuelve en ningún caso) o una que ya trae el tiempo no la necesitan."""
+    p = guardrails.normalizar(pregunta)
+    return bool(fuentes and set(fuentes) <= {"devoluciones", "garantia"} and _SU_COMPRA.search(p)
+                and not _PREGUNTA_DE_POLITICA.search(p) and not TIEMPO.search(p) and not _COMPRA_FUTURA.search(p)
+                and not _NO_SE_DEVUELVE.search(p) and not _PIDE_PLATA.search(p))
 
 
 def _pide_reembolso(pregunta: str) -> bool:

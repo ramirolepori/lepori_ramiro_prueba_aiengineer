@@ -43,7 +43,7 @@ python -m tiendahogar            # chat interactivo con memoria de sesión, lín
 
 En Windows, si la consola muestra mal las tildes: `$env:PYTHONUTF8 = "1"`.
 
-Con una sola pregunta el agente no recuerda nada. En el chat interactivo (o desde código con `agente.responder(pregunta, Sesion())`) recuerda qué dato le pidió al cliente: si falta el lugar para un envío, el monto de un reembolso o el número de un pedido, lo repregunta (como máximo 2 veces, y se olvida a los 5 mensajes) y usa la respuesta. Sin sesión, cada pregunta es independiente.
+Con una sola pregunta el agente no recuerda nada. En el chat interactivo (o desde código con `agente.responder(pregunta, Sesion())`) recuerda qué dato le pidió al cliente: si falta el lugar para un envío, el monto de un reembolso, el número de un pedido o hace cuánto se compró algo que se quiere devolver o usar en garantía, lo repregunta (como máximo 2 veces, y se olvida a los 5 mensajes) y usa la respuesta. Sin sesión, cada pregunta es independiente.
 
 Desde código:
 
@@ -132,4 +132,4 @@ La descripción de cada módulo está en [docs/arquitectura.md](docs/arquitectur
 
 ## Limitaciones
 
-Están detalladas en [SUBMISSION.md](SUBMISSION.md). Las principales: el agente trabaja en español, los clientes de modelo no se probaron contra la API de un proveedor comercial, la memoria se limita al lugar, el monto y el número de pedido, y las cifras de medición salen de conjuntos de frases escritos por el mismo autor del código o ajustados mirándolos.
+Están detalladas en [SUBMISSION.md](SUBMISSION.md). Las principales: el agente trabaja en español, los clientes de modelo no se probaron contra la API de un proveedor comercial, la memoria se limita al lugar, el monto, el número de pedido y la antigüedad de la compra, y las cifras de medición salen de conjuntos de frases escritos por el mismo autor del código o ajustados mirándolos.

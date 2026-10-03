@@ -29,6 +29,10 @@ PREGUNTA_MONTO = (f"¿De cuánto fue la compra? Con ese dato te digo cómo sigue
                   f"se procesa en 5-10 días hábiles, al mismo método de pago original, y por encima de "
                   f"${guardrails.TOPE_REEMBOLSO:,.0f} lo tiene que aprobar un supervisor humano (en ese caso te derivo a "
                   f"{guardrails.CONTACTO}). [reembolsos]")
+PREGUNTA_ANTIGUEDAD = ("¿Hace cuánto lo compraste? Con eso te digo cómo sigue: la devolución se acepta hasta 30 días desde la "
+                       "compra, con el producto sin usar y en su empaque original, y pasado ese plazo solo si tiene un defecto "
+                       "cubierto por la garantía, que dura 12 meses en los electrodomésticos grandes y 6 en los pequeños. "
+                       "[devoluciones] [garantia]")
 PREGUNTA_PEDIDO = "Necesito el número de pedido (formato ORD-XXXX) para consultarlo."
 SIN_PEDIDO = ("Sin el número de pedido (formato ORD-XXXX) no puedo consultar su estado. Cuando lo tengas, escribilo y "
               "lo reviso.")
@@ -37,6 +41,12 @@ _SI = re.compile(r"^(?:si|sii+|claro|asi es|correcto|exacto|exactamente|dale|aja
 _NO = re.compile(r"^(?:no|nop|nope|negativo|para nada)\b(?! (?:se|lo se|recuerdo|me acuerdo|tengo|sabria))")
 _NO_SE = re.compile(r"\bno (?:se|lo se|recuerdo|me acuerdo|tengo idea|sabria)\b|ni idea|\bno (?:lo )?tengo\b")
 _DEFINIDOS = {"capital", "otra", "exterior"}
+
+_NUMERO = r"(?:\d+|un|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|veinte|treinta)"
+# Cualquier forma de decir cuánto hace de la compra ("hace 3 semanas", "45 días", "ayer", "el mes pasado", "hace poco")
+TIEMPO = re.compile(rf"\b{_NUMERO}\s+(?:dias?|semanas?|meses|mes|anos?)\b|"
+                    r"\b(?:ayer|anteayer|antes de ayer|hoy|recien|esta semana|este mes|la semana pasada|el mes pasado|"
+                    r"el ano pasado|hace (?:poco|mucho|bastante|un rato|un tiempo))\b")
 
 
 @dataclass
@@ -118,6 +128,17 @@ def interpretar(sesion: Sesion, mensaje: str) -> Turno | None:
             return Turno(base, repreguntar=False)
         if _es_un_intento(mensaje):
             return _reintentar(sesion, PREGUNTA_MONTO, Turno(base, repreguntar=False))
+    elif pendiente == "antiguedad":
+        if TIEMPO.search(t):
+            sesion.limpiar()
+            dicho = mensaje.strip(" .!¡")
+            if re.match(rf"{_NUMERO}\s", t):                # "3 semanas" -> "hace 3 semanas"
+                dicho = f"hace {dicho}"
+            return Turno(f"{base} Antigüedad: {dicho}.")
+        if _NO_SE.search(t):                    # no recuerda cuándo: se responde la política sin insistir
+            return Turno(base, repreguntar=False)
+        if _es_un_intento(mensaje):
+            return _reintentar(sesion, PREGUNTA_ANTIGUEDAD, Turno(base, repreguntar=False))
     elif pendiente == "pedido":
         if extraer_referencias(mensaje) or extraer_identificadores_raros(mensaje):
             sesion.limpiar()
