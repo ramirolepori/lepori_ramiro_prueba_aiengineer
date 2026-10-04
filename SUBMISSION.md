@@ -14,7 +14,7 @@ cliente ── pregunta (y, si hay, una sesión) ──► AgenteSoporte.respond
   7. validación de la salida y notas obligatorias agregadas por código ─► Respuesta
 ```
 
-El flujo lo decide el código y el modelo de lenguaje solo redacta con lo recuperado. Lo que el enunciado trata como regla (derivar, no inventar datos, no aprobar reembolsos) corre en código antes o después del modelo. Así el comportamiento crítico es el mismo con cualquier modelo, también uno chico y local, y se prueba sin red. Sin modelo configurado el agente funciona completo en modo offline. Una sesión opcional recuerda qué dato le pidió al cliente (lugar, monto, número de pedido, antigüedad de la compra) y lo repregunta en vez de volcar un documento entero.
+El flujo lo decide el código y el modelo de lenguaje solo redacta con lo recuperado. Lo que el enunciado trata como regla (derivar, no inventar datos, no aprobar reembolsos) corre en código antes o después del modelo. Así el comportamiento crítico es el mismo con cualquier modelo, también uno chico y local, y se prueba sin red. Sin modelo configurado el agente funciona completo en modo offline. Una sesión opcional recuerda qué dato le pidió al cliente (lugar, monto, número de pedido, antigüedad de la compra) y lo repregunta en vez de volcar un documento entero. Con "quiero hacer una devolución" pide el número de pedido (o hace cuánto compró): si el cliente lo da, el agente consulta la tool, dice qué estado tiene el pedido (entregado, en camino, cancelado) y sigue con la cuenta del plazo sin perder el hilo.
 
 Trade-offs por el límite de tiempo y los datos que dan los documentos:
 - Sin framework de agentes ni tool calling decidido por el modelo. Con 5 documentos, una tool y un flujo lineal, un framework agrega capas y un modelo chico se equivoca justo en los casos críticos. Sería razonable si el corpus y las tools crecen. [ADR 0002](docs/adr/0002-orquestacion-deterministica-sin-framework.md).
@@ -34,7 +34,7 @@ Todas las decisiones, con sus alternativas y su evidencia, están en [docs/adr](
 
 ## Pruebas automatizadas
 
-Comando exacto: `python -m pytest tests/` (o `pytest tests/` si pytest ya está instalado). Son 828 tests que corren en unos 20 segundos, sin red ni `.env`, en modo offline. Hay dos opt-in que necesitan Ollama (`TIENDAHOGAR_TEST_OLLAMA=1`).
+Comando exacto: `python -m pytest tests/` (o `pytest tests/` si pytest ya está instalado). Son 920 tests que corren en unos 20 segundos, sin red ni `.env`, en modo offline. Hay dos opt-in que necesitan Ollama (`TIENDAHOGAR_TEST_OLLAMA=1`).
 
 Lo primero que hay que leer es `tests/test_criticos.py`: los tres casos críticos del enunciado y los límites ($500 no escala y $501 sí, liquidación, pedido inexistente) en pocos tests. El detalle está repartido así:
 - Recuperación: `test_rag.py` y `test_recuperador.py`. Cada documento se recupera con su pregunta y las preguntas fuera de alcance no superan el umbral.
@@ -66,6 +66,7 @@ Mediciones sobre conjuntos de frases (no son tests; se corren con `python -m tie
 - El RAG a veces recupera solo uno de dos documentos en preguntas que los mezclan y falla en paráfrasis lejanas. En modo offline, una pregunta fuera de tema que comparte una palabra del dominio recibe el documento completo.
 - Varias consultas a la vez: sin modelos, 32 clientes simultáneos dan las mismas respuestas que uno solo, sin errores. No medí varios clientes contra un mismo modelo de lenguaje.
 - Los documentos no dicen precios, marcas ni garantía extendida: el agente responde que no tiene esa información.
+- Decisiones propias que agregué después de una revisión externa: un incidente de seguridad con un producto (lesión, descarga, incendio) se deriva a una persona como quinta categoría, solo por reglas (no tiene frases de ejemplo para la capa semántica); el tope de $500 se aplica por reembolso y no a la suma de varios; un monto dicho como umbral ("los reembolsos de más de $500...") es una pregunta por la regla y se responde con el Doc 4; y la garantía se responde con una cuenta cuando el cliente nombra el producto y cuánto hace que lo tiene. Pedir una copia de la factura no es una disputa: se dice que los documentos no cubren eso y se ofrece derivar si es un reclamo. "No quiero un reembolso, solo saber la garantía" no deriva ni responde reembolsos.
 - Los tests y las mediciones se corrieron en Windows con Python 3.11.
 
 ## Tiempo invertido

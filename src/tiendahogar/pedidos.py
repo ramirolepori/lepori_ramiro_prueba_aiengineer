@@ -6,6 +6,8 @@ import re
 import unicodedata
 from typing import Any
 
+from .montos import _leer_numero_en_palabras
+
 PEDIDOS: dict[str, dict[str, str]] = {
     "ORD-1001": {"producto": "Refrigeradora", "estado": "En tránsito", "entrega_estimada": "3 días hábiles"},
     "ORD-1002": {"producto": "Licuadora", "estado": "Entregado", "entrega_estimada": "—"},
@@ -15,15 +17,25 @@ PEDIDOS: dict[str, dict[str, str]] = {
 
 NO_ENCONTRADO = "No encontrado"
 
+_INVISIBLES = dict.fromkeys(map(ord, "​‌‍⁠﻿"))
+
+
+def _limpiar(texto: str) -> str:
+    """Quita lo que se cuela al copiar y pegar: espacios al borde, caracteres invisibles, anchos completos (ＯＲＤ) y guiones raros."""
+    t = unicodedata.normalize("NFKC", texto).translate(_INVISIBLES)
+    return re.sub("[‐‑‒–—―−]", "-", t).strip()
+
+
 def consultar_estado_pedido(order_id: str) -> dict[str, Any]:
     """Devuelve los datos del pedido, o `estado: "No encontrado"` si el id no existe. Nunca inventa datos.
 
     Solo se normaliza may\u00fasculas y espacios en los bordes ("ord-1001 " vale como "ORD-1001").
     """
-    clave = order_id.strip().upper() if isinstance(order_id, str) else ""
+    clave = _limpiar(order_id).upper() if isinstance(order_id, str) else ""
     datos = PEDIDOS.get(clave)
     if datos is None:
-        return {"order_id": order_id, "encontrado": False, "estado": NO_ENCONTRADO,
+        # se devuelve tal cual lo recibió si es texto; otra cosa (bytes, número) se pasa a texto para que la respuesta sea serializable
+        return {"order_id": order_id if isinstance(order_id, str) or order_id is None else str(order_id), "encontrado": False, "estado": NO_ENCONTRADO,
                 "mensaje": "No existe un pedido con ese n\u00famero en el sistema."}
     return {"order_id": clave, "encontrado": True, **datos}
 
@@ -62,9 +74,23 @@ _RE_CODIGO_SUELTO = re.compile(r"(?<![a-z0-9@])([a-z]{2,6}[-_]{1,2}\d{3,8})(?![a
 _HABLA_DE_UN_PEDIDO = re.compile(r"\b(?:ordene|orden|pedido|pedi|compra|compre|adquiri|encargue|estado|seguimiento|numero|nro)\b")
 
 
+_RE_ORD_PEGADO = re.compile(rf"(?<![a-z0-9])ord{_SEP_ORD}\d{{3,8}}[a-z]\w*")
+
+
 def _sin_tildes(texto: str) -> str:
     s = unicodedata.normalize("NFD", texto.lower())
     return "".join(c for c in s if unicodedata.category(c) != "Mn")
+
+
+_RE_EN_PALABRAS = re.compile(r"\b(?:pedidos?|ordenes|orden|compras?)\s+(?:(?:de (?:pedido|compra|orden)|numero|nro\w*)\s+)*"
+                             r"((?:[a-z]+\s*)+)")
+
+
+def _numero_en_palabras(texto: str) -> int | None:
+    """'mil uno' -> 1001. Solo si todo lo que sigue a 'pedido' son palabras de número."""
+    toks = texto.split()
+    leido = _leer_numero_en_palabras(toks, 0)
+    return int(leido[0]) if leido and leido[1] == len(toks) else None
 
 
 def extraer_referencias(texto: str) -> list[tuple[str, str]]:
@@ -84,6 +110,10 @@ def extraer_referencias(texto: str) -> list[tuple[str, str]]:
             hallados.append((m.start(2) + extra.start(), extra.group(0), extra.group(0)))
     for m in _RE_NUMERO_SUELTO.finditer(t):
         hallados.append((m.start(1), m.group(1), m.group(1)))
+    for m in _RE_EN_PALABRAS.finditer(t):
+        valor = _numero_en_palabras(m.group(1))
+        if valor is not None and 100 <= valor <= 99999999:
+            hallados.append((m.start(1), str(valor), m.group(1).strip()))
     vistos: dict[str, str] = {}
     for _, digitos, literal in sorted(hallados):
         vistos.setdefault(f"ORD-{digitos}", literal)
@@ -96,6 +126,8 @@ def extraer_identificadores_raros(texto: str) -> list[str]:
     t = _sin_tildes(texto)
     raros: list[str] = []
     candidatos = list(_RE_RARO.finditer(t))
+    for m in _RE_ORD_PEGADO.finditer(t):
+        raros.append(texto[m.start():m.end()])
     if _HABLA_DE_UN_PEDIDO.search(t):
         candidatos += list(_RE_CODIGO_SUELTO.finditer(t))
     for m in candidatos:

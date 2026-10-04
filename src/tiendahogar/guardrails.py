@@ -13,7 +13,7 @@ import re
 from dataclasses import dataclass
 
 from .montos import extraer_montos
-from .rag import normalizar
+from .rag import _PIDE_CANAL, normalizar
 from .semantica import ClasificadorSemantico, segmentar
 
 CONTACTO = "soporte@tiendahogar.example"
@@ -29,6 +29,17 @@ _LEGAL = re.compile(
 _AGRESION = (r"me (?:grito|gritaron|empujo|empujaron|escupio|escupieron|echo|hecho|echaron|bardeo|bardearon|insulto|insultaron|"
              r"humillo|humillaron|amenazo|amenazaron|golpeo|golpearon|siguio|siguieron|persiguio|persiguieron|ignoro|ignoraron|"
              r"menospreci\w+|corto (?:el telefono|la llamada)|cortaron (?:el telefono|la llamada))")
+_EXAGERACION = re.compile(r"\bes (?:una estafa|un fraude|un robo) que\b")
+# Lesiones o riesgo con un producto: los documentos no dicen qué hacer, lo ve una persona
+_SEGURIDAD = re.compile(
+    r"\bme (?:lastim\w+|lesion\w+|electrocut\w+|quem\w+ con|cort\w+ con|golpe\w* con|intoxic\w+)\b|"
+    r"\b(?:mi|nuestr[oa]) (?:hij[oa]|nen[ea]|bebe|mama|papa|espos[oa]|pareja|abuel[oa]|vecin[oa]|perr[oa]|gat[oa]|mascota)"
+    r" se (?:lastim\w+|lesion\w+|electrocut\w+|quem\w+|cort\w+|intoxic\w+)\b|"
+    r"\bse (?:lastim\w+|lesion\w+|electrocut\w+) con\b|"
+    r"\b(?:golpe de corriente|descarga electrica|me dio (?:una )?(?:patada|corriente|descarga)|"
+    r"(?:se|me) incendi\w+|se prendio fuego|prendio fuego|principio de incendio|cortocircuito|"
+    r"(?:salio|echaba|largaba) (?:humo|chispas|fuego)|exploto|explosion)\b"
+)
 _TRATO = re.compile(
     r"(maltrat\w+|grosero|grosera|groseria\w*|descortes\w*|destrat\w+|insult\w+|falta de respeto|"
     r"irrespetuos\w+|(?:mala|pesima|horrible) (?:atencion|actitud)|mal trato|trato (?:horrible|pesimo|malo|inadecuado)|"
@@ -39,6 +50,7 @@ _TRATO = re.compile(
     rf"\b{_AGRESION}\b|"
     r"casi me (?:pega|pego|golpea|golpeo)|me agarr\w+ a las pinas|(?:me voy|me fui|fui) a las manos|"
     r"no me (?:dejo|dejaron|permitio|permitieron|quiso|quisieron) (?:entrar|pasar|atender|escuchar|ayudar)|"
+    r"no me gust\w+ (?:la |el |como )?(?:atencion|trato|me atendieron|me trataron)|"
     r"desubicad\w+|maleducad\w+|mal educad\w+|prepotent\w+|"
     r"(?:con|de) (?:desprecio|mala onda|malas formas|malos modos|mala cara|desgano)|"
     r"me trat(?:o|aron) como|"
@@ -83,7 +95,7 @@ _RECLAMO_PERSONAL = re.compile(
 
 @dataclass(frozen=True)
 class Escalamiento:
-    categoria: str     # "reembolso_mayor_500" | "queja_trato" | "disputa_facturacion" | "tema_legal"
+    categoria: str     # "reembolso_mayor_500" | "queja_trato" | "disputa_facturacion" | "tema_legal" | "incidente_seguridad"
     motivo: str
     mensaje: str       # lo que se le responde al cliente
     origen: str = "regla"   # "regla" o "semantica"
@@ -92,7 +104,8 @@ class Escalamiento:
 def _es_consulta_de_canal(texto_norm: str) -> bool:
     """'Con quién hablo si tengo un tema legal?' pregunta por el canal: se responde con el Doc 5, no se deriva
     a ciegas. Una frase con un reclamo propio ('voy a demandar, con quién hablo?') sí se deriva."""
-    return bool(_CONSULTA_CANAL.search(texto_norm.strip(" ¿?¡!"))) and not _RECLAMO_PERSONAL.search(texto_norm)
+    pide = _CONSULTA_CANAL.search(texto_norm.strip(" ¿?¡!")) or _PIDE_CANAL.search(texto_norm)
+    return bool(pide) and not _RECLAMO_PERSONAL.search(texto_norm)
 
 
 def _mensaje(categoria: str, monto: float | None = None) -> tuple[str, str]:
@@ -100,6 +113,10 @@ def _mensaje(categoria: str, monto: float | None = None) -> tuple[str, str]:
     if categoria == "tema_legal":
         return "tema legal", (f"Los temas legales los atiende una persona del equipo y no puedo resolverlos yo. "
                               f"Escribí a {CONTACTO} y te van a ayudar.")
+    if categoria == "incidente_seguridad":
+        return "incidente de seguridad con un producto", (
+            f"Lamento lo que pasó. Un incidente de seguridad con un producto lo tiene que ver una persona del equipo y no "
+            f"puedo resolverlo yo. Escribí a {CONTACTO} y contales lo ocurrido.")
     if categoria == "queja_trato":
         return "queja sobre el trato de un empleado", (
             f"Lamento que hayas tenido esa experiencia. Las quejas sobre el trato de un empleado las gestiona "
@@ -143,8 +160,36 @@ _ELOGIO = re.compile(r"amable|genio|excelente|bueniss|atent[oa]|me ayudo|buena a
 _MONEDA = re.compile(r"\$|usd|u\$s|pesos|dolar|euro|mango|luca|guita|plata|dinero|\d\s?k\b")
 
 
+# "Los reembolsos de más de $600, los aprueba un supervisor?" pregunta por la regla (habla del umbral, no de un reembolso
+# propio): se responde con el Doc 4 y no se deriva. Con algo propio ("quiero", "mi compra", "pagué") sí se deriva.
+_UMBRAL = re.compile(r"\b(?:mayor(?:es)?|mas|menor(?:es)?|menos|superior(?:es)?|inferior(?:es)?|hasta|supera\w*|excede\w*|"
+                     r"arriba|encima|debajo)\b (?:de |a |que |del? )?(?:los |las )?(?:\$|u\$s|usd|\d|mil\b|cien|quinientos|"
+                     r"seiscientos|setecientos|ochocientos|novecientos)")
+_ALGO_PROPIO = re.compile(r"\b(?:quiero|necesito|quisiera|pido|solicito|exijo|dame|devuelvan|reembolsen|reintegren|"
+                          r"mi|mis|mio|mia|compre|compramos|pague|pagamos|pedi|me (?:devuelven|reembolsan|reintegran|deben|"
+                          r"corresponde|cobraron|salio|costo))\b")
+# Para aceptar un monto alto detectado solo por significado hace falta que hable de recuperar plata: un precio nombrado de
+# paso ("garantía de una refrigeradora de $2000") no es un pedido de reembolso
+_RECUPERAR_PLATA = re.compile(r"recuper|de vuelta|me corresponde|me deben|plata|dinero|guita|abon|saldo")
+
+
+# "No quiero un reembolso de $900, solo quiero saber la garantía": dice lo que NO quiere, no hay nada que derivar. Con "sino"
+# ("no quiero uno de $200 sino de $900") sí pide uno, y se evalúa como siempre
+NIEGA_REEMBOLSO = re.compile(r"\bno (?:quiero|pido|necesito|busco|estoy pidiendo|voy a pedir|estoy buscando)\b.{0,25}\b(?:reembols\w*|reintegr\w*|devol\w*|plata|dinero)"
+                           r"(?!.*(?:\bsino\b|\b(?:quiero|necesito|pido) (?:un |el |mi )?(?:reembols|reintegr)))")
+# Pedir una copia de la factura no es discutirla: los documentos no dicen cómo se pide, y si es un reclamo lo ve una persona
+PIDE_COPIA = re.compile(r"\b(?:copia|duplicado|reenvio|reenviar|reenvien|reenvie)\b (?:de |del )?(?:mi |la |el |una |un )?"
+                        r"(?:factura|comprobante|ticket|recibo)|"
+                        r"\b(?:necesito|quiero|quisiera|pido|solicito|mandame|enviame|reenviame|pasame|que me (?:envien|manden|reenvien|pasen))"
+                        r" (?:una? |la |mi |el |copia de (?:la |mi )?)?(?:factura|comprobante)\b")
+
+
+def _pregunta_por_el_umbral(t: str) -> bool:
+    return bool(_UMBRAL.search(t)) and not _ALGO_PROPIO.search(t)
+
+
 def _reembolso_alto(texto_norm: str, texto: str) -> float | None:
-    if not _intencion_de_reembolso(texto_norm):
+    if not _intencion_de_reembolso(texto_norm) or _pregunta_por_el_umbral(texto_norm) or NIEGA_REEMBOLSO.search(texto_norm):
         return None
     mayores = [m for m in extraer_montos(texto) if m > TOPE_REEMBOLSO]
     return max(mayores) if mayores else None
@@ -160,8 +205,10 @@ def evaluar(pregunta: str, clasificador: ClasificadorSemantico | None = None) ->
     if _es_consulta_de_canal(t):
         return []
     res: dict[str, Escalamiento] = {}
-    for cat, patron in (("tema_legal", _LEGAL), ("queja_trato", _TRATO), ("disputa_facturacion", _FACTURACION)):
-        if patron.search(t):
+    t_legal = _EXAGERACION.sub(" ", t)          # "es una estafa que tarde tanto" es un enojo, no una acusación
+    for cat, patron, texto in (("tema_legal", _LEGAL, t_legal), ("queja_trato", _TRATO, t),
+                               ("disputa_facturacion", _FACTURACION, t), ("incidente_seguridad", _SEGURIDAD, t)):
+        if patron.search(texto):
             res[cat] = Escalamiento(cat, *_mensaje(cat))
     monto = _reembolso_alto(t, pregunta)
     if monto is not None:
@@ -180,12 +227,15 @@ def evaluar(pregunta: str, clasificador: ClasificadorSemantico | None = None) ->
                 continue
             if cat == "queja_trato" and _ELOGIO.search(t):
                 continue
+            if cat == "disputa_facturacion" and PIDE_COPIA.search(t):
+                continue
             if cat == "reembolso_mayor_500":
-                if mayor_monto > TOPE_REEMBOLSO and (_MONEDA.search(t) or _intencion_de_reembolso(t)):
+                if (mayor_monto > TOPE_REEMBOLSO and (_intencion_de_reembolso(t) or (_MONEDA.search(t) and _RECUPERAR_PLATA.search(t)))
+                        and not _pregunta_por_el_umbral(t) and not NIEGA_REEMBOLSO.search(t)):
                     res[cat] = Escalamiento(cat, *_mensaje(cat, mayor_monto), origen="semantica")
             else:
                 res[cat] = Escalamiento(cat, *_mensaje(cat), origen="semantica")
-    orden = ("tema_legal", "queja_trato", "disputa_facturacion", "reembolso_mayor_500")
+    orden = ("incidente_seguridad", "tema_legal", "queja_trato", "disputa_facturacion", "reembolso_mayor_500")
     return [res[c] for c in orden if c in res]
 
 

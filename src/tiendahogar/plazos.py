@@ -52,3 +52,27 @@ def nota_de_devolucion(dias: int) -> str:
                 f"producto tiene un defecto cubierto por la garantía.")
     return (f"Como estás dentro de los {PLAZO_DEVOLUCION_DIAS} días desde la compra, la devolución se acepta si el producto "
             f"está sin usar y en su empaque original.")
+
+
+_GRANDES = ("refrigeradora", "heladera", "nevera", "lavadora", "estufa")
+_CHICOS = ("licuadora", "plancha", "tostadora")
+_TIENE_TIEMPO = re.compile(r"\b(?:hace|tiene|tienen|lleva|llevo|tengo)(?: unos| como| casi| mas de)? " + _NUM + r" (dias?|semanas?|meses|mes|anos?)\b")
+_MESES_POR_UNIDAD = {"dia": 1 / 30, "dias": 1 / 30, "semana": 7 / 30, "semanas": 7 / 30, "mes": 1, "meses": 1, "ano": 12, "anos": 12}
+
+
+def respuesta_de_garantia(texto: str) -> str | None:
+    """Si el cliente nombra un producto del Doc 1 y cuánto hace que lo tiene, aplica el plazo de la garantía con una cuenta
+    (12 meses los grandes, 6 los pequeños). Repite el documento: no agrega ninguna regla. Sin producto o sin tiempo, None."""
+    t = _sin_tildes(texto)
+    producto = next((p for p in _GRANDES + _CHICOS if p in t), None)
+    m = _TIENE_TIEMPO.search(t)
+    if producto is None or m is None or "garant" not in t:
+        return None
+    n = int(m.group(1)) if m.group(1).isdigit() else _NUMEROS[m.group(1)]
+    meses, plazo = n * _MESES_POR_UNIDAD[m.group(2)], (12 if producto in _GRANDES else 6)
+    unidad = {"ano": "año", "anos": "años"}.get(m.group(2), m.group(2))
+    cuanto = f"{m.group(1) if m.group(1).isdigit() else n} {unidad}"
+    if meses <= plazo:
+        return (f"La garantía de tu {producto} es de {plazo} meses desde la fecha de compra: con {cuanto} "
+                f"todavía estás dentro de ese plazo. La garantía cubre defectos de fábrica, no daños por mal uso.")
+    return (f"La garantía de tu {producto} es de {plazo} meses desde la fecha de compra, y con {cuanto} ya pasó ese plazo.")

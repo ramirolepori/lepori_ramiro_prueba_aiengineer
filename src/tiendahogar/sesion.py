@@ -29,7 +29,7 @@ PREGUNTA_MONTO = (f"¿De cuánto fue la compra? Con ese dato te digo cómo sigue
                   f"se procesa en 5-10 días hábiles, al mismo método de pago original, y por encima de "
                   f"${guardrails.TOPE_REEMBOLSO:,.0f} lo tiene que aprobar un supervisor humano (en ese caso te derivo a "
                   f"{guardrails.CONTACTO}). [reembolsos]")
-PREGUNTA_ANTIGUEDAD = ("¿Hace cuánto lo compraste? Con eso te digo cómo sigue: la devolución se acepta hasta 30 días desde la "
+PREGUNTA_ANTIGUEDAD = ("¿Hace cuánto lo compraste? Si tenés el número de pedido (ORD-XXXX), pasámelo y lo reviso. Con eso te digo cómo sigue: la devolución se acepta hasta 30 días desde la "
                        "compra, con el producto sin usar y en su empaque original, y pasado ese plazo solo si tiene un defecto "
                        "cubierto por la garantía, que dura 12 meses en los electrodomésticos grandes y 6 en los pequeños. "
                        "[devoluciones] [garantia]")
@@ -181,6 +181,13 @@ def interpretar(sesion: Sesion, mensaje: str) -> Turno | None:
             if re.match(rf"{_NUMERO}\s", t):                # "3 semanas" -> "hace 3 semanas"
                 dicho = f"hace {dicho}"
             return Turno(f"{base} Antigüedad: {dicho}.")
+        numero = re.fullmatch(r"(?:el |la |lo |mi |es |ese |esa )*(?:pedido |orden |nro\.? |numero |n[°º] |# )?(\d{3,8})", t)
+        if numero:
+            sesion.limpiar()
+            return Turno(f"{base} pedido {numero.group(1)}")
+        if extraer_referencias(mensaje) or extraer_identificadores_raros(mensaje):
+            sesion.limpiar()                    # en vez de la fecha pasó el número de pedido: se consulta ese pedido
+            return Turno(f"{base} {mensaje}")
         if _NO_SE.search(t):                    # no recuerda cuándo: se responde la política sin insistir
             return Turno(base, repreguntar=False)
         if _es_un_intento(mensaje):

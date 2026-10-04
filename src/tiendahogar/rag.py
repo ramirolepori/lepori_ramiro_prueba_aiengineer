@@ -37,7 +37,7 @@ STOPWORDS = {
 # palabra normalizada -> término canónico que se agrega a la consulta y a los fragmentos
 CONCEPTOS = {
     "garantia": ["garantia", "defecto", "defectuoso", "defectuosa", "fabrica", "falla", "fallo", "roto",
-                 "rota", "descompuso", "descompuesto", "cubre", "quemo", "quemado", "quemada", "averia", "averio",
+                 "rota", "rompio", "rompe", "rompieron", "romper", "rompi", "descompuso", "descompuesto", "cubre", "quemo", "quemado", "quemada", "averia", "averio",
                  "desperfecto", "estropeo", "respalda", "respaldan", "respaldo", "cubierto", "cubierta"],
     "devolucion": ["devolver", "devolucion", "devuelvo", "devuelve", "devuelto", "regresar", "retornar",
                    "cambiar", "cambio"],
@@ -88,13 +88,20 @@ _PIDE_CANAL = re.compile(
     r"reclam\w+|quej\w+)\b|"
     r"\ba (?:qu?ien|kien) (?:le )?(?:escribo|reclamo|consulto|me quejo|me dirijo|llamo|contacto)\b|"
     r"\b(?:a que|que) (?:mail|correo|email|canal)\b|"
-    r"\bdonde (?:reclamo|me quejo|puedo quejarme)\b|\bcomo (?:me comunico|me contacto|contacto|hago un reclamo)\b")
+    r"\bdonde (?:reclamo|me quejo|puedo quejarme)\b|\bcomo (?:me comunico|me contacto|contacto|hago un reclamo)\b|"
+    # pide una persona: "quiero hablar con un humano", "necesito un supervisor", "pasame con un asesor"
+    r"\b(?:hablar|comunicarme|contactarme|chatear|pasame|comunicame|derivame|conectame|ponme) (?:con|a)(?: (?:una|un|el|la|algun[ao]?))? "
+    r"(?:persona|humano|humana|agente|asesor\w*|supervisor\w*|operador\w*|alguien|representante|encargado|gerente)\b|"
+    r"\b(?:necesito|quiero|quisiera) (?:un|el|una) (?:supervisor\w*|gerente|encargado|humano|asesor\w*|operador\w*)\b|"
+    r"\batencion humana\b")
 
 
 def tokenizar(texto: str) -> list[str]:
     tokens: list[str] = []
     # "no funciona", "no enciende"...: un defecto (por sí solas, "funciona" o "anda" no dicen nada del dominio)
-    t_norm = _PIDE_CANAL.sub("contacto canal", _NO_ANDA.sub("defecto", normalizar(texto)))
+    # "envío a La Plata" es la ciudad, no "plata" de dinero (que lleva al documento de reembolsos)
+    t_norm = re.sub(r"\b(a|en|hasta|hacia|para|por|desde) la plata\b", r"\1 laplata", normalizar(texto))
+    t_norm = _PIDE_CANAL.sub("contacto canal", _NO_ANDA.sub("defecto", t_norm))
     for t in re.findall(r"[a-z0-9]+", t_norm):
         if t in STOPWORDS or len(t) < 2:
             continue

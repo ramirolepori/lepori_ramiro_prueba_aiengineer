@@ -205,8 +205,16 @@ def test_no_se_pregunta_la_antiguedad_si_no_hace_falta(agente, pregunta):
     assert "¿Hace cuánto lo compraste?" not in agente.responder(pregunta).texto
 
 
-def test_la_antiguedad_no_se_pregunta_si_hay_un_pedido(agente):
-    assert "¿Hace cuánto lo compraste?" not in agente.responder("Quiero devolver mi pedido ORD-1002").texto
+def test_con_un_pedido_entregado_solo_se_pregunta_la_fecha_en_corto(agente):
+    # el pedido no trae fecha de compra: se pregunta, pero sin repetir toda la política como cuando no hay pedido
+    r = agente.responder("Quiero devolver mi pedido ORD-1002")
+    assert "figura como Entregado" in r.texto and "todavía estás dentro de los 30 días" in r.texto
+    assert "Si tenés el número de pedido" not in r.texto
+
+
+def test_con_un_pedido_cancelado_no_se_pregunta_la_fecha(agente):
+    r = agente.responder("Quiero devolver mi pedido ORD-1004")
+    assert "figura como cancelado" in r.texto and "¿Hace cuánto" not in r.texto
 
 
 def test_un_saludo_con_algo_pendiente_se_contesta_y_se_repregunta(agente):

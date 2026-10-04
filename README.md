@@ -1,6 +1,6 @@
 # Agente de soporte de TiendaHogar
 
-Agente de soporte que responde preguntas sobre garantías, devoluciones, envíos y reembolsos con RAG sobre los 5 documentos del enunciado, consulta el estado de un pedido con la tool `consultar_estado_pedido` y deriva a una persona (soporte@tiendahogar.example) lo que no debe resolver: reembolsos mayores a $500, quejas por el trato de un empleado, disputas de facturación y temas legales. Responde en español.
+Agente de soporte que responde preguntas sobre garantías, devoluciones, envíos y reembolsos con RAG sobre los 5 documentos del enunciado, consulta el estado de un pedido con la tool `consultar_estado_pedido` y deriva a una persona (soporte@tiendahogar.example) lo que no debe resolver: reembolsos mayores a $500, quejas por el trato de un empleado, disputas de facturación, temas legales e incidentes de seguridad con un producto (una lesión, un cortocircuito). Responde en español.
 
 El flujo lo decide el código y el modelo de lenguaje solo redacta con lo recuperado, así que el comportamiento crítico no depende del modelo. Sin modelo configurado el agente funciona completo en modo offline.
 

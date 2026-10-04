@@ -86,7 +86,7 @@ def _leer_numero_en_palabras(toks: list[str], i: int) -> tuple[float, int] | Non
         elif t in {"mil", "luca", "lucas"}:
             total += max(actual, 1) * 1000
             actual, leyo = 0, True
-        elif t in {"millon", "millones"}:
+        elif t in {"millon", "millones", "palo", "palos"}:
             total += max(actual, 1) * 1_000_000
             actual, leyo = 0, True
         elif t == "y" and leyo and j + 1 < len(toks) and _como_palabra_numero(toks[j + 1]) is not None:
@@ -97,8 +97,22 @@ def _leer_numero_en_palabras(toks: list[str], i: int) -> tuple[float, int] | Non
     return (total + actual, j) if leyo else None
 
 
+_CIENTOS = {"dos": "doscientos", "tres": "trescientos", "cuatro": "cuatrocientos", "cinco": "quinientos",
+            "seis": "seiscientos", "siete": "setecientos", "ocho": "ochocientos", "nueve": "novecientos"}
+
+
+def _normalizar_escritura(t: str) -> str:
+    """Formas de escribir una cifra que el tokenizador no entiende: `1’000` (apóstrofo de miles), `1.5M` (millones),
+    `medio millón`, `seis cientos` y `6 cientos`."""
+    t = re.sub(r"(?<=\d)['’´`](?=\d{3}(?!\d))", "", t)
+    t = re.sub(r"(?<=\d)m(?:m|illones|illon)?\b", " millones", t)
+    t = re.sub(r"\bmedio millon\b", " 500000 ", t)
+    t = re.sub(r"\b(\d+)\s*cientos?\b", lambda m: f" {int(m.group(1)) * 100} ", t)
+    return re.sub(r"\b(dos|tres|cuatro|cinco|seis|siete|ocho|nueve) cientos\b", lambda m: _CIENTOS[m.group(1)], t)
+
+
 def extraer_montos(texto: str) -> list[float]:
-    t = _sin_tildes(texto)
+    t = _normalizar_escritura(_sin_tildes(texto))
     t = re.sub(r"\bord-\d+\b", " ", t)
     # "5-10 días", "5 a 10 días hábiles": un rango de tiempo, no dos montos
     t = re.sub(r"\b\d+\s*(?:-|a|al|o|y|hasta)\s*\d+\s+(?=(?:dias?|semanas?|meses|mes|horas?|anos?|minutos?)\b)", " ", t)
@@ -119,7 +133,7 @@ def extraer_montos(texto: str) -> list[float]:
                     valor, j = valor * 1000, j + 1
                 elif j < len(toks) and toks[j] in {"mil", "luca", "lucas"}:
                     valor, j = valor * 1000, j + 1
-                elif j < len(toks) and toks[j] in {"millon", "millones"}:
+                elif j < len(toks) and toks[j] in {"millon", "millones", "palo", "palos"}:
                     valor, j = valor * 1_000_000, j + 1
                 siguiente = toks[j] if j < len(toks) else ""
                 con_moneda = previo in {"$", "usd", "us"} or siguiente in _MONEDAS or siguiente == "$"
@@ -127,7 +141,7 @@ def extraer_montos(texto: str) -> list[float]:
                 if con_moneda or (siguiente not in _NO_DINERO and not es_id):
                     montos.append(valor)
             i = j
-        elif tok in {"mil", "luca", "lucas"} or _como_palabra_numero(tok) is not None:
+        elif tok in {"mil", "luca", "lucas", "palo", "palos"} or _como_palabra_numero(tok) is not None:
             leido = _leer_numero_en_palabras(toks, i)
             if leido is None:
                 i += 1
