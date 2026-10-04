@@ -20,6 +20,9 @@ from .llm import ErrorLLM, _post
 from .tiempos import sumar_embeddings
 
 
+MAX_PREGUNTAS_EN_MEMORIA = 2000
+
+
 def unitario(v: list[float]) -> list[float]:
     norma = math.sqrt(sum(x * x for x in v))
     return [x / norma for x in v] if norma else list(v)
@@ -54,6 +57,7 @@ class ClienteEmbeddings:
         cache_dir = cache_dir if cache_dir is not None else config.cache_dir
         self._cache_dir = Path(cache_dir) if cache_dir else None
         self._disco: dict[str, list[float]] | None = None
+        self._fijos: set[str] = set()      # documentos y anclas: nunca se descartan de la memoria
 
     # --- caché en disco, solo para textos fijos ---
 
@@ -76,6 +80,7 @@ class ClienteEmbeddings:
 
     def embeber_fijos(self, textos: list[str]) -> list[list[float]]:
         """Como `embeber`, pero para textos que no cambian (documentos, anclas): usa y llena la caché en disco."""
+        self._fijos.update(textos)
         if self._cache_dir is None:
             return self.embeber(textos)
         disco = self._cargar_disco()
@@ -118,5 +123,20 @@ class ClienteEmbeddings:
                 raise ErrorLLM("respuesta de embeddings con formato inesperado") from e
             if len(vectores) != len(nuevos):
                 raise ErrorLLM("el proveedor devolvió una cantidad inesperada de embeddings")
-            self._memo.update(zip(nuevos, (unitario(v) for v in vectores)))     # unitarios: el coseno es un producto punto
+            try:
+                unitarios = [unitario(v) for v in vectores]         # unitarios: el coseno es un producto punto
+            except (TypeError, ValueError) as e:
+                raise ErrorLLM("respuesta de embeddings con vectores inválidos") from e
+            if len({len(v) for v in unitarios}) > 1:
+                raise ErrorLLM("el proveedor devolvió vectores de distinto largo")
+            self._memo.update(zip(nuevos, unitarios))
+            self._recortar_memoria()
         return [self._memo[t] for t in textos]
+
+    def _recortar_memoria(self) -> None:
+        """Las preguntas de los clientes se recuerdan en memoria, pero no sin límite: en un proceso que corre días la
+        memoria crecería con cada pregunta distinta. Se descartan las más viejas que no son textos fijos."""
+        exceso = len(self._memo) - len(self._fijos) - MAX_PREGUNTAS_EN_MEMORIA
+        if exceso > 0:
+            for t in [t for t in self._memo if t not in self._fijos][:exceso]:
+                del self._memo[t]

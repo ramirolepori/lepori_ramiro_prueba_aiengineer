@@ -82,7 +82,7 @@ _CAPITAL = re.compile(r"\bcapital\b")
 _DESCONOCIDO = re.compile(
     r"\b(?:soy de|somos de|vivo en|vivimos en|estoy en|estamos en|resido en|vivo por|envios? a|enviar a|envian a|mandan a|"
     r"mandar a|mandas a|llegan? a|entregan en|entregan a|reparten en)\s+"
-    r"(?!(?:mi|mis|su|sus|el|la|los|las|un|una|otro|otra|esa|ese|casa|domicilio|direccion|ahi|aca|alla|donde|todo|todos|"
+    r"(?!(?:mi|mis|su|sus|el|la|los|las|un|una|otro|otra|otros|otras|argentina|distinta|distinto|distintas|distintos|diferente|diferentes|esa|ese|casa|domicilio|direccion|ahi|aca|alla|donde|todo|todos|"
     r"cualquier|tu|tus|nuestra|nuestro)\b)"
     r"([a-z]+(?:\s+(?:de |del |la |los |las |san |santa )?[a-z]+){0,2})")
 _DESCONOCIDO_ENVIO = re.compile(r"\ba (?!(?:mi|su|la|el|los|las|un|una)\s+(?:casa|domicilio|direccion)\b)(?:la |el )?([a-z]+(?: (?!las\b|los\b)[a-z]+)?) (?:las |los )?(?:compras|envios|pedidos|paquetes)\b")
@@ -144,8 +144,12 @@ def resolver_lugares(texto: str) -> list[Lugar]:
     exterior = any(m[3] == "exterior" for m in menciones)
     lugares: list[Lugar] = []
     for k, (i, f, nombre, tipo) in enumerate(menciones):
-        if tipo == "otra" and exterior and not re.search(r"\bargentina\b", p):
-            continue            # "Córdoba, España": el país nombrado manda
+        if tipo == "otra" and exterior and not re.search(r"\bargentina\b", p) and any(
+                m[3] == "exterior" and m[0] >= f and re.fullmatch(r"[\s,(\-]*(?:de |en )?", p[f:m[0]]) for m in menciones):
+            continue            # "Córdoba, España": el país que va pegado a la ciudad manda. "Montevideo y a Rosario" son dos lugares
+        if tipo == "exterior" and any(m[3] == "exterior" and m[0] >= f and re.fullmatch(r"[\s,(\-]*(?:de |en )?", p[f:m[0]])
+                                      for m in menciones):
+            continue            # "Madrid, España": ciudad y país pegados son un solo lugar, se dice una vez
         if tipo == "barrio":
             lugares.append(Lugar(nombre, "capital", barrio=True))
         elif tipo == "otra":
@@ -184,7 +188,8 @@ def _linea(l: Lugar) -> str:
         if l.capital_provincial:
             return (f"{l.nombre} capital es la capital de su provincia, no la del país ({CAPITAL_EN_PARENTESIS}), así que cuenta como "
                     f"otra ciudad: el envío tarda {PLAZO_OTRAS}.")
-        return (f"Los envíos a {l.nombre} se consideran envíos a otras ciudades (distintas de la capital, {CAPITAL_EN_PARENTESIS}) y "
+        a_donde = "al " + l.nombre[3:] if l.nombre.startswith("el ") else "a " + l.nombre       # "al Gran Buenos Aires", no "a el"
+        return (f"Los envíos {a_donde} se consideran envíos a otras ciudades (distintas de la capital, {CAPITAL_EN_PARENTESIS}) y "
                 f"tardan {PLAZO_OTRAS}.")
     if l.tipo == "ambiguo_ba":
         return (f"¿Estás en {CAPITAL}? Si es así, el envío tarda {PLAZO_CAPITAL}; si estás en otra localidad de la "

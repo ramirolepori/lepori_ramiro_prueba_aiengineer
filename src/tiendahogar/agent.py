@@ -261,7 +261,8 @@ class AgenteSoporte:
                 p = consultar_estado_pedido(literal)           # no es un ORD-XXXX: la tool dice que no lo encuentra
                 p["formato_invalido"] = True
                 pedidos.append(p)
-                ev("tool", nombre="consultar_estado_pedido", order_id=literal, encontrado=False, formato_invalido=True)
+                # el texto del cliente no va a la traza: lo que sigue a "pedido" o "código" puede ser cualquier dato (una tarjeta, un DNI)
+                ev("tool", nombre="consultar_estado_pedido", encontrado=False, formato_invalido=True, largo=len(literal))
         with etapa("intencion"):
             consulta_sin_numero = not pedidos and self._consulta_de_pedido(pregunta)
         if consulta_sin_numero:
@@ -271,18 +272,21 @@ class AgenteSoporte:
 
         with etapa("recuperacion"):
             resultados = [r for r in self.indice.buscar(pregunta) if r.fragmento.documento not in (excluir or set())]
+        if TIEMPO.search(guardrails.normalizar(pregunta)) and not tokenizar(re.sub(r"\bhace\b", " ", TIEMPO.sub(" ", guardrails.normalizar(pregunta)))):
+            resultados = []                       # "hace 10 días" solo: "días" no lo vuelve una pregunta de reembolsos
         ev("rag", fuentes=[r.fragmento.documento for r in resultados],
            puntajes=[round(r.puntaje, 2) for r in resultados], coberturas=[round(r.cobertura, 2) for r in resultados])
         # "Soy de Lima, cuánto tarda?": nombra un lugar y pregunta por un plazo, es de envíos aunque no diga la palabra
-        if (not resultados and not pedidos and resolver_lugares(pregunta) and _INTENCION_ENVIO.search(guardrails.normalizar(pregunta))
-                and "envios" not in (excluir or ())):
+        seguimiento = bool(re.match(r"y (?:a|en|para|hasta) ", guardrails.normalizar(pregunta).strip(" ¿?")))     # "y a Mendoza?"
+        if (not resultados and not pedidos and resolver_lugares(pregunta) and "envios" not in (excluir or ())
+                and (_INTENCION_ENVIO.search(guardrails.normalizar(pregunta)) or seguimiento)):
             envios = next((f for f in getattr(self.indice, "indice", self.indice).fragmentos if f.documento == "envios"), None)
             if envios is not None:
                 resultados = [ResultadoRAG(envios, 1.0, 1.0)]
         # El documento de envíos solo corresponde si la pregunta habla de un envío: nombrar un lugar ("capital de
         # Francia") no alcanza, y sin esta revisión una pregunta de geografía recibiría una respuesta de envíos.
         if (any(r.fragmento.documento == "envios" for r in resultados)
-                and not _INTENCION_ENVIO.search(guardrails.normalizar(pregunta)) and resolver_lugares(pregunta)):
+                and not _INTENCION_ENVIO.search(guardrails.normalizar(pregunta)) and not seguimiento and resolver_lugares(pregunta)):
             resultados = [r for r in resultados if r.fragmento.documento != "envios"]
         # "Cuánto tarda en llegar el reembolso?" habla del reembolso: "llega" y "tarda" solos no son una pregunta de envío
         if (any(r.fragmento.documento == "envios" for r in resultados)
@@ -294,6 +298,12 @@ class AgenteSoporte:
             resto = guardrails.NIEGA_REEMBOLSO.sub(" ", guardrails.normalizar(pregunta))
             resultados = [r for r in resultados if r.fragmento.documento not in ("reembolsos", "devoluciones")
                           or _NOMBRA_EL_DOCUMENTO[r.fragmento.documento].search(resto)]
+        # con el pedido en mano, el estado ya responde "dónde está": el plazo general de envío sobra si no nombra un lugar
+        if pedidos and not resolver_lugares(pregunta):
+            resultados = [r for r in resultados if r.fragmento.documento != "envios"]
+        # "Mi garantía vence en 2 días" es de garantía: el plazo de devolución solo corresponde si habla de devolver o cambiar
+        if ("garant" in guardrails.normalizar(pregunta) and not re.search("devol|devuelv|cambi|reembols|arrepent|regres", guardrails.normalizar(pregunta))):
+            resultados = [r for r in resultados if r.fragmento.documento != "devoluciones"]
         # "Quiero hacer una devolución" no habla de plata: el documento de reembolsos solo sobra cuando no se la nombra
         norm_p = guardrails.normalizar(pregunta)
         if (any(r.fragmento.documento == "devoluciones" for r in resultados)
@@ -366,7 +376,9 @@ class AgenteSoporte:
         # El plazo de envío según el lugar lo resuelve el código (lugares.py): el modelo no tiene que adivinar cuál es la
         # capital. Esa parte se saca de lo que redacta el modelo y se agrega ya resuelta.
         envio = None
-        if "envios" in fuentes:
+        if "envios" in fuentes and not resolver_lugares(pregunta) and _INTERNACIONAL.search(guardrails.normalizar(pregunta)):
+            envio = "Los envíos internacionales no están disponibles actualmente. [envios]"     # lo que pregunta, sin pedir la ciudad
+        elif "envios" in fuentes:
             lugares = [lugar_dado] if lugar_dado else resolver_lugares(pregunta)
             if lugares:
                 por_confirmar = confirmacion(lugares)      # lugar ambiguo o desconocido: se le pregunta
@@ -416,8 +428,8 @@ class AgenteSoporte:
                     # modelo chico las omite a veces, y no pueden depender de que el modelo las copie.
                     if notas:
                         texto = texto + "\n\n" + "\n".join(notas)
-            except ErrorLLM as e:
-                ev("llm", ok=False, error=str(e))
+            except Exception as e:          # un modelo que falla de cualquier forma no tumba la respuesta: sigue el modo offline
+                ev("llm", ok=False, error=str(e) if isinstance(e, ErrorLLM) else f"{type(e).__name__}: {e}")
         if not texto:
             texto = _redactar_offline(redactables, pedidos, notas, envio)
         return Respuesta(texto, "respondido", fuentes, pedidos=pedidos)
@@ -439,7 +451,7 @@ class AgenteSoporte:
     def _consulta_de_pedido(self, pregunta: str) -> bool:
         """¿Pregunta por el estado de un pedido? Por significado (embeddings o n-gramas), o por palabras clave
         como último recurso."""
-        p = guardrails.normalizar(pregunta)
+        p = re.sub(r"\bmi (casa|domicilio|direccion|ciudad|zona|barrio|provincia|pais)\b", " ", guardrails.normalizar(pregunta))     # "a mi casa" no es "mi pedido"
         if _COMPRA_FUTURA.search(p):          # "voy a comprar...", "si compro mañana...": todavía no hay pedido
             return False
         if _TEMA_DE_POLITICA.search(p) and not _TEMA_DE_ESTADO.search(p):
@@ -500,12 +512,14 @@ _ACCION_QUE_NO_PUEDE = re.compile(
     r"program\w+ (?:una |la |mi )?(?:entrega|llamada|visita)|llam\w*me|"
     r"\b(?:envi|mand)(?:a|e|es|ar|ame|arme)\b (?:me )?(?:un |el |la |una |mi )?(?:correo|mail|email|resumen|factura|comprobante|mensaje|sms)|"
     r"\b(?:gener|emit|hag|hac)\w* (?:me )?(?:una |la |mi |un )?(?:factura|comprobante)|"
+    r"(?:quiero|quisiera|puedo|podria|necesito|voy a) cancel\w+|cancel(?:ar|o|e)(?:lo|la|me)\b|"
     r"cancel\w+ (?:el |mi |la |este |ese )?(?:pedido|orden|compra)|anul\w+ (?:el |mi |la )?(?:pedido|orden|compra)|"
     r"actualiz\w+ (?:el )?estado|modific\w+ (?:mi |el |la )?(?:pedido|direccion|compra)|cambi\w+ (?:la |mi )?direccion|"
     r"avis\w+ (?:a|al) (?:la |el )?(?:empresa|transportista|correo)")
 _HABLA_DE_PLATA = re.compile(r"reembols|reintegr|plata|dinero|guita|pago|pague|cobr|tarjeta|efectivo|monto|importe|\$|usd|pesos|dolar")
 _QUIERE_DEVOLVER = re.compile(r"devol|devuelv")
 PREGUNTA_FECHA_COMPRA = "¿Hace cuánto lo compraste? Con eso te digo si todavía estás dentro de los 30 días."
+_INTERNACIONAL = re.compile(r"\b(?:internacional\w*|exterior|otro pais|otros paises|afuera del pais|fuera del pais|al extranjero)\b")
 _ENVIO_EXPLICITO = re.compile(r"\b(?:envi\w*|entreg\w*|despach\w*|paquete\w*|flete|domicilio|repart\w*)\b")
 _NOMBRA_EL_DOCUMENTO = {"garantia": re.compile("garant"), "devoluciones": re.compile("devol|devuelv"),
                         "reembolsos": re.compile("reembols|reintegr"), "envios": re.compile("envi|entreg|despach"),
@@ -522,7 +536,7 @@ _SU_COMPRA = re.compile(r"\b(?:mi|mis|compre|compramos|hice|pedi)\b|"
                         r"\b(?:la|lo|las|los) (?:puedo|podria|se puede) (?:devolver|cambiar)\b|\bse me\b|"
                         r"\bme (?:la|lo|las|los) (?:cubre|cubren|aceptan|cambian|reparan|devuelven)\b")
 # un producto que no se devuelve en ningún caso, o que el cliente dice por qué falló (puede decidir otra regla)
-_NO_SE_DEVUELVE = re.compile(_NO_DEVOLVIBLE.pattern + r"|\bporque\b|mal uso|se me cayo|golpe|\bmoj[eo]\b")
+_NO_SE_DEVUELVE = re.compile(_NO_DEVOLVIBLE.pattern + r"|\bporque\b|mal uso|se me cayo|golpe|\bmoj[eo]\b|\busad[oa]s?\b|ya (?:la |lo |las |los )?use\b")
 
 
 def _pregunta_por_su_compra(pregunta: str, fuentes: list[str]) -> bool:
@@ -730,7 +744,12 @@ def _para_el_cliente(texto: str) -> str:
     return _INSTRUCCION_AL_AGENTE.sub("", texto)
 
 
+_MARCADOR_FALSO = re.compile(r"(?i)(documentos|pedidos|pregunta del cliente)<s>*:".replace("<s>", chr(92) + "s"))
+
+
 def _prompt(pregunta: str, resultados: list[ResultadoRAG], pedidos: list[dict[str, Any]]) -> str:
+    # el cliente no puede abrir un bloque "DOCUMENTOS:" propio dentro de su pregunta para hacer pasar un texto suyo por una política
+    pregunta = _MARCADOR_FALSO.sub(lambda m: m.group(1) + " -", pregunta)
     docs = "\n\n".join(f"[{r.fragmento.documento}]\n{_para_el_cliente(r.fragmento.texto)}" for r in resultados) or "(ninguno)"
     peds = "\n".join(str(p) for p in pedidos) or "(ninguno)"
     return f"DOCUMENTOS:\n{docs}\n\nPEDIDOS:\n{peds}\n\nPREGUNTA DEL CLIENTE:\n{pregunta}"

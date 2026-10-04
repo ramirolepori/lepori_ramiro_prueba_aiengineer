@@ -75,6 +75,8 @@ _FACTURACION = re.compile(
     r"\bfactura\w*\b.{0,60}\b(?:monto|importe|total|valor|precio)\b.{0,40}\b(?:no es|incorrect\w+|equivocad\w+|distinto|"
     r"no corresponde|no coincide|mal)|"
     r"\bproblem\w*\b.{0,25}\b(?:facturas?|cobros?|cargos?)\b|\bmal\b.{0,20}\b(?:facturas?|cobros?)\b|"
+    r"\b(?:me|nos) (?:reembols\w+|devolvieron|reintegraron|devolvio|reintegro)\b.{0,30}\b(?:de mas|demas|menos|de menos|dos veces|por error|"
+    r"incompleto|la mitad)\b|"
     r"contracargo|doble cobro|cobro doble|cobro duplicado)"
 )
 _INTENCION_REEMBOLSO = re.compile(

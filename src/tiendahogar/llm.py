@@ -111,7 +111,7 @@ class OpenAICompatible:
                     raise
         try:
             return r["choices"][0]["message"]["content"].strip()
-        except (KeyError, IndexError, AttributeError) as e:
+        except (KeyError, IndexError, AttributeError, TypeError) as e:     # TypeError: la respuesta no es un objeto JSON
             raise ErrorLLM("respuesta del proveedor con formato inesperado") from e
 
 

@@ -39,7 +39,7 @@ CONCEPTOS = {
     "garantia": ["garantia", "defecto", "defectuoso", "defectuosa", "fabrica", "falla", "fallo", "roto",
                  "rota", "rompio", "rompe", "rompieron", "romper", "rompi", "descompuso", "descompuesto", "cubre", "quemo", "quemado", "quemada", "averia", "averio",
                  "desperfecto", "estropeo", "respalda", "respaldan", "respaldo", "cubierto", "cubierta"],
-    "devolucion": ["devolver", "devolucion", "devuelvo", "devuelve", "devuelto", "regresar", "retornar",
+    "devolucion": ["arrepenti", "arrepiento", "arrepentimiento", "devolver", "devolucion", "devuelvo", "devuelve", "devuelto", "regresar", "retornar",
                    "cambiar", "cambio"],
     "envio": ["envio", "enviar", "envian", "envia", "entrega", "entregar", "llega", "llegar", "despacho", "despachar", "despachan",
               "demora", "demorar"],
@@ -93,14 +93,16 @@ _PIDE_CANAL = re.compile(
     r"\b(?:hablar|comunicarme|contactarme|chatear|pasame|comunicame|derivame|conectame|ponme) (?:con|a)(?: (?:una|un|el|la|algun[ao]?))? "
     r"(?:persona|humano|humana|agente|asesor\w*|supervisor\w*|operador\w*|alguien|representante|encargado|gerente)\b|"
     r"\b(?:necesito|quiero|quisiera) (?:un|el|una) (?:supervisor\w*|gerente|encargado|humano|asesor\w*|operador\w*)\b|"
-    r"\batencion humana\b")
+    r"\batencion humana\b|"
+    # "quiero presentar un reclamo formal": pide el canal para reclamar
+    r"\b(?:presentar|hacer|iniciar|realizar|abrir|formular|efectuar) (?:un |el |mi )?(?:reclamo|queja)\b")
 
 
 def tokenizar(texto: str) -> list[str]:
     tokens: list[str] = []
     # "no funciona", "no enciende"...: un defecto (por sí solas, "funciona" o "anda" no dicen nada del dominio)
     # "envío a La Plata" es la ciudad, no "plata" de dinero (que lleva al documento de reembolsos)
-    t_norm = re.sub(r"\b(a|en|hasta|hacia|para|por|desde) la plata\b", r"\1 laplata", normalizar(texto))
+    t_norm = re.sub(r"\b(a|en|hasta|hacia|para|por|desde) la plata\b|\b(?:mar del|rio de la|del) plata\b", lambda m: (m.group(1) or "") + " laplata", normalizar(texto))
     t_norm = _PIDE_CANAL.sub("contacto canal", _NO_ANDA.sub("defecto", t_norm))
     for t in re.findall(r"[a-z0-9]+", t_norm):
         if t in STOPWORDS or len(t) < 2:

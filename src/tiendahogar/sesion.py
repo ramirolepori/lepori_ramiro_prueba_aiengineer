@@ -43,6 +43,10 @@ _SI = re.compile(r"^(?:si|sii+|claro|asi es|correcto|exacto|exactamente|dale|aja
 _NO = re.compile(r"^(?:no|nop|nope|negativo|para nada)\b(?! (?:se|lo se|recuerdo|me acuerdo|tengo|sabria))")
 _NO_SE = re.compile(r"\bno (?:se|lo se|recuerdo|me acuerdo|tengo idea|sabria)\b|ni idea|\bno (?:lo )?tengo\b")
 _DEFINIDOS = {"capital", "otra", "exterior"}
+_PARECE_UN_LUGAR = re.compile(r"[a-z]{3,}(?: (?:de |del |la |los |las |san |santa )?[a-z]{2,}){0,2}")
+_NO_ES_UN_LUGAR = {"nada", "ninguna", "ninguno", "ahora", "luego", "despues", "gracias", "hola", "okey", "dale", "claro", "bueno",
+                   "jaja", "jajaja", "eso", "aca", "aqui", "alli", "ahi", "quien", "cual", "como", "donde", "porque", "algo", "listo"}
+_NO_SE_PUEDE_DEVOLVER = re.compile(r"liquidacion|oferta final|personalizad|a medida|a pedido")
 
 _NUMERO = r"(?:\d+|un|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|veinte|treinta)"
 # Cualquier forma de decir cuánto hace de la compra ("hace 3 semanas", "45 días", "ayer", "el mes pasado", "hace poco")
@@ -161,20 +165,27 @@ def interpretar(sesion: Sesion, mensaje: str) -> Turno | None:
         pendiente = "lugar"                     # contestó con un lugar en vez de sí o no
 
     if pendiente == "lugar":
-        if any(l.tipo in _DEFINIDOS for l in resolver_lugares(mensaje)):
+        if any(l.tipo in _DEFINIDOS | {"ambiguo_ba"} for l in resolver_lugares(mensaje)):
             sesion.limpiar()
-            return Turno(f"{base} {mensaje}")
+            return Turno(f"{base} {mensaje}")        # "Buenos Aires" también: el flujo normal pregunta si es la capital
+        if (_PARECE_UN_LUGAR.fullmatch(t) and re.search("[aeiou]", t) and not (_SI.match(t) or _NO.match(t) or _NO_SE.search(t))
+                and not set(t.split()) & _NO_ES_UN_LUGAR):
+            sesion.limpiar()                         # un nombre que no conoce ("Springfield"): se lo trata como lugar desconocido
+            return Turno(f"{base} Soy de {mensaje.strip(' .!¡')}")
         if _es_un_intento(mensaje):
             return _reintentar(sesion, PREGUNTA_LUGAR, Turno(base, repreguntar=False))
     elif pendiente == "monto":
-        if extraer_montos(mensaje):
-            sesion.limpiar()
+        if extraer_montos(mensaje) or extraer_referencias(mensaje):
+            sesion.limpiar()                    # con un pedido, el flujo normal lo consulta y vuelve a pedir el monto
             return Turno(f"{base} {mensaje}")
         if _NO_SE.search(t):                    # no sabe el monto: se responde la política sin insistir, y si lo da después se usa
             return Turno(base, repreguntar=False)
         if _es_un_intento(mensaje):
             return _reintentar(sesion, PREGUNTA_MONTO, Turno(base, repreguntar=False))
     elif pendiente == "antiguedad":
+        if _NO_SE_PUEDE_DEVOLVER.search(t):
+            sesion.limpiar()                    # dice que es de liquidación o personalizado: no hace falta la fecha
+            return Turno(f"{base} {mensaje}")
         if TIEMPO.search(t):
             sesion.limpiar()
             dicho = mensaje.strip(" .!¡")
