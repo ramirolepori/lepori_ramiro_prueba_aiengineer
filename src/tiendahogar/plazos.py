@@ -29,7 +29,7 @@ _NOMBRES = "|".join(_PRODUCTOS) + "|producto|equipo|aparato|electrodomestico"
 
 _DURACION = re.compile(r"\b(?:hace|hacen|pasaron|pasaron como|hace unos|hace como|hace casi|hace mas de)\s+" + _NUM + r"\s+" + _UNIDADES + r"\b")
 # La edad del producto dicha como "mi lavadora tiene 8 meses", "una plancha de 3 meses" o "una lavadora de hace 40 días"
-_EDAD = re.compile(r"\b(?:" + _NOMBRES + r")\w*(?:\s+[a-z]+){0,4}?\s+(?:tiene|tienen)(?: unos| como| casi| mas de)?\s+" + _NUM +
+_EDAD = re.compile(r"\b(?:" + _NOMBRES + r")\w*(?:\s+[a-z0-9-]+){0,4}?\s+(?:tiene|tienen)(?: unos| como| casi| mas de)?\s+" + _NUM +
                    r"\s+" + _UNIDADES + r"\b(?!\s+de\s+garantia)")
 _DE_EDAD = re.compile(r"\b(?:" + _NOMBRES + r")\w*\s+(?:que (?:tengo|compre|compramos)\s+)?de\s+(?:hace\s+)?" + _NUM +
                       r"\s+" + _UNIDADES + r"\b(?!\s+de\s+garantia)")
@@ -39,7 +39,10 @@ _NOMBRE_Y_TIENE = re.compile(r"(?:" + _NOMBRES + r")\w*\s+(?:tiene|tienen)\b")
 _Y_MEDIO = re.compile(r"\s+y\s+(?:medio|media)\b")
 _Y_PICO = re.compile(r"\s+y\s+(?:pico|algo|tanto)\b")
 _Y_OTRA = re.compile(r"\s+y\s+" + _NUM + r"\s+" + _UNIDADES + r"\b")
-_COMPRO = re.compile(r"\b(?:compr\w+|adquir\w+|ordene|pedi|encargue|me llego|recibi|antiguedad)\b")
+_LLEGO = r"\b(?:llego|llegaron|recibi|entregaron|trajeron)\b[^.?!]{0,20}"
+_LLEGO_HOY = re.compile(_LLEGO + r"\b(?:hoy|recien)\b")
+_LLEGO_AYER = re.compile(_LLEGO + r"\bayer\b")
+_COMPRO = re.compile(r"\b(?:compr\w+|adquir\w+|ordene|pedi|encargue|llego|llegaron|recibi|entregaron|trajeron|antiguedad)\b")
 _QUIERE_DEVOLVER = re.compile(r"\b(?:devolver\w*|devuelv\w*|devolucion|cambiar\w*|cambio|retorno)\b|de vuelta")
 _ESPERA_UN_REEMBOLSO = re.compile(r"reembols|reintegr|impact|tarjeta|dinero|plata|acredit")
 # Habla de la garantía o de una falla: lo que lleva a mirar el plazo de la garantía aunque no diga la palabra
@@ -99,7 +102,12 @@ def dias_desde_la_compra(texto: str) -> int | None:
     if re.search(r"\b(?:compr\w+|adquir\w+) ayer\b|\bayer (?:compr\w+|adquir\w+|fui\b.*\bcompr\w+|hice una compra)", t):
         return 1
     m = _tiempo_de_uso(t)
-    return None if m is None else int(_duracion(m, t, _UNIDAD)[0])
+    if m is not None:
+        return int(_duracion(m, t, _UNIDAD)[0])
+    # "me llegó hoy", "lo recibí ayer": sin otra duración en la frase, cuenta desde que lo recibió
+    if _LLEGO_HOY.search(t):
+        return 0
+    return 1 if _LLEGO_AYER.search(t) else None
 
 
 def nota_de_devolucion(dias: int) -> str:
@@ -111,15 +119,35 @@ def nota_de_devolucion(dias: int) -> str:
             f"está sin usar y en su empaque original.")
 
 
-def garantia_del_producto(texto: str, devolucion: bool = False, requiere_motivo: bool = True) -> str | None:
-    """Si el cliente nombra un producto del Doc 1 y cuánto hace que lo tiene, aplica el plazo de su garantía con una cuenta (12
-    meses los grandes, 6 los pequeños). Repite el documento: no agrega ninguna regla. Sin un producto (o con dos de plazos
-    distintos) o sin tiempo, None. Con `requiere_motivo` pide además que hable de la garantía o de una falla. Con `devolucion`,
-    si el plazo ya pasó, dice qué implica para la devolución (pasados los 30 días solo se acepta un defecto cubierto)."""
+def _productos_de(t: str, producto: str | None = None) -> dict[str, int]:
+    """Los productos del Doc 1 que nombra el texto (ya sin tildes) con sus meses de garantía. Si no nombra ninguno se usa
+    `producto`, el que figura en el pedido del cliente ("Licuadora")."""
+    nombrados = {nombre: meses for raiz, (nombre, meses) in _PRODUCTOS.items() if raiz in t}
+    if nombrados or not producto:
+        return nombrados
+    return {nombre: meses for raiz, (nombre, meses) in _PRODUCTOS.items() if raiz in _sin_tildes(producto)}
+
+
+def garantia_de(producto: str) -> str | None:
+    """La garantía de un producto del Doc 1 sin cuenta de tiempo, para quien pregunta si puede usarla ("tu licuadora": 6 meses)."""
+    productos = _productos_de("", producto)
+    if len(productos) != 1:
+        return None
+    (nombre, plazo), = productos.items()
+    return f"La garantía de tu {nombre} es de {plazo} meses desde la fecha de compra y cubre defectos de fábrica, no daños por mal uso."
+
+
+def garantia_del_producto(texto: str, devolucion: bool = False, requiere_motivo: bool = True,
+                          producto: str | None = None) -> str | None:
+    """Si el cliente nombra un producto del Doc 1 (o lo trae su pedido, en `producto`) y cuánto hace que lo tiene, aplica el
+    plazo de su garantía con una cuenta (12 meses los grandes, 6 los pequeños). Repite el documento: no agrega ninguna regla.
+    Sin un producto (o con dos de plazos distintos) o sin tiempo, None. Con `requiere_motivo` pide además que hable de la
+    garantía o de una falla. Con `devolucion`, si el plazo ya pasó, dice qué implica para la devolución (pasados los 30 días
+    solo se acepta un defecto cubierto)."""
     t = _sin_tildes(texto)
     if requiere_motivo and not _FALLA.search(t):
         return None
-    productos = {nombre: meses for raiz, (nombre, meses) in _PRODUCTOS.items() if raiz in t}
+    productos = _productos_de(t, producto)
     m = _tiempo_de_uso(t)
     if len(productos) != 1 or m is None:
         return None

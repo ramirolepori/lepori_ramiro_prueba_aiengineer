@@ -21,7 +21,8 @@ from typing import Any, Callable
 
 from . import guardrails
 from .llm import LLM, ErrorLLM
-from .plazos import PLAZO_DEVOLUCION_DIAS, dias_desde_la_compra, garantia_del_producto, nota_de_devolucion, respuesta_de_garantia
+from .plazos import (PLAZO_DEVOLUCION_DIAS, dias_desde_la_compra, garantia_de, garantia_del_producto, nota_de_devolucion,
+                     respuesta_de_garantia)
 from .pedidos import consultar_estado_pedido, extraer_identificadores_raros, extraer_referencias
 from .config import Config
 from .embeddings import ClienteEmbeddings
@@ -179,15 +180,21 @@ class AgenteSoporte:
         return self._responder(pregunta, ev, con_respaldo=True, sesion=sesion, lugar_dado=lugar_dado,
                                repreguntar=repreguntar)
 
-    def _respuesta_de_plazo(self, dias: int, fuentes: list[str], pregunta: str) -> str:
+    def _respuesta_de_plazo(self, dias: int, fuentes: list[str], pregunta: str, producto: str | None = None) -> str:
+        """El plazo de devolución según los días y, si corresponde, la garantía. `producto` es el del pedido del cliente."""
         texto = f"{nota_de_devolucion(dias)} [devoluciones]"
-        if dias > PLAZO_DEVOLUCION_DIAS and "garantia" in fuentes:
-            # pasados los 30 días solo cuenta la garantía: con el producto y el tiempo se hace la cuenta; si no, se da el documento
-            propia = garantia_del_producto(pregunta, devolucion=True, requiere_motivo=False)
+        # Pasados los 30 días solo cuenta la garantía, y si la pregunta la nombra ("devolverlo o usar la garantía") se responde
+        # también dentro de los 30. Con el producto y el tiempo se hace la cuenta; con el producto solo, se dice cuánto dura; si
+        # no, se da el documento (siempre que la garantía venga al caso por la pregunta o por los documentos recuperados).
+        despues_de_30 = dias > PLAZO_DEVOLUCION_DIAS
+        pregunta_por_la_garantia = "garantia" in fuentes and "garant" in guardrails.normalizar(pregunta)
+        if despues_de_30 or pregunta_por_la_garantia:
+            propia = (garantia_del_producto(pregunta, devolucion=despues_de_30, requiere_motivo=False, producto=producto)
+                      or (garantia_de(producto) if producto else None))
             garantia = next((f for f in getattr(self.indice, "indice", self.indice).fragmentos if f.documento == "garantia"), None)
             if propia is not None:
                 texto += f"\n\n{propia} [garantia]"
-            elif garantia is not None:
+            elif garantia is not None and "garantia" in fuentes:
                 cuerpo = re.sub(r"^#.*\n+", "", garantia.texto).strip()
                 texto += f"\n\n{para_el_cliente(cuerpo)} [garantia]"
         return texto
@@ -299,6 +306,12 @@ class AgenteSoporte:
         accion = bool(ACCION_QUE_NO_PUEDE.search(guardrails.normalizar(pregunta)))
         if accion:
             resultados = [r for r in resultados if NOMBRA_EL_DOCUMENTO[r.fragmento.documento].search(guardrails.normalizar(pregunta))]
+        # "Mi pedido llegó fallado, puedo devolverlo o usar la garantía?": si la pregunta nombra la garantía, también se responde esa mitad
+        if (pedidos and QUIERE_DEVOLVER.search(norm_p) and "garant" in norm_p
+                and not any(r.fragmento.documento == "garantia" for r in resultados)):
+            garantia_doc = next((f for f in getattr(self.indice, "indice", self.indice).fragmentos if f.documento == "garantia"), None)
+            if garantia_doc is not None:
+                resultados.append(ResultadoRAG(garantia_doc, 1.0, 1.0))
         fuentes = [r.fragmento.documento for r in resultados]
 
         notas = notas_obligatorias(pregunta, fuentes, consulta_sin_numero, derivando)
@@ -332,11 +345,17 @@ class AgenteSoporte:
                     notas.append(f"El pedido {p['order_id']} todavía no figura como entregado.")
         # Devolver algo que compró hace tantos días: es una cuenta del Doc 2, no una opinión. Se responde por código (un modelo
         # chico a veces decía "no se acepta después de 30 días si no fue usado", y a veces lo contrario).
+        # Con un pedido entregado el producto sale del pedido y la respuesta empieza por su estado.
         dias = dias_desde_la_compra(pregunta) if "devoluciones" in fuentes else None
-        if (dias is not None and not pedidos and set(fuentes) <= {"devoluciones", "garantia"}
+        entregados = bool(pedidos) and all(p["encontrado"] and p["estado"] == "Entregado" for p in pedidos)
+        if (dias is not None and (not pedidos or entregados) and set(fuentes) <= {"devoluciones", "garantia"}
                 and not NO_DEVOLVIBLE.search(guardrails.normalizar(pregunta))):
             ev("plazo_de_devolucion", dias=dias)
-            return Respuesta(self._respuesta_de_plazo(dias, fuentes, pregunta), "respondido", fuentes)
+            producto = pedidos[0]["producto"] if len(pedidos) == 1 else None
+            plazo = self._respuesta_de_plazo(dias, fuentes, pregunta, producto)
+            estado = redactar_offline([], pedidos, [], None) if pedidos else ""
+            citadas = fuentes + (["garantia"] if "[garantia]" in plazo and "garantia" not in fuentes else [])
+            return Respuesta(f"{estado}\n\n{plazo}" if estado else plazo, "respondido", citadas, pedidos=pedidos)
         # Garantía de algo que tiene hace tantos meses: también es una cuenta del Doc 1 (12 meses los grandes, 6 los pequeños)
         garantia = respuesta_de_garantia(pregunta) if fuentes == ["garantia"] and not pedidos else None
         if garantia:
@@ -388,9 +407,18 @@ class AgenteSoporte:
             envio = f"{envio}\n\n{TEXTO_CANAL}" if envio else TEXTO_CANAL
         fuentes_red = [r.fragmento.documento for r in redactables]
 
+        # Con un pedido en una consulta de devolución o garantía, el estado, los plazos y la garantía del producto los resuelve el
+        # código. El modelo contestaba solo la mitad ("puedes usar la garantía") y la citaba mal, y el código daba por cubierta la
+        # devolución por la cita.
+        por_codigo = bool(pedidos) and bool(QUIERE_DEVOLVER.search(norm_p)) and set(fuentes) <= {"devoluciones", "garantia"}
+        if por_codigo and len(pedidos) == 1 and pedidos[0]["encontrado"] and any(r.fragmento.documento == "garantia" for r in redactables):
+            propia = garantia_de(pedidos[0]["producto"])
+            if propia:
+                redactables = [r for r in redactables if r.fragmento.documento != "garantia"]
+                notas.insert(0, f"{propia} [garantia]")
+
         texto = None
-        # Solo pedidos: la plantilla es exacta y evita que un modelo chico reformule los datos
-        if self.llm is not None and redactables:
+        if self.llm is not None and redactables and not por_codigo:
             try:
                 prompt = armar_prompt(self._sin_pedidos_ajenos(pregunta, ev), redactables, pedidos)
                 with etapa("generacion"):

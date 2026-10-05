@@ -129,10 +129,11 @@ def test_con_la_devolucion_en_juego_una_garantia_vencida_dice_que_no_se_acepta()
 
 
 class LLMQueNoSeLlama:
-    llamadas = 0
+    def __init__(self):
+        self.llamadas = 0
 
     def generar(self, sistema, prompt):
-        LLMQueNoSeLlama.llamadas += 1
+        self.llamadas += 1
         return "Sí, aplica la garantía. No puedes devolverla, solo puedes solicitar el arreglo o reemplazo según la garantía."
 
 
@@ -148,7 +149,6 @@ class LLMQueNoSeLlama:
 ])
 def test_garantia_mezclada_con_devolucion_se_responde_por_codigo_con_cualquier_redaccion(pregunta, esperado, no_esperado):
     llm = LLMQueNoSeLlama()
-    llm.llamadas = 0
     r = AgenteSoporte(llm=llm).responder(pregunta)
     assert llm.llamadas == 0, "es una cuenta de los documentos: no la hace el modelo"
     assert all(e in r.texto for e in esperado) and not any(n in r.texto for n in no_esperado), r.texto
@@ -189,3 +189,65 @@ def test_las_duraciones_compuestas_se_suman(texto, vencida, dicho):
 ])
 def test_los_dias_tambien_suman_las_partes(texto, dias):
     assert dias_desde_la_compra(texto) == dias
+
+
+# --- cuándo lo recibió: "me llegó hoy", "lo recibí ayer", "llegó hace 5 días" ---------------------------------------------------------
+
+@pytest.mark.parametrize("texto,dias", [
+    ("Quiero devolver mi licuadora. Antigüedad: Me llego hoy.", 0),
+    ("Me llegó hoy la licuadora y quiero devolverla", 0),
+    ("Lo recibí hoy y no lo usé, lo devuelvo?", 0),
+    ("Me llegó recién, lo puedo devolver?", 0),
+    ("Me llegó ayer, quiero devolver mi heladera", 1),
+    ("Mi pedido llegó hace 5 días y está fallado, puedo devolverlo?", 5),
+    ("Me llegó hoy un mail, quiero devolver mi licuadora que compré hace 20 días", 20),      # la duración explícita manda
+])
+def test_cuando_lo_recibio_tambien_cuenta(texto, dias):
+    assert dias_desde_la_compra(texto) == dias
+
+
+# --- con un pedido en la consulta: el estado, la cuenta y la garantía del producto del pedido los pone el código -----------------------
+
+def charlar_con(llm, *mensajes):
+    from tiendahogar.sesion import Sesion
+    a, s = AgenteSoporte(llm=llm), Sesion()
+    return s, [a.responder(m, s) for m in mensajes]
+
+
+def llm_nuevo():
+    return LLMQueNoSeLlama()
+
+
+def test_el_pedido_que_llego_fallado_se_responde_por_codigo_en_los_dos_turnos():
+    llm = llm_nuevo()
+    s, (r1, r2) = charlar_con(llm, "Mi pedido ORD-1002 llegó fallado, puedo devolverlo o usar la garantía?", "Me llego hoy")
+    assert "figura como Entregado" in r1.texto and "dentro de 30 días de la compra" in r1.texto          # la devolución
+    assert "La garantía de tu licuadora es de 6 meses" in r1.texto                                      # y la garantía del pedido
+    assert "¿Hace cuánto lo compraste?" in r1.texto and s.pendiente is None
+    assert "figura como Entregado" in r2.texto and "estás dentro de los 30 días" in r2.texto
+    assert "La garantía de tu licuadora es de 6 meses" in r2.texto and "¿Hace cuánto" not in r2.texto
+    assert llm.llamadas == 0 and "arreglo" not in r1.texto + r2.texto
+
+
+def test_el_pedido_entregado_hace_mas_de_30_dias_hace_la_cuenta_de_la_garantia_del_producto():
+    _, (r,) = charlar_con(llm_nuevo(), "Quiero devolver mi pedido ORD-1002 que recibí hace 40 días")
+    assert "pasaron más de 30 días" in r.texto and "con 40 días todavía estás dentro" in r.texto
+    _, (r,) = charlar_con(llm_nuevo(), "Mi pedido ORD-1002 lo recibí hace 8 meses y se rompió, puedo devolverlo?")
+    assert "6 meses" in r.texto and "ya pasó ese plazo, así que la devolución no se acepta" in r.texto
+
+
+@pytest.mark.parametrize("pregunta,esperado", [
+    ("Quiero devolver mi tostadora ORD-1004", "figura como cancelado"),
+    ("Quiero devolver ORD-1003 o usar la garantía", "todavía no figura como entregado"),
+    ("Quiero devolver mi pedido ORD-9999", "No encontré ningún pedido"),
+])
+def test_un_pedido_cancelado_en_preparacion_o_inexistente_tambien_se_responde_por_codigo(pregunta, esperado):
+    llm = llm_nuevo()
+    _, (r,) = charlar_con(llm, pregunta)
+    assert esperado in r.texto and llm.llamadas == 0
+
+
+def test_con_un_pedido_pero_sobre_reembolsos_el_modelo_sigue_redactando():
+    llm = llm_nuevo()
+    charlar_con(llm, "Mi pedido ORD-1002 llegó fallado, quiero que me devuelvan la plata, cuánto tarda el reembolso?")
+    assert llm.llamadas >= 1

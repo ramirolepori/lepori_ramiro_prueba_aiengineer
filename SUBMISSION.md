@@ -33,7 +33,7 @@ Las decisiones con sus alternativas y su evidencia están en [docs/adr](docs/adr
 
 ## Pruebas automatizadas
 
-Comando exacto: `python -m pytest tests/` (o `pytest tests/` si pytest ya está instalado). Son 1032 tests que corren en unos 25 segundos, sin red ni `.env`, en modo offline. Hay dos opt-in que necesitan Ollama (`TIENDAHOGAR_TEST_OLLAMA=1`).
+Comando exacto: `python -m pytest tests/` (o `pytest tests/` si pytest ya está instalado). Son 1045 tests que corren en unos 25 segundos, sin red ni `.env`, en modo offline. Hay dos opt-in que necesitan Ollama (`TIENDAHOGAR_TEST_OLLAMA=1`).
 
 Lo primero que hay que leer es `tests/test_criticos.py`: los tres casos críticos del enunciado y los límites ($500 no escala y $501 sí, liquidación, pedido inexistente). El resto:
 - Recuperación: `test_rag.py` y `test_recuperador.py`. Tool de pedidos: `test_pedidos.py` y `test_pedidos_flexibles.py` (inexistentes o mal formados dan "No encontrado", sin inventar).
