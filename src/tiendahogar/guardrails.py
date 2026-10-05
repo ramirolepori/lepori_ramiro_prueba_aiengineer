@@ -13,7 +13,7 @@ import re
 from dataclasses import dataclass
 
 from .montos import extraer_montos
-from .rag import _PIDE_CANAL, normalizar
+from .rag import _PIDE_PERSONA, normalizar
 from .semantica import ClasificadorSemantico, segmentar
 
 CONTACTO = "soporte@tiendahogar.example"
@@ -106,8 +106,7 @@ class Escalamiento:
 def _es_consulta_de_canal(texto_norm: str) -> bool:
     """'Con quién hablo si tengo un tema legal?' pregunta por el canal: se responde con el Doc 5, no se deriva
     a ciegas. Una frase con un reclamo propio ('voy a demandar, con quién hablo?') sí se deriva."""
-    pide = _CONSULTA_CANAL.search(texto_norm.strip(" ¿?¡!")) or _PIDE_CANAL.search(texto_norm)
-    return bool(pide) and not _RECLAMO_PERSONAL.search(texto_norm)
+    return bool(_CONSULTA_CANAL.search(texto_norm.strip(" ¿?¡!"))) and not _RECLAMO_PERSONAL.search(texto_norm)
 
 
 def _mensaje(categoria: str, monto: float | None = None) -> tuple[str, str]:
@@ -216,6 +215,10 @@ def evaluar(pregunta: str, clasificador: ClasificadorSemantico | None = None) ->
     if monto is not None:
         res["reembolso_mayor_500"] = Escalamiento("reembolso_mayor_500", *_mensaje("reembolso_mayor_500", monto))
 
+    # "Pasame con un asesor", "quiero un supervisor": pide una persona. Si las reglas no encontraron un tema para derivar, no
+    # se busca uno por significado (el n-grama lo tomaba por una queja de trato) y el agente responde con el canal.
+    if not res and _PIDE_PERSONA.search(t):
+        return []
     # Si las reglas ya decidieron y la pregunta es una sola cláusula, no hay parte permitida que separar ni
     # otra categoría que cambie la derivación: se evita la llamada al modelo de embeddings.
     if res and len(segmentar(pregunta)) == 1:

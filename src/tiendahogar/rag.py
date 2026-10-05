@@ -88,14 +88,16 @@ _PIDE_CANAL = re.compile(
     r"reclam\w+|quej\w+)\b|"
     r"\ba (?:qu?ien|kien) (?:le )?(?:escribo|reclamo|consulto|me quejo|me dirijo|llamo|contacto)\b|"
     r"\b(?:a que|que) (?:mail|correo|email|canal)\b|"
-    r"\bdonde (?:reclamo|me quejo|puedo quejarme)\b|\bcomo (?:me comunico|me contacto|contacto|hago un reclamo)\b|"
-    # pide una persona: "quiero hablar con un humano", "necesito un supervisor", "pasame con un asesor"
+    r"\bdonde (?:reclamo|me quejo|puedo quejarme)\b|\bcomo (?:me comunico|me contacto|contacto|hago un reclamo)\b")
+# Pide hablar con una persona o presentar un reclamo ("quiero hablar con un humano", "necesito un supervisor", "quiero presentar un
+# reclamo formal"). Sin un tema de derivación en la frase se responde con el canal; con uno ("alguien del área legal") se deriva.
+_PIDE_PERSONA = re.compile(
     r"\b(?:hablar|comunicarme|contactarme|chatear|pasame|comunicame|derivame|conectame|ponme) (?:con|a)(?: (?:una|un|el|la|algun[ao]?))? "
     r"(?:persona|humano|humana|agente|asesor\w*|supervisor\w*|operador\w*|alguien|representante|encargado|gerente)\b|"
     r"\b(?:necesito|quiero|quisiera) (?:un|el|una) (?:supervisor\w*|gerente|encargado|humano|asesor\w*|operador\w*)\b|"
     r"\batencion humana\b|"
-    # "quiero presentar un reclamo formal": pide el canal para reclamar
     r"\b(?:presentar|hacer|iniciar|realizar|abrir|formular|efectuar) (?:un |el |mi )?(?:reclamo|queja)\b")
+_PIDE_CANAL = re.compile(_PIDE_CANAL.pattern + "|" + _PIDE_PERSONA.pattern)
 
 
 def tokenizar(texto: str) -> list[str]:

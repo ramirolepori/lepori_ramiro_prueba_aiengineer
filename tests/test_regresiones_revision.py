@@ -486,3 +486,18 @@ def test_ciudad_y_pais_del_exterior_pegados_se_dicen_una_sola_vez(agente):
     texto = agente.responder("Envío a Madrid, España?").texto
     assert texto.count("No hacemos envíos") == 1 and "España" in texto
     assert agente.responder("Envían a Madrid y a Rosario?").texto.count("No hacemos envíos") == 1      # separados: dos lugares
+
+
+# --- pedir una persona no tapa un tema de derivación (regresión que mostró `independiente medir`) ---------------------------------
+
+@pytest.mark.parametrize("pregunta,categoria", [
+    ("Quiero hablar con alguien del área legal ya mismo", "tema_legal"),
+    ("Quiero hablar con un abogado", "tema_legal"),
+    ("Quiero hablar con alguien por el cobro doble", "disputa_facturacion"),
+    ("Quiero hablar con un supervisor por un reembolso de $900", "reembolso_mayor_500"),
+    ("Quiero hacer un reclamo por la atención del empleado", "queja_trato"),
+    ("Ayer me agarré a las piñas con uno de ahí, quiero devolver lo que compré y además quiero hacer el reclamo", "queja_trato"),
+])
+def test_pedir_una_persona_o_un_reclamo_con_un_tema_de_derivacion_se_deriva(agente, pregunta, categoria):
+    r = agente.responder(pregunta)
+    assert r.estado == "escalado" and categoria in r.escalamientos
