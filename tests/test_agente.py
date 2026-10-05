@@ -165,7 +165,7 @@ def test_pedir_el_numero_tambien_lo_agrega_el_codigo_cuando_hay_documentos():
 
 
 def test_el_modelo_recibe_la_indicacion_de_responder_corto():
-    from tiendahogar.agent import SISTEMA
+    from tiendahogar.redaccion import SISTEMA
     assert "una o dos oraciones" in SISTEMA
 
 
@@ -200,10 +200,10 @@ def test_la_cobertura_va_antes_de_las_aclaraciones_obligatorias():
 
 
 def test_solo_se_completan_los_dos_mejores_documentos():
-    from tiendahogar.agent import _completar_cobertura
+    from tiendahogar.redaccion import completar_cobertura
     from tiendahogar.rag import Fragmento, Resultado
     rs = [Resultado(Fragmento(f"{d}#0", d, f"# Titulo {d}\n\nCuerpo {d}."), 1.0, 1.0) for d in ("garantia", "devoluciones", "reembolsos")]
-    texto, agregados = _completar_cobertura("Respuesta.", rs, "garantia devolver reembolso")
+    texto, agregados = completar_cobertura("Respuesta.", rs, "garantia devolver reembolso")
     assert agregados == ["garantia", "devoluciones"] and "Cuerpo reembolsos" not in texto
 
 
@@ -214,10 +214,10 @@ def test_si_el_modelo_ya_usa_las_cifras_del_documento_no_se_repite_aunque_no_lo_
 
 
 def test_la_cifra_debe_estar_completa_para_contar():
-    from tiendahogar.agent import _usa_las_cifras
-    assert _usa_las_cifras("tarda 5-10 días hábiles", "se procesan en 5-10 días hábiles")
-    assert not _usa_las_cifras("tarda 5 días", "se procesan en 5-10 días hábiles")
-    assert not _usa_las_cifras("son 120 meses", "tienen garantía de 12 meses")
+    from tiendahogar.redaccion import usa_las_cifras
+    assert usa_las_cifras("tarda 5-10 días hábiles", "se procesan en 5-10 días hábiles")
+    assert not usa_las_cifras("tarda 5 días", "se procesan en 5-10 días hábiles")
+    assert not usa_las_cifras("son 120 meses", "tienen garantía de 12 meses")
 
 
 # --- entradas límite ------------------------------------------------------------------------------------------
@@ -264,15 +264,15 @@ def test_una_compra_hecha_si_pide_numero_de_pedido(agente, pregunta):
 
 
 def test_el_prompt_no_manda_a_negar_aprobaciones():
-    from tiendahogar.agent import SISTEMA
+    from tiendahogar.redaccion import SISTEMA
     assert "No apruebes" not in SISTEMA and "No confirmes ni prometas" in SISTEMA
 
 
 def test_la_cobertura_solo_agrega_los_documentos_que_la_pregunta_nombra():
-    from tiendahogar.agent import _completar_cobertura
+    from tiendahogar.redaccion import completar_cobertura
     from tiendahogar.rag import Fragmento, Resultado
     rs = [Resultado(Fragmento(f"{d}#0", d, f"# {d}\n\nCuerpo {d}."), 1.0, 1.0) for d in ("devoluciones", "reembolsos")]
-    texto, agregados = _completar_cobertura("Se puede devolver.", rs, "Puedo devolver la plancha?")
+    texto, agregados = completar_cobertura("Se puede devolver.", rs, "Puedo devolver la plancha?")
     assert agregados == ["devoluciones"] and "Cuerpo reembolsos" not in texto
-    texto, agregados = _completar_cobertura("Se puede devolver.", rs, "Quiero devolver la plancha, cuándo me reembolsan?")
+    texto, agregados = completar_cobertura("Se puede devolver.", rs, "Quiero devolver la plancha, cuándo me reembolsan?")
     assert agregados == ["devoluciones", "reembolsos"]

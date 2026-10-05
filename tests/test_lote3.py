@@ -3,7 +3,7 @@
 import pytest
 
 from tiendahogar import AgenteSoporte
-from tiendahogar.agent import _para_el_cliente
+from tiendahogar.redaccion import para_el_cliente
 from tiendahogar.guardrails import evaluar
 from tiendahogar.lugares import resolver_lugares
 from tiendahogar.pedidos import extraer_identificadores_raros
@@ -117,16 +117,16 @@ def test_un_producto_hecho_a_pedido_no_pregunta_cuando_se_compro(agente):
 
 
 def test_las_indicaciones_para_el_agente_no_se_le_muestran_al_cliente():
-    assert _para_el_cliente("Reembolsos mayores a $500 requieren aprobación de un supervisor humano — el agente no debe "
+    assert para_el_cliente("Reembolsos mayores a $500 requieren aprobación de un supervisor humano — el agente no debe "
                             "aprobarlos automáticamente.") == "Reembolsos mayores a $500 requieren aprobación de un supervisor humano."
-    assert "asistente de IA" not in _para_el_cliente("referido a un agente humano en soporte@tiendahogar.example — el asistente de IA no debe intentar resolver estos casos.")
+    assert "asistente de IA" not in para_el_cliente("referido a un agente humano en soporte@tiendahogar.example — el asistente de IA no debe intentar resolver estos casos.")
 
 
 def test_el_contacto_no_se_repite_si_la_respuesta_ya_trae_el_correo():
-    from tiendahogar.agent import _completar_cobertura
+    from tiendahogar.redaccion import completar_cobertura
     from tiendahogar.rag import Fragmento, Resultado
     contacto = Resultado(Fragmento("contacto#0", "contacto", "# Canales de contacto\n\nEscribir a soporte@tiendahogar.example"), 1.0, 1.0)
-    texto, agregados = _completar_cobertura("Escribí a soporte@tiendahogar.example", [contacto], "con quien me contacto")
+    texto, agregados = completar_cobertura("Escribí a soporte@tiendahogar.example", [contacto], "con quien me contacto")
     assert agregados == []
 
 

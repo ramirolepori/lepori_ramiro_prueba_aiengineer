@@ -3,7 +3,7 @@ Los textos son respuestas reales de `qwen2.5:7b` a preguntas del banco de frases
 
 import pytest
 
-from tiendahogar.agent import _limpiar_citas, _problema_de_salida, _prompt
+from tiendahogar.redaccion import limpiar_citas, problema_de_salida, armar_prompt
 from tiendahogar.rag import cargar_indice
 
 INDICE = cargar_indice()
@@ -13,7 +13,7 @@ def prompt_de(pregunta: str) -> str:
     resultados = INDICE.buscar(pregunta)
     if not resultados:      # sin embeddings el recuperador no ve la pregunta del teléfono: se le da el documento de contacto
         resultados = [r for r in INDICE.puntuar("contacto canal queja facturacion legal") if r.fragmento.documento == "contacto"]
-    return _prompt(pregunta, resultados, [])
+    return armar_prompt(pregunta, resultados, [])
 
 
 INVENTADAS = [
@@ -39,21 +39,21 @@ CORRECTAS = [
 
 @pytest.mark.parametrize("pregunta,texto", INVENTADAS)
 def test_se_descarta_una_respuesta_con_consejos_o_pasos_inventados(pregunta, texto):
-    assert "inventados" in (_problema_de_salida(texto, prompt_de(pregunta)) or "")
+    assert "inventados" in (problema_de_salida(texto, prompt_de(pregunta)) or "")
 
 
 @pytest.mark.parametrize("pregunta,texto", CORRECTAS)
 def test_se_acepta_una_respuesta_fiel_a_los_documentos(pregunta, texto):
-    assert _problema_de_salida(texto, prompt_de(pregunta)) is None
+    assert problema_de_salida(texto, prompt_de(pregunta)) is None
 
 
 def test_una_referencia_a_una_cita_rota_se_borra_entera():
     texto = "Según la [Política de Garantía], la plancha tiene una garantía de 6 meses. [garantia]"
-    assert _limpiar_citas(texto, ["garantia"]) == "La plancha tiene una garantía de 6 meses. [garantia]"
-    assert _limpiar_citas("Según la, tu plancha tiene 6 meses.", ["garantia"]).startswith("Tu plancha tiene 6 meses.")
-    assert _limpiar_citas("Según nuestra política, 6 meses. [garantia]", ["garantia"]) == "Según nuestra política, 6 meses. [garantia]"
+    assert limpiar_citas(texto, ["garantia"]) == "La plancha tiene una garantía de 6 meses. [garantia]"
+    assert limpiar_citas("Según la, tu plancha tiene 6 meses.", ["garantia"]).startswith("Tu plancha tiene 6 meses.")
+    assert limpiar_citas("Según nuestra política, 6 meses. [garantia]", ["garantia"]) == "Según nuestra política, 6 meses. [garantia]"
 
 
 def test_una_cita_en_el_medio_pasa_al_final():
-    assert _limpiar_citas("Según la [garantia], la licuadora tiene garantía de 6 meses.", ["garantia"]) == \
+    assert limpiar_citas("Según la [garantia], la licuadora tiene garantía de 6 meses.", ["garantia"]) == \
         "La licuadora tiene garantía de 6 meses. [garantia]"

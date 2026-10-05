@@ -3,7 +3,7 @@ import pytest
 
 from tiendahogar import AgenteSoporte
 from tiendahogar.__main__ import para_mostrar
-from tiendahogar.agent import MENSAJE_DESPEDIDA, MENSAJE_SALUDO
+from tiendahogar.mensajes import MENSAJE_DESPEDIDA, MENSAJE_SALUDO
 
 
 @pytest.fixture(scope="module")
