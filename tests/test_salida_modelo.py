@@ -57,3 +57,36 @@ def test_una_referencia_a_una_cita_rota_se_borra_entera():
 def test_una_cita_en_el_medio_pasa_al_final():
     assert limpiar_citas("Según la [garantia], la licuadora tiene garantía de 6 meses.", ["garantia"]) == \
         "La licuadora tiene garantía de 6 meses. [garantia]"
+
+
+@pytest.mark.parametrize("pregunta,texto", [
+    ("Mi lavadora tiene 8 meses y se rompió, aplica la garantía y puedo devolverla?",
+     "Sí, aplica la garantía. No puedes devolverla, solo puedes solicitar el arreglo o reemplazo según la garantía. [garantia]"),
+    ("Mi licuadora falla, qué hago?", "La garantía cubre el defecto, así que van a reparar tu licuadora. [garantia]"),
+    ("Mi plancha no calienta", "Con la garantía podés pedir el canje por una plancha nueva. [garantia]"),
+])
+def test_se_descarta_un_remedio_que_los_documentos_no_ofrecen(pregunta, texto):
+    assert "remedio" in (problema_de_salida(texto, prompt_de(pregunta)) or "")
+
+
+def test_si_el_cliente_nombra_el_remedio_el_modelo_puede_decir_que_no_tiene_esa_informacion():
+    pregunta = "Me pueden reemplazar la licuadora?"
+    texto = "No tengo información sobre el reemplazo de licuadoras. [garantia]"
+    assert problema_de_salida(texto, prompt_de(pregunta)) is None
+
+
+@pytest.mark.parametrize("texto", [
+    "Los reembolsos se procesan en 5-10 días hábiles. Se reembolsa al mismo método de pago original. [reembolsos]",
+    "El reembolso se acredita en 5-10 días hábiles después de recibir el producto devuelto. [reembolsos]",
+])
+def test_repetir_lo_que_dice_el_documento_no_es_una_promesa(texto):
+    assert problema_de_salida(texto, prompt_de("Cuánto tarda un reembolso y a qué método de pago me lo devuelven?")) is None
+
+
+@pytest.mark.parametrize("texto", [
+    "Tu reembolso se aprobó y se acredita en 5-10 días hábiles. [reembolsos]",
+    "Listo, te lo reembolsamos hoy mismo al mismo método de pago original. [reembolsos]",
+    "Tu reembolso fue aprobado y se procesa en 5-10 días hábiles. [reembolsos]",
+])
+def test_decir_que_algo_ya_esta_aprobado_o_hecho_si_es_una_promesa(texto):
+    assert "promesa" in (problema_de_salida(texto, prompt_de("Cuánto tarda un reembolso?")) or "")

@@ -120,20 +120,35 @@ def problema_de_salida(texto: str, prompt: str) -> str | None:
         return f"promesa o instrucción que no está en los documentos: {promesa.group(0)}"
     if _afirma_lo_que_el_documento_niega(texto, prompt):
         return "dice que sí se puede devolver algo que el documento no devuelve (liquidación o personalizado)"
+    remedio = _remedio_inventado(texto, prompt)
+    if remedio:
+        return f"consejos o pasos inventados: ofrece un remedio que los documentos no ofrecen ({remedio})"
     inventadas = _palabras_sin_respaldo(texto, prompt)
     if len(inventadas) >= MAX_PALABRAS_SIN_RESPALDO:
         return f"palabras que no están en el contexto (consejos o pasos inventados): {', '.join(inventadas)}"
     return None
 
 
-# Cosas que el modelo no puede decir: que algo ya está aprobado o hecho, que se arregla o se regala, o una orden sobre sus reglas
+# Cosas que el modelo no puede decir: que algo ya está aprobado o hecho, que se arregla o se regala, o una orden sobre sus reglas.
+# Solo el pasado y la primera persona ("te lo reparamos", "se aprobó"): "se reembolsa al mismo método de pago" es el Doc 4.
 _PROMESA = re.compile(
     r"\b(?:fue|esta|sera|queda|quedo|ha sido|fueron|estan|quedan) (?:ya )?(?:aprobad\w+|autorizad\w+|acreditad\w+|"
-    r"reembolsad\w+|procesad\w+ con exito)\b|\b(?:te|se|le) (?:lo |la |los |las )?(?:aprob\w+|autoriz\w+|acredit\w+|"
-    r"reembols\w+|reparam\w+|repararemos|cambiam\w+|cambiaremos|reemplazam\w+|reemplazaremos|devolvem\w+|devolveremos|"
-    r"enviam\w+|enviaremos|mandam\w+|mandaremos)\b|\bgratis\b|\bsin (?:costo|cargo)\b|\b(?:aprobe|apruebo|autorizo|"
-    r"autorice)\b|\b(?:ignor\w+|olvid\w+) (?:mis |tus |las |todas las )?(?:instrucciones|reglas)\b|con mi autorizacion")
+    r"reembolsad\w+|procesad\w+ con exito)\b|"
+    r"\b(?:te|le|les) (?:lo |la |los |las )?(?:aprobamos|autorizamos|acreditamos|reembolsamos|reembolsaremos|reparamos|repararemos|"
+    r"cambiamos|cambiaremos|reemplazamos|reemplazaremos|devolvemos|devolveremos|enviamos|enviaremos|mandamos|mandaremos|"
+    r"aprobe|autorice|acredite|reembolse)\b|"
+    r"\bse (?:te |le |les )?(?:aprobo|autorizo|acredito|reembolso)\b|"
+    r"\bgratis\b|\bsin (?:costo|cargo)\b|\b(?:aprobe|apruebo|autorizo|autorice)\b|"
+    r"\b(?:ignor\w+|olvid\w+) (?:mis |tus |las |todas las )?(?:instrucciones|reglas)\b|con mi autorizacion")
 _NO_SE_DEVUELVE_LIQ = re.compile(r"liquidacion|oferta final|personalizad")
+# La garantía "cubre defectos de fábrica": los documentos no dicen que se arregle, se repare ni se reemplace nada. Si el modelo
+# lo ofrece ("solo podés solicitar el arreglo o reemplazo") y esas palabras no estaban en lo que recibió, lo inventó.
+_REMEDIOS = ("arregl", "repar", "reemplaz", "sustitu", "canje")
+
+
+def _remedio_inventado(texto: str, prompt: str) -> str | None:
+    t, contexto = guardrails.normalizar(texto), guardrails.normalizar(prompt)
+    return next((raiz for raiz in _REMEDIOS if re.search(rf"\b{raiz}\w*", t) and not re.search(rf"\b{raiz}\w*", contexto)), None)
 
 
 def _afirma_lo_que_el_documento_niega(texto: str, prompt: str) -> bool:

@@ -41,6 +41,8 @@ def test_producto_en_liquidacion_no_se_devuelve(agente):
 def test_garantia_mezclada_con_devolucion(agente):
     r = agente.responder("Mi lavadora tiene 45 días y falla, la puedo devolver?")
     assert {"garantia", "devoluciones"} <= set(r.fuentes)
+    # con el producto y el tiempo, el código hace las dos cuentas: pasaron los 30 días y la garantía de 12 meses sigue vigente
+    assert "pasaron más de 30 días" in r.texto and "12 meses" in r.texto and "todavía estás dentro" in r.texto
 
 
 def test_pedido_existente_usa_la_tool(agente):
@@ -173,7 +175,7 @@ def test_el_modelo_recibe_la_indicacion_de_responder_corto():
 
 def test_si_el_modelo_cita_solo_una_politica_se_agrega_la_otra():
     llm = LLMFalso("No se aceptan devoluciones después de 30 días sin un defecto cubierto [devoluciones].")
-    r = AgenteSoporte(llm=llm).responder("Mi lavadora tiene 45 días y falla, la puedo devolver?")
+    r = AgenteSoporte(llm=llm).responder("Mi lavadora falla, la puedo devolver? Y cuánto dura la garantía?")
     assert {"devoluciones", "garantia"} <= set(r.fuentes)
     assert r.texto.startswith("No se aceptan devoluciones")
     assert "Política de garantía: " in r.texto and "12 meses" in r.texto and r.texto.count("[garantia]") == 1
@@ -182,7 +184,7 @@ def test_si_el_modelo_cita_solo_una_politica_se_agrega_la_otra():
 
 def test_si_el_modelo_cita_todo_no_se_agrega_nada():
     llm = LLMFalso("Se puede devolver hasta 30 días; después solo con defecto de garantía de 12 meses [devoluciones] [garantia].")
-    r = AgenteSoporte(llm=llm).responder("Mi lavadora tiene 45 días y falla, la puedo devolver?")
+    r = AgenteSoporte(llm=llm).responder("Mi lavadora falla, la puedo devolver? Y cuánto dura la garantía?")
     assert "Política de" not in r.texto and not any(e["tipo"] == "cobertura" for e in r.traza)
 
 
@@ -209,7 +211,7 @@ def test_solo_se_completan_los_dos_mejores_documentos():
 
 def test_si_el_modelo_ya_usa_las_cifras_del_documento_no_se_repite_aunque_no_lo_cite():
     llm = LLMFalso("Pasaron más de 30 días, pero como la lavadora tiene 12 meses de garantía podés reclamarla [devoluciones].")
-    r = AgenteSoporte(llm=llm).responder("Mi lavadora tiene 45 días y falla, la puedo devolver?")
+    r = AgenteSoporte(llm=llm).responder("Mi lavadora falla, la puedo devolver? Y cuánto dura la garantía?")
     assert "Política de garantía" not in r.texto
 
 

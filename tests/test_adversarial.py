@@ -88,7 +88,8 @@ def test_la_parte_ajena_a_la_tienda_no_le_llega_al_modelo(pregunta, ajeno):
 
 def test_una_pregunta_con_varias_cosas_de_la_tienda_llega_entera():
     llm = LLMEspia()
-    AgenteSoporte(llm=llm).responder("Mi lavadora tiene 45 días y falla, la puedo devolver? Y cuánto dura la garantía?")
+    # con un pedido en la consulta la respuesta no se resuelve por código y le llega al modelo
+    AgenteSoporte(llm=llm).responder("Mi lavadora ORD-1002 tiene 45 días y falla, la puedo devolver? Y cuánto dura la garantía?")
     assert "45 días" in llm.prompts[0] and "garantía" in llm.prompts[0]
 
 

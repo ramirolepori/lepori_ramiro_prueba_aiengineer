@@ -21,7 +21,7 @@ from typing import Any, Callable
 
 from . import guardrails
 from .llm import LLM, ErrorLLM
-from .plazos import PLAZO_DEVOLUCION_DIAS, dias_desde_la_compra, nota_de_devolucion, respuesta_de_garantia
+from .plazos import PLAZO_DEVOLUCION_DIAS, dias_desde_la_compra, garantia_del_producto, nota_de_devolucion, respuesta_de_garantia
 from .pedidos import consultar_estado_pedido, extraer_identificadores_raros, extraer_referencias
 from .config import Config
 from .embeddings import ClienteEmbeddings
@@ -179,11 +179,15 @@ class AgenteSoporte:
         return self._responder(pregunta, ev, con_respaldo=True, sesion=sesion, lugar_dado=lugar_dado,
                                repreguntar=repreguntar)
 
-    def _respuesta_de_plazo(self, dias: int, fuentes: list[str]) -> str:
+    def _respuesta_de_plazo(self, dias: int, fuentes: list[str], pregunta: str) -> str:
         texto = f"{nota_de_devolucion(dias)} [devoluciones]"
         if dias > PLAZO_DEVOLUCION_DIAS and "garantia" in fuentes:
+            # pasados los 30 días solo cuenta la garantía: con el producto y el tiempo se hace la cuenta; si no, se da el documento
+            propia = garantia_del_producto(pregunta, devolucion=True, requiere_motivo=False)
             garantia = next((f for f in getattr(self.indice, "indice", self.indice).fragmentos if f.documento == "garantia"), None)
-            if garantia is not None:
+            if propia is not None:
+                texto += f"\n\n{propia} [garantia]"
+            elif garantia is not None:
                 cuerpo = re.sub(r"^#.*\n+", "", garantia.texto).strip()
                 texto += f"\n\n{para_el_cliente(cuerpo)} [garantia]"
         return texto
@@ -332,7 +336,7 @@ class AgenteSoporte:
         if (dias is not None and not pedidos and set(fuentes) <= {"devoluciones", "garantia"}
                 and not NO_DEVOLVIBLE.search(guardrails.normalizar(pregunta))):
             ev("plazo_de_devolucion", dias=dias)
-            return Respuesta(self._respuesta_de_plazo(dias, fuentes), "respondido", fuentes)
+            return Respuesta(self._respuesta_de_plazo(dias, fuentes, pregunta), "respondido", fuentes)
         # Garantía de algo que tiene hace tantos meses: también es una cuenta del Doc 1 (12 meses los grandes, 6 los pequeños)
         garantia = respuesta_de_garantia(pregunta) if fuentes == ["garantia"] and not pedidos else None
         if garantia:

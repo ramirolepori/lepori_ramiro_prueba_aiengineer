@@ -3,7 +3,7 @@
 import pytest
 
 from tiendahogar import AgenteSoporte
-from tiendahogar.plazos import dias_desde_la_compra, nota_de_devolucion
+from tiendahogar.plazos import dias_desde_la_compra, garantia_del_producto, nota_de_devolucion
 
 
 @pytest.mark.parametrize("texto,dias", [
@@ -70,3 +70,86 @@ def test_con_mas_de_30_dias_y_una_falla_tambien_da_lo_que_dice_la_garantia():
 def test_un_producto_que_no_se_devuelve_nunca_no_recibe_la_cuenta_de_los_dias(pregunta):
     texto = AgenteSoporte().responder(pregunta).texto
     assert "dentro de los 30 días" not in texto and "pasaron más de 30 días" not in texto
+
+
+# --- el tiempo dicho de otras formas: "tiene 8 meses", "de 14 meses", "de hace 40 días" ---------------------------------------------
+
+@pytest.mark.parametrize("texto,dias", [
+    ("Mi lavadora tiene 8 meses y se rompió, puedo devolverla?", 240),
+    ("Mi licuadora tiene 45 días y falla, la puedo devolver?", 45),
+    ("Mi refrigeradora de 14 meses falló, puedo devolverla?", 420),
+    ("Quiero devolver mi lavadora de hace 40 días, está defectuosa", 40),
+    ("La lavadora de mi mamá tiene 3 meses y se rompió, puede devolverla?", 90),
+    ("Mi tostadora tiene 2 años, la puedo devolver?", 730),
+    ("La heladera que compré tiene dos semanas, la puedo cambiar?", 14),
+])
+def test_la_edad_del_producto_dicha_de_otra_forma_tambien_cuenta(texto, dias):
+    assert dias_desde_la_compra(texto) == dias
+
+
+@pytest.mark.parametrize("texto", [
+    "Mi licuadora tiene 6 meses de garantía, puedo devolverla?",              # el plazo de la garantía, no la edad
+    "Mi hija tiene 8 meses y le regalaron una plancha, puedo devolverla?",    # la edad de otra cosa
+    "Mi licuadora se rompió hace 3 días, la puedo devolver?",                 # la fecha de la falla, no de la compra
+    "Tengo 30 días para devolver mi heladera?",
+])
+def test_no_se_toma_por_la_edad_del_producto_lo_que_es_otra_cosa(texto):
+    assert dias_desde_la_compra(texto) is None
+
+
+@pytest.mark.parametrize("texto,dentro,vencida", [
+    ("Mi lavadora tiene 8 meses y se rompió, tengo garantía?", True, False),
+    ("Mi licuadora tiene 7 meses y falla, tengo garantía?", False, True),
+    ("Compré una estufa hace 2 años, se rompió, qué puedo hacer?", False, True),
+    ("Tengo una plancha de 3 meses que no calienta, la garantía la cubre?", True, False),
+    ("Mi lavarropas de 5 meses no centrifuga, puedo usar la garantía?", True, False),
+    ("Compré una heladera hace 12 meses y dejó de enfriar, tengo garantía?", True, False),
+])
+def test_la_garantia_se_calcula_con_el_producto_y_el_tiempo(texto, dentro, vencida):
+    g = garantia_del_producto(texto)
+    assert (g is not None and "todavía estás dentro" in g) is dentro and (g is not None and "ya pasó ese plazo" in g) is vencida
+
+
+@pytest.mark.parametrize("texto", [
+    "Mi licuadora tiene 6 meses de garantía, es verdad?",                     # no es la edad
+    "Cuánto dura la garantía de la plancha de 6 meses?",                      # ambiguo: se da el documento
+    "Mi licuadora se rompió hace 3 días, tengo garantía?",                    # "hace 3 días" no es la compra
+    "Compré hace 8 meses una heladera y una licuadora, tienen garantía?",     # dos productos con plazos distintos
+    "Cuánto dura la garantía de una refrigeradora?",                          # sin tiempo
+    "Compré hace 8 meses, tengo garantía?",                                   # sin producto
+])
+def test_la_garantia_no_se_calcula_si_falta_o_es_ambiguo_algun_dato(texto):
+    assert garantia_del_producto(texto) is None
+
+
+def test_con_la_devolucion_en_juego_una_garantia_vencida_dice_que_no_se_acepta():
+    g = garantia_del_producto("Mi refrigeradora de 14 meses falló, puedo devolverla?", devolucion=True)
+    assert g.endswith("ya pasó ese plazo, así que la devolución no se acepta.")
+    assert "no se acepta" not in garantia_del_producto("Mi refrigeradora de 14 meses falló, tengo garantía?")
+
+
+class LLMQueNoSeLlama:
+    llamadas = 0
+
+    def generar(self, sistema, prompt):
+        LLMQueNoSeLlama.llamadas += 1
+        return "Sí, aplica la garantía. No puedes devolverla, solo puedes solicitar el arreglo o reemplazo según la garantía."
+
+
+@pytest.mark.parametrize("pregunta,esperado,no_esperado", [
+    ("Mi lavadora tiene 8 meses y se rompió, aplica la garantía y puedo devolverla?",
+     ["pasaron más de 30 días", "12 meses", "con 8 meses todavía estás dentro"], ["no se acepta", "arreglo", "reemplazo"]),
+    ("Mi licuadora tiene 7 meses y falla, puedo devolverla o usar la garantía?",
+     ["pasaron más de 30 días", "6 meses", "ya pasó ese plazo", "la devolución no se acepta"], ["arreglo", "reemplazo"]),
+    ("Mi refrigeradora de 14 meses falló, puedo devolverla?",
+     ["12 meses", "ya pasó ese plazo", "la devolución no se acepta"], ["arreglo", "reemplazo"]),
+    ("Quiero devolver mi lavadora de hace 40 días, está defectuosa",
+     ["pasaron más de 30 días", "con 40 días todavía estás dentro"], ["no se acepta"]),
+])
+def test_garantia_mezclada_con_devolucion_se_responde_por_codigo_con_cualquier_redaccion(pregunta, esperado, no_esperado):
+    llm = LLMQueNoSeLlama()
+    llm.llamadas = 0
+    r = AgenteSoporte(llm=llm).responder(pregunta)
+    assert llm.llamadas == 0, "es una cuenta de los documentos: no la hace el modelo"
+    assert all(e in r.texto for e in esperado) and not any(n in r.texto for n in no_esperado), r.texto
+    assert r.estado == "respondido" and {"devoluciones", "garantia"} >= set(r.fuentes)
