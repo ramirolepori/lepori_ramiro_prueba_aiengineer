@@ -20,7 +20,7 @@ cliente ── pregunta ──► AgenteSoporte.responder(pregunta, sesion=None)
         (cada paso queda en una traza JSONL con sus tiempos)
 ```
 
-Lo que el enunciado trata como regla (derivar, no inventar, no aprobar reembolsos) se resuelve en código antes o después del modelo, nunca dentro de él (ADR 0002).
+Lo que el enunciado trata como regla (derivar, no inventar, no aprobar reembolsos) se resuelve en código antes o después del modelo, nunca dentro de él (ADR 0001).
 
 ## Módulos
 
@@ -28,7 +28,9 @@ Todo está en `src/tiendahogar/` y usa solo la librería estándar.
 
 | Módulo | Responsabilidad |
 | --- | --- |
-| `agent.py` | El flujo de arriba: `AgenteSoporte`, `Respuesta`, preguntas mixtas, validación de la salida y notas |
+| `agent.py` | El flujo de arriba: `AgenteSoporte`, `Respuesta`, preguntas mixtas y orden de las decisiones |
+| `intenciones.py`, `conversacion.py`, `mensajes.py` | Qué quiere el cliente (reglas sobre el texto), saludos y despedidas, y los textos fijos que se le responden |
+| `redaccion.py` | El prompt del modelo, la validación de lo que devuelve, la cobertura de políticas, las aclaraciones obligatorias y el texto sin modelo |
 | `guardrails.py`, `semantica.py` | Reglas de derivación e inyección; clasificación por significado (embeddings y n-gramas) |
 | `montos.py` | Montos en distintos formatos (`$1.000`, `2k`, `2 lucas`, `mil quinientos`) |
 | `rag.py`, `embeddings.py` | BM25, recuperador híbrido con umbral por margen, cliente de embeddings con caché |
@@ -54,4 +56,4 @@ Datos en `src/tiendahogar/data/`: `docs/` (los 5 documentos del enunciado, sin e
 - Un dato que el agente repregunte: definirlo en `sesion.py` y `agent.py`, con tests en `tests/test_sesion.py`.
 - Un proveedor de modelos: si es compatible con OpenAI alcanza con `LLM_BASE_URL`; si no, un cliente nuevo en `llm.py` con `generar(sistema, prompt)`.
 
-Después de un cambio, correr `python -m pytest tests/`. Un lote de frases ajenas se mide una sola vez antes de corregir (ADR 0010).
+Después de un cambio, correr `python -m pytest tests/`. Un lote de frases ajenas se mide una sola vez antes de corregir (ADR 0006).

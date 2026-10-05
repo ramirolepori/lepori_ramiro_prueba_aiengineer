@@ -90,7 +90,7 @@ python -m tiendahogar.independiente medir                    # lotes de frases e
 python -m tiendahogar.rendimiento [--sin-llm|--offline]      # latencia por etapa
 ```
 
-Los conjuntos de frases están en `tests/data/`, divididos en desarrollo y prueba. Los resultados y sus salvedades están en los ADR [0003](docs/adr/0003-guardrail-en-tres-capas.md), [0004](docs/adr/0004-rag-hibrido-y-umbral-por-margen.md), [0009](docs/adr/0009-modelos-locales-y-clientes-sin-sdk.md), [0010](docs/adr/0010-estrategia-de-evaluacion.md) y [0011](docs/adr/0011-robustez-ante-intentos-de-sacarlo-de-alcance.md).
+Los conjuntos de frases están en `tests/data/`, divididos en desarrollo y prueba. Los resultados y sus salvedades están en los ADR [0002](docs/adr/0002-guardrail-y-robustez.md), [0003](docs/adr/0003-recuperacion-y-pedidos.md) y [0006](docs/adr/0006-modelos-y-evaluacion.md).
 
 ## Estructura
 
@@ -105,4 +105,4 @@ Las trazas de `python -m tiendahogar` van a `trazas/trazas.jsonl` (ignorada por 
 
 ## Limitaciones
 
-Están en [SUBMISSION.md](SUBMISSION.md). Las principales: trabaja en español, los clientes de modelo no se probaron contra la API de un proveedor comercial, la memoria se limita a cuatro datos y las cifras de medición salen de conjuntos de frases escritos por el mismo autor del código o ajustados mirándolos.
+Están en [SUBMISSION.md](SUBMISSION.md). Las principales: trabaja en español, los clientes de modelo no se probaron contra la API de un proveedor comercial, la memoria cubre solo datos pendientes (lugar, monto, pedido y fecha de compra) y las cifras de medición salen de conjuntos de frases escritos por el mismo autor del código o ajustados mirándolos.
