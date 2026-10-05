@@ -33,12 +33,12 @@ Las decisiones con sus alternativas y su evidencia están en [docs/adr](docs/adr
 
 ## Pruebas automatizadas
 
-Comando exacto: `python -m pytest tests/` (o `pytest tests/` si pytest ya está instalado). Son 961 tests que corren en unos 25 segundos, sin red ni `.env`, en modo offline. Hay dos opt-in que necesitan Ollama (`TIENDAHOGAR_TEST_OLLAMA=1`).
+Comando exacto: `python -m pytest tests/` (o `pytest tests/` si pytest ya está instalado). Son 1004 tests que corren en unos 25 segundos, sin red ni `.env`, en modo offline. Hay dos opt-in que necesitan Ollama (`TIENDAHOGAR_TEST_OLLAMA=1`).
 
 Lo primero que hay que leer es `tests/test_criticos.py`: los tres casos críticos del enunciado y los límites ($500 no escala y $501 sí, liquidación, pedido inexistente). El resto:
 - Recuperación: `test_rag.py` y `test_recuperador.py`. Tool de pedidos: `test_pedidos.py` y `test_pedidos_flexibles.py` (inexistentes o mal formados dan "No encontrado", sin inventar).
 - Guardrail: `test_guardrails.py` y `test_semantica.py` (reembolsos, formatos de monto, quejas, facturación, temas legales, paráfrasis e inyección).
-- Escenarios y ataques: `test_agente.py`, `test_mixtas.py`, `test_fuera_de_alcance.py` y `test_adversarial.py` (75 preguntas ajenas y 72 intentos de sacar al agente de su alcance; ninguno se obedece).
+- Escenarios y ataques: `test_agente.py`, `test_mixtas.py`, `test_fuera_de_alcance.py` y `test_adversarial.py` (75 preguntas ajenas y 75 intentos de sacar al agente de su alcance; ninguno se obedece).
 - Conversación y lugares: `test_sesion.py` y `test_lugares.py`. Clientes de modelo: `test_llm.py`, contra un servidor local que imita cada API.
 - Errores encontrados por una revisión externa: `test_regresiones_revision.py`.
 
@@ -60,7 +60,7 @@ Hay además mediciones sobre conjuntos de frases (`python -m tiendahogar.evaluac
 - Las cifras salen de conjuntos de frases que escribí yo o que se ajustaron mirándolos; un lote ajeno puede dar peor. La detección de inyección se limita a lo inequívoco y la validación de la salida del modelo es una red de seguridad, no una garantía.
 - Decisiones propias que los documentos no dan: hasta $500 el agente no deriva ni promete la aprobación; el tope se aplica por reembolso y no a la suma de varios; "la capital" es la Ciudad de Buenos Aires; el monto es el que declara el cliente porque la tabla no tiene precios; un incidente de seguridad con un producto se deriva a una persona (quinta categoría, solo por reglas).
 - El diccionario de lugares es una muestra: un lugar que no figura se confirma con el cliente.
-- La memoria cubre datos pendientes (lugar, monto, pedido, fecha de compra), no sigue la charla, y vive en el proceso.
+- La memoria cubre datos pendientes (lugar, monto, pedido, fecha de compra), no sigue la charla (un "y la de una licuadora?" sin contexto se responde como pregunta nueva) y vive en el proceso.
 - El RAG a veces recupera solo uno de dos documentos en preguntas que los mezclan y falla en paráfrasis lejanas. En modo offline, una pregunta fuera de tema que comparte una palabra del dominio recibe el documento completo.
 - Varias consultas a la vez: sin modelos, 32 clientes simultáneos dan las mismas respuestas que uno solo, sin errores. No medí varios clientes contra un mismo modelo de lenguaje.
 - Los documentos no dicen precios, marcas ni garantía extendida: el agente responde que no tiene esa información.

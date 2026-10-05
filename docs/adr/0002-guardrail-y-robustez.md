@@ -31,6 +31,6 @@ Solo reglas (68 % en el primer set), un modelo generativo como clasificador (no 
 
 ## Evidencia
 
-Set propio de 200 frases, dividido en desarrollo (para ajustar) y prueba. Riesgo detectado, con 0 falsos positivos: reglas solas 86,4 % y 88,1 %; reglas y n-gramas 88,6 % y 95,2 %; reglas y `embeddinggemma` 98,9 % y 97,6 %. Para lo ajeno, 72 ataques en 9 técnicas y un banco de 75 preguntas fuera del negocio: ninguno se obedece ni se responde con un documento, y se rechazan 73 de 75 (las otras 2 son decisiones de diseño). Se probaron Garak (inyecciones codificadas, secuestro de la orden, inyección latente: 256 de 256 en cada familia) y Promptfoo (80 casos en español); mostraron dos defectos que se corrigieron.
+Set propio de 200 frases, dividido en desarrollo (para ajustar) y prueba. Riesgo detectado, con 0 falsos positivos: reglas solas 86,4 % y 88,1 %; reglas y n-gramas 88,6 % y 95,2 %; reglas y `embeddinggemma` 98,9 % y 97,6 %. Para lo ajeno, 75 ataques en 9 técnicas y un banco de 75 preguntas fuera del negocio: ninguno se obedece ni se responde con un documento, y se rechazan 73 de 75 (las otras 2 son decisiones de diseño). Se probaron Garak (inyecciones codificadas, secuestro de la orden, inyección latente: 256 de 256 en cada familia) y Promptfoo (80 casos en español); mostraron dos defectos que se corrigieron.
 
 Salvedad: el set, las anclas y el banco los escribió la misma persona y varias correcciones salieron de sus fallos, así que las cifras son optimistas (ver el ADR 0006). Las frases de ejemplo están en español.
