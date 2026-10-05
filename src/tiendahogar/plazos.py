@@ -34,6 +34,11 @@ _EDAD = re.compile(r"\b(?:" + _NOMBRES + r")\w*(?:\s+[a-z]+){0,4}?\s+(?:tiene|ti
 _DE_EDAD = re.compile(r"\b(?:" + _NOMBRES + r")\w*\s+(?:que (?:tengo|compre|compramos)\s+)?de\s+(?:hace\s+)?" + _NUM +
                       r"\s+" + _UNIDADES + r"\b(?!\s+de\s+garantia)")
 _GARANTIA_DE = re.compile(r"garantia (?:de|del)\s+(?:(?:la|el|mi|un|una|su)\s+)?$")
+_NOMBRE_Y_TIENE = re.compile(r"(?:" + _NOMBRES + r")\w*\s+(?:tiene|tienen)\b")
+# "un año y medio", "1 año y 2 meses", "un año y pico": la duración sigue después de la unidad
+_Y_MEDIO = re.compile(r"\s+y\s+(?:medio|media)\b")
+_Y_PICO = re.compile(r"\s+y\s+(?:pico|algo|tanto)\b")
+_Y_OTRA = re.compile(r"\s+y\s+" + _NUM + r"\s+" + _UNIDADES + r"\b")
 _COMPRO = re.compile(r"\b(?:compr\w+|adquir\w+|ordene|pedi|encargue|me llego|recibi|antiguedad)\b")
 _QUIERE_DEVOLVER = re.compile(r"\b(?:devolver\w*|devuelv\w*|devolucion|cambiar\w*|cambio|retorno)\b|de vuelta")
 _ESPERA_UN_REEMBOLSO = re.compile(r"reembols|reintegr|impact|tarjeta|dinero|plata|acredit")
@@ -57,6 +62,8 @@ def _tiempo_de_uso(t: str) -> re.Match | None:
     """Cuánto hace que compró o cuánto tiene el producto, sobre el texto sin tildes. Un "hace N días" suelto solo cuenta si la
     frase habla de comprar: puede ser la fecha de la falla o los días que lleva esperando un reembolso."""
     m = _EDAD.search(t)
+    if m is not None and _GARANTIA_DE.search(t[:m.start()]) and _NOMBRE_Y_TIENE.match(m.group(0)):
+        m = None             # "la garantía de la licuadora tiene 6 meses": es el plazo de la garantía y no la edad de la licuadora
     if m is None:
         m = _DE_EDAD.search(t)
         if m is not None and _GARANTIA_DE.search(t[:m.start()]):
@@ -64,6 +71,22 @@ def _tiempo_de_uso(t: str) -> re.Match | None:
     if m is None and _COMPRO.search(t):
         m = _DURACION.search(t)
     return m
+
+
+def _duracion(m: re.Match, t: str, tabla: dict[str, float]) -> tuple[float, str]:
+    """El valor de lo que dijo, en la unidad de `tabla`, y cómo lo dijo. Suma las dos partes de "un año y medio" y de "1 año y 2
+    meses", y toma "un año y pico" como un poco más de un año: si no, "un año y medio" se leía como un año."""
+    unidad, valor, fin = m.group(2), _numero(m) * tabla[m.group(2)], m.end()
+    resto = t[fin:]
+    if (x := _Y_MEDIO.match(resto)):
+        valor += tabla[unidad] / 2
+    elif (x := _Y_PICO.match(resto)):
+        valor += tabla[unidad] / 100
+    elif (x := _Y_OTRA.match(resto)):
+        valor += _numero(x) * tabla[x.group(2)]
+    fin += x.end() if x else 0
+    dicho = re.sub(r"\b(dias?|anos?)\b", lambda k: _UNIDAD_ESCRITA[k.group(1)], t[m.start(1):fin])
+    return valor, dicho
 
 
 def dias_desde_la_compra(texto: str) -> int | None:
@@ -76,7 +99,7 @@ def dias_desde_la_compra(texto: str) -> int | None:
     if re.search(r"\b(?:compr\w+|adquir\w+) ayer\b|\bayer (?:compr\w+|adquir\w+|fui\b.*\bcompr\w+|hice una compra)", t):
         return 1
     m = _tiempo_de_uso(t)
-    return None if m is None else _numero(m) * _UNIDAD[m.group(2)]
+    return None if m is None else int(_duracion(m, t, _UNIDAD)[0])
 
 
 def nota_de_devolucion(dias: int) -> str:
@@ -101,8 +124,7 @@ def garantia_del_producto(texto: str, devolucion: bool = False, requiere_motivo:
     if len(productos) != 1 or m is None:
         return None
     (producto, plazo), = productos.items()
-    meses = _numero(m) * _MESES_POR_UNIDAD[m.group(2)]
-    cuanto = f"{m.group(1) if m.group(1).isdigit() else _numero(m)} {_UNIDAD_ESCRITA.get(m.group(2), m.group(2))}"
+    meses, cuanto = _duracion(m, t, _MESES_POR_UNIDAD)
     if meses <= plazo:
         return (f"La garantía de tu {producto} es de {plazo} meses desde la fecha de compra: con {cuanto} "
                 f"todavía estás dentro de ese plazo. La garantía cubre defectos de fábrica, no daños por mal uso.")

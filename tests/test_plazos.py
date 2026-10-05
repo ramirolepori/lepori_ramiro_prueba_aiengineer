@@ -153,3 +153,39 @@ def test_garantia_mezclada_con_devolucion_se_responde_por_codigo_con_cualquier_r
     assert llm.llamadas == 0, "es una cuenta de los documentos: no la hace el modelo"
     assert all(e in r.texto for e in esperado) and not any(n in r.texto for n in no_esperado), r.texto
     assert r.estado == "respondido" and {"devoluciones", "garantia"} >= set(r.fuentes)
+
+
+# --- el plazo de la garantía no es la edad del producto, y "un año y medio" no es un año --------------------------------------------
+
+@pytest.mark.parametrize("texto", [
+    "La garantía de la licuadora tiene 6 meses, es así?",
+    "La garantía de la heladera tiene 12 meses?",
+    "La licuadora tiene 6 meses de garantía, es así?",
+])
+def test_el_plazo_de_la_garantia_dicho_como_tiene_n_meses_no_se_toma_por_la_edad(texto):
+    assert garantia_del_producto(texto) is None and dias_desde_la_compra(texto + " la puedo devolver?") is None
+
+
+def test_la_garantia_de_la_lavadora_que_tiene_8_meses_si_es_la_edad():
+    assert "con 8 meses todavía estás dentro" in garantia_del_producto("Cuál es la garantía de la lavadora que tiene 8 meses y se rompió?")
+
+
+@pytest.mark.parametrize("texto,vencida,dicho", [
+    ("Mi lavadora tiene un año y medio y se rompió, tengo garantía?", True, "con un año y medio"),
+    ("Compré una heladera hace 1 año y 2 meses y se rompió, tengo garantía?", True, "con 1 año y 2 meses"),
+    ("Mi heladera tiene 1 año y pico, tengo garantía?", True, "con 1 año y pico"),
+    ("Mi plancha tiene 3 meses y medio y no calienta, tengo garantía?", False, "con 3 meses y medio"),
+    ("Mi estufa tiene 11 meses y 3 semanas y se rompió, tengo garantía?", False, "con 11 meses y 3 semanas"),
+])
+def test_las_duraciones_compuestas_se_suman(texto, vencida, dicho):
+    g = garantia_del_producto(texto)
+    assert dicho in g and ("ya pasó ese plazo" in g) is vencida
+
+
+@pytest.mark.parametrize("texto,dias", [
+    ("Mi lavadora tiene 2 años y 3 meses, se rompió, la puedo devolver?", 820),
+    ("Compré una lavadora hace 2 semanas y 3 días, la puedo devolver?", 17),
+    ("Compré hace 3 meses y quiero devolver mi licuadora", 90),                  # "y quiero" no es parte de la duración
+])
+def test_los_dias_tambien_suman_las_partes(texto, dias):
+    assert dias_desde_la_compra(texto) == dias

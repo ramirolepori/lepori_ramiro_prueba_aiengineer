@@ -88,7 +88,12 @@ _PIDE_CANAL = re.compile(
     r"reclam\w+|quej\w+)\b|"
     r"\ba (?:qu?ien|kien) (?:le )?(?:escribo|reclamo|consulto|me quejo|me dirijo|llamo|contacto)\b|"
     r"\b(?:a que|que) (?:mail|correo|email|canal)\b|"
-    r"\bdonde (?:reclamo|me quejo|puedo quejarme)\b|\bcomo (?:me comunico|me contacto|contacto|hago un reclamo)\b")
+    r"\bdonde (?:reclamo|me quejo|puedo quejarme)\b|\bcomo (?:me comunico|me contacto|contacto|hago un reclamo)\b|"
+    # pide el dato de contacto: "cuál es el correo para reclamos", "tienen un mail de contacto", "mail de atención", "su email"
+    r"\b(?:cual es|cuales son|dame|decime|dime|pasame|necesito|quiero|quisiera|tienen|tenes|tiene|hay)\b[^?.!]{0,20}"
+    r"\b(?:correo|mail|e-?mail|canal|contacto)\b|"
+    r"\b(?:correo|mail|e-?mail)\b (?:de|para) (?:contacto|atencion|soporte|ayuda|consultas?|reclamos?|quejas?)\b|"
+    r"^\W*(?:el |un |su )?(?:correo|mail|e-?mail|contacto|canal de contacto)\W*$")
 # Pide hablar con una persona o presentar un reclamo ("quiero hablar con un humano", "necesito un supervisor", "quiero presentar un
 # reclamo formal"). Sin un tema de derivación en la frase se responde con el canal; con uno ("alguien del área legal") se deriva.
 _PIDE_PERSONA = re.compile(
